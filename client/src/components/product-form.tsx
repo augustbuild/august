@@ -180,28 +180,6 @@ export default function ProductForm({
     material.toLowerCase().includes(materialSearch.toLowerCase())
   );
 
-  const handleRemoveMaterial = (materialToRemove: string, field: any) => {
-    const currentValue = field.value || [];
-    if (!Array.isArray(currentValue)) return;
-
-    const newValue = currentValue.filter((m: string) => m !== materialToRemove);
-    field.onChange(newValue);
-  };
-
-  const handleToggleMaterial = (material: string, field: any) => {
-    const currentValue = field.value || [];
-    if (!Array.isArray(currentValue)) {
-      field.onChange([material]);
-      return;
-    }
-
-    const newValue = currentValue.includes(material)
-      ? currentValue.filter((m: string) => m !== material)
-      : [...currentValue, material];
-
-    field.onChange(newValue);
-  };
-
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">{isEditing ? "Edit Product" : "Submit a Product"}</h2>
@@ -243,6 +221,23 @@ export default function ProductForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Materials</FormLabel>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {(field.value || []).map((material: string) => (
+                    <Badge
+                      key={material}
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
+                      {material}
+                      <X
+                        className="h-3 w-3 cursor-pointer hover:text-destructive"
+                        onClick={() => {
+                          field.onChange((field.value || []).filter((m: string) => m !== material));
+                        }}
+                      />
+                    </Badge>
+                  ))}
+                </div>
                 <FormControl>
                   <Popover open={materialsOpen} onOpenChange={setMaterialsOpen}>
                     <PopoverTrigger asChild>
@@ -250,29 +245,9 @@ export default function ProductForm({
                         variant="outline"
                         role="combobox"
                         aria-expanded={materialsOpen}
-                        className="w-full justify-between h-auto min-h-[40px] flex-wrap"
+                        className="w-full justify-between"
                       >
-                        <div className="flex flex-wrap gap-1">
-                          {(field.value || []).map((material: string) => (
-                            <Badge
-                              key={material}
-                              variant="secondary"
-                              className="flex items-center gap-1"
-                            >
-                              {material}
-                              <X
-                                className="h-3 w-3 cursor-pointer hover:text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveMaterial(material, field);
-                                }}
-                              />
-                            </Badge>
-                          ))}
-                          {(!field.value || field.value.length === 0) && (
-                            <span className="text-muted-foreground">Select materials</span>
-                          )}
-                        </div>
+                        <span className="text-muted-foreground">Select materials</span>
                         <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -289,7 +264,11 @@ export default function ProductForm({
                             <CommandItem
                               key={material}
                               onSelect={() => {
-                                handleToggleMaterial(material, field);
+                                const currentValue = field.value || [];
+                                const newValue = currentValue.includes(material)
+                                  ? currentValue.filter((m: string) => m !== material)
+                                  : [...currentValue, material];
+                                field.onChange(newValue);
                               }}
                             >
                               <Check
