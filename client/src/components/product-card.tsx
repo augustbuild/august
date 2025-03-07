@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
@@ -93,7 +93,36 @@ export default function ProductCard({
   return (
     <>
       <div className="flex gap-3">
-        {/* Left side - Image */}
+        {/* Upvote Button - Now on the left */}
+        <Button
+          variant="outline"
+          onClick={handleVote}
+          disabled={!user || voteMutation.isPending}
+          className={cn(
+            "h-24 w-24 flex items-center justify-center",
+            showDarkButton && "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+          )}
+        >
+          <div className="inline-flex items-center gap-1">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="mb-1"
+            >
+              <path 
+                d="M16 4L28 28H4L16 4Z" 
+                fill="currentColor"
+                strokeWidth={2}
+              />
+            </svg>
+            <span className="text-2xl font-medium leading-none">{product.score}</span>
+          </div>
+        </Button>
+
+        {/* Product Image */}
         <div className="flex-shrink-0">
           <img
             src={product.imageUrl}
@@ -170,27 +199,6 @@ export default function ProductCard({
             )}
           </div>
         </div>
-
-        {/* Right side - Vote Button */}
-        <Button
-          variant="outline"
-          onClick={handleVote}
-          disabled={!user || voteMutation.isPending}
-          className={cn(
-            "h-24 w-24 flex items-center justify-center",
-            showDarkButton && "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-          )}
-        >
-          <div className="inline-flex items-center gap-1">
-            <ArrowUp
-              strokeWidth={8}
-              strokeLinecap="square"
-              strokeLinejoin="miter"
-              className="h-8 w-auto"
-            />
-            <span className="text-2xl font-medium leading-none">{product.score}</span>
-          </div>
-        </Button>
       </div>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
