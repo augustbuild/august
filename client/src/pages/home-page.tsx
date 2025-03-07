@@ -74,7 +74,11 @@ export default function HomePage() {
         <div className="divide-y divide-border">
           {products?.map((product) => (
             <div key={product.id} className="py-6 first:pt-0 last:pb-0">
-              <ProductCard key={product.id} product={product} />
+              <ProductCard 
+                key={product.id} 
+                product={product}
+                showComments={false}
+              />
             </div>
           ))}
         </div>
