@@ -23,12 +23,12 @@ import {
 import ProductForm from "./product-form";
 import { useToast } from "@/hooks/use-toast";
 
-export default function ProductCard({ 
-  product, 
+export default function ProductCard({
+  product,
   showComments = true,
-  isOwner = false 
-}: { 
-  product: Product; 
+  isOwner = false
+}: {
+  product: Product;
   showComments?: boolean;
   isOwner?: boolean;
 }) {
@@ -89,8 +89,8 @@ export default function ProductCard({
 
   return (
     <Card>
-      <CardContent className="p-4">
-        <div className="flex gap-4">
+      <CardContent className="p-3">
+        <div className="flex gap-3">
           {/* Left side - Image */}
           <div className="flex-shrink-0">
             <img
@@ -122,7 +122,7 @@ export default function ProductCard({
                       <Pencil className="h-4 w-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => deleteProductMutation.mutate()}
                     >
@@ -138,29 +138,37 @@ export default function ProductCard({
               {product.description}
             </p>
 
-            <div className="flex items-center gap-2 mt-4">
-              <a 
+            <div className="flex items-center gap-2 mt-3">
+              <a
                 href={product.link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="no-underline"
               >
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7"
+                >
                   <ShoppingBag className="h-4 w-4" />
                 </Button>
               </a>
 
               {showComments && (
                 <Link href={`/products/${product.id}`}>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="flex items-center justify-center gap-2"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
                   >
                     <MessageSquare className="h-4 w-4" />
-                    {comments?.length || 0}
                   </Button>
                 </Link>
+              )}
+              {showComments && (
+                <span className="text-sm text-muted-foreground">
+                  {comments?.length || 0}
+                </span>
               )}
             </div>
           </div>
@@ -171,12 +179,14 @@ export default function ProductCard({
             onClick={handleVote}
             disabled={!user || voteMutation.isPending}
             className={cn(
-              "h-24 w-24 flex flex-col items-center justify-center",
+              "h-24 w-24 flex items-center justify-center",
               vote?.value === 1 && "text-primary border-primary"
             )}
           >
-            <ArrowBigUp className="h-8 w-8" />
-            <span className="text-lg font-medium">{product.score}</span>
+            <div className="flex items-center">
+              <ArrowBigUp className="h-6 w-6 mr-1.5" />
+              <span className="text-lg font-medium">{product.score}</span>
+            </div>
           </Button>
         </div>
       </CardContent>
@@ -186,9 +196,9 @@ export default function ProductCard({
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          <ProductForm 
-            initialValues={product} 
-            onSuccess={() => setShowEditDialog(false)} 
+          <ProductForm
+            initialValues={product}
+            onSuccess={() => setShowEditDialog(false)}
             isEditing={true}
           />
         </DialogContent>
