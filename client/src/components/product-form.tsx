@@ -4,6 +4,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { insertProductSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +14,8 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { Check, X } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { useState } from "react";
 
 // Materials list sorted alphabetically
 const materials = [
@@ -123,6 +126,8 @@ export default function ProductForm({
 }) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const [materialsOpen, setMaterialsOpen] = useState(false);
+  const [materialSearch, setMaterialSearch] = useState("");
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
@@ -169,6 +174,10 @@ export default function ProductForm({
     },
   });
 
+  const filteredMaterials = materials.filter((material) =>
+    material.toLowerCase().includes(materialSearch.toLowerCase())
+  );
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">{isEditing ? "Edit Product" : "Submit a Product"}</h2>
@@ -211,52 +220,69 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Materials</FormLabel>
                 <FormControl>
-                  <Select 
-                    onValueChange={(value: string[]) => field.onChange(value)}
-                    value={field.value || []}
-                    multiple
-                  >
-                    <SelectTrigger className="h-auto min-h-[40px] flex-wrap gap-1">
-                      <div className="flex flex-wrap gap-1">
-                        {Array.isArray(field.value) && field.value.map((material) => (
-                          <Badge
-                            key={material}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {material}
-                            <X
-                              className="h-3 w-3 cursor-pointer hover:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newValue = Array.isArray(field.value) 
-                                  ? field.value.filter((m) => m !== material)
-                                  : [];
-                                field.onChange(newValue);
+                  <Popover open={materialsOpen} onOpenChange={setMaterialsOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={materialsOpen}
+                        className="w-full justify-between h-auto min-h-[40px] flex-wrap"
+                      >
+                        <div className="flex flex-wrap gap-1">
+                          {field.value.map((material: string) => (
+                            <Badge
+                              key={material}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
+                              {material}
+                              <X
+                                className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  field.onChange(field.value.filter((m: string) => m !== material));
+                                }}
+                              />
+                            </Badge>
+                          ))}
+                          {field.value.length === 0 && "Select materials"}
+                        </div>
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search materials..."
+                          value={materialSearch}
+                          onValueChange={setMaterialSearch}
+                        />
+                        <CommandEmpty>No materials found.</CommandEmpty>
+                        <CommandGroup className="max-h-64 overflow-auto">
+                          {filteredMaterials.map((material) => (
+                            <CommandItem
+                              key={material}
+                              onSelect={() => {
+                                field.onChange(
+                                  field.value.includes(material)
+                                    ? field.value.filter((m: string) => m !== material)
+                                    : [...field.value, material]
+                                );
                               }}
-                            />
-                          </Badge>
-                        ))}
-                        {(!field.value || !Array.isArray(field.value) || field.value.length === 0) && (
-                          <SelectValue placeholder="Select materials" />
-                        )}
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {materials.map((material) => (
-                        <SelectItem
-                          key={material}
-                          value={material}
-                          className="flex items-center gap-2"
-                        >
-                          <div className="flex-1">{material}</div>
-                          {Array.isArray(field.value) && field.value.includes(material) && (
-                            <Check className="h-4 w-4 opacity-70" />
-                          )}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value.includes(material) ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {material}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </FormControl>
                 <FormMessage />
               </FormItem>
