@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { Comment, User } from "@shared/schema";
+import { useLocation } from "wouter";
 
 type CommentProps = {
   comment: Comment;
@@ -21,6 +22,7 @@ type CommentProps = {
 function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [_, setLocation] = useLocation();
 
   const { data: author } = useQuery<User>({
     queryKey: [`/api/users/${comment.userId}`],
@@ -71,7 +73,7 @@ function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
           <div className="text-sm font-medium">{author?.username}</div>
           <p className="text-muted-foreground mt-1">{comment.content}</p>
 
-          {user && (
+          {user ? (
             <Form {...form}>
               <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="mt-2">
                 <FormField
@@ -95,6 +97,15 @@ function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
                 </Button>
               </form>
             </Form>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation("/auth")}
+              className="mt-2"
+            >
+              Login to reply
+            </Button>
           )}
 
           {replies?.map((reply) => (
@@ -118,6 +129,7 @@ type CommentThreadProps = {
 export default function CommentThread({ productId }: CommentThreadProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [_, setLocation] = useLocation();
 
   const { data: comments } = useQuery<Comment[]>({
     queryKey: [`/api/products/${productId}/comments`],
@@ -153,7 +165,7 @@ export default function CommentThread({ productId }: CommentThreadProps) {
   return (
     <Card>
       <CardContent className="pt-6">
-        {user && (
+        {user ? (
           <Form {...form}>
             <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="mb-6">
               <FormField
@@ -177,6 +189,16 @@ export default function CommentThread({ productId }: CommentThreadProps) {
               </Button>
             </form>
           </Form>
+        ) : (
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/auth")}
+              className="w-full"
+            >
+              Login to join the discussion
+            </Button>
+          </div>
         )}
 
         <div className="space-y-6">

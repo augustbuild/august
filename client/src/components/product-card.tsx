@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -33,6 +33,7 @@ export default function ProductCard({
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [_, setLocation] = useLocation();
   const [showEditDialog, setShowEditDialog] = useState(false);
 
   const { data: vote } = useQuery<Vote>({
@@ -81,7 +82,10 @@ export default function ProductCard({
   });
 
   const handleVote = () => {
-    if (!user) return;
+    if (!user) {
+      setLocation("/auth");
+      return;
+    }
     const newValue = vote?.value === 1 ? 0 : 1;
     voteMutation.mutate(newValue);
   };
@@ -144,7 +148,7 @@ export default function ProductCard({
                 variant={hasUpvoted ? "default" : "outline"}
                 size="sm"
                 onClick={handleVote}
-                disabled={!user || voteMutation.isPending}
+                disabled={voteMutation.isPending}
                 className="h-7 px-2 flex items-center gap-1"
               >
                 <ArrowUp className="h-4 w-4" />
