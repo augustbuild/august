@@ -180,6 +180,28 @@ export default function ProductForm({
     material.toLowerCase().includes(materialSearch.toLowerCase())
   );
 
+  const handleRemoveMaterial = (materialToRemove: string, field: any) => {
+    const currentValue = field.value || [];
+    if (!Array.isArray(currentValue)) return;
+
+    const newValue = currentValue.filter((m: string) => m !== materialToRemove);
+    field.onChange(newValue);
+  };
+
+  const handleToggleMaterial = (material: string, field: any) => {
+    const currentValue = field.value || [];
+    if (!Array.isArray(currentValue)) {
+      field.onChange([material]);
+      return;
+    }
+
+    const newValue = currentValue.includes(material)
+      ? currentValue.filter((m: string) => m !== material)
+      : [...currentValue, material];
+
+    field.onChange(newValue);
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">{isEditing ? "Edit Product" : "Submit a Product"}</h2>
@@ -231,7 +253,7 @@ export default function ProductForm({
                         className="w-full justify-between h-auto min-h-[40px] flex-wrap"
                       >
                         <div className="flex flex-wrap gap-1">
-                          {Array.isArray(field.value) && field.value.map((material: string) => (
+                          {(field.value || []).map((material: string) => (
                             <Badge
                               key={material}
                               variant="secondary"
@@ -242,14 +264,12 @@ export default function ProductForm({
                                 className="h-3 w-3 cursor-pointer hover:text-destructive"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const newValue = field.value.filter((m: string) => m !== material);
-                                  field.onChange(newValue);
-                                  setMaterialsOpen(false);
+                                  handleRemoveMaterial(material, field);
                                 }}
                               />
                             </Badge>
                           ))}
-                          {(!Array.isArray(field.value) || field.value.length === 0) && (
+                          {(!field.value || field.value.length === 0) && (
                             <span className="text-muted-foreground">Select materials</span>
                           )}
                         </div>
@@ -269,17 +289,13 @@ export default function ProductForm({
                             <CommandItem
                               key={material}
                               onSelect={() => {
-                                const currentValue = Array.isArray(field.value) ? field.value : [];
-                                const newValue = currentValue.includes(material)
-                                  ? currentValue.filter((m) => m !== material)
-                                  : [...currentValue, material];
-                                field.onChange(newValue);
+                                handleToggleMaterial(material, field);
                               }}
                             >
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  Array.isArray(field.value) && field.value.includes(material)
+                                  (field.value || []).includes(material)
                                     ? "opacity-100"
                                     : "opacity-0"
                                 )}
