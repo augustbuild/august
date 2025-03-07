@@ -181,8 +181,13 @@ export default function ProductCard({
             showDarkButton && "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
           )}
         >
-          <div className="flex items-center gap-1">
-            <ArrowUp strokeWidth={4} className="h-14 w-14" />
+          <div className="inline-flex items-center gap-1">
+            <ArrowUp
+              strokeWidth={8}
+              strokeLinecap="square"
+              strokeLinejoin="miter"
+              className="h-8 w-auto"
+            />
             <span className="text-2xl font-medium leading-none">{product.score}</span>
           </div>
         </Button>
