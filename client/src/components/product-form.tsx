@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,8 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
+import { Check, X } from "lucide-react";
 
 // Materials list sorted alphabetically
 const materials = [
@@ -213,17 +216,40 @@ export default function ProductForm({
                     value={field.value || []}
                     multiple
                   >
-                    <SelectTrigger className="h-auto min-h-[40px]">
-                      <SelectValue>
-                        {Array.isArray(field.value) && field.value.length > 0
-                          ? field.value.join(", ")
-                          : "Select materials"}
-                      </SelectValue>
+                    <SelectTrigger className="h-auto min-h-[40px] flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1">
+                        {field.value?.map((material) => (
+                          <Badge
+                            key={material}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {material}
+                            <X
+                              className="h-3 w-3 cursor-pointer hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                field.onChange(field.value.filter((m) => m !== material));
+                              }}
+                            />
+                          </Badge>
+                        ))}
+                        {(!field.value || field.value.length === 0) && (
+                          <SelectValue placeholder="Select materials" />
+                        )}
+                      </div>
                     </SelectTrigger>
                     <SelectContent>
                       {materials.map((material) => (
-                        <SelectItem key={material} value={material}>
-                          {material}
+                        <SelectItem
+                          key={material}
+                          value={material}
+                          className="flex items-center gap-2"
+                        >
+                          <div className="flex-1">{material}</div>
+                          {field.value?.includes(material) && (
+                            <Check className="h-4 w-4 opacity-70" />
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
