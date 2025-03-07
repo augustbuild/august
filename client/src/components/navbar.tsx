@@ -9,7 +9,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="border-b">
-      <div className="container flex h-16 items-center justify-between px-4">
+      <div className="max-w-4xl mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex gap-6 items-center">
           <Link href="/">
             <a className="text-xl font-instrument italic">August</a>
