@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
@@ -181,9 +181,9 @@ export default function ProductCard({
             showDarkButton && "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
           )}
         >
-          <div className="flex items-center">
-            <ArrowBigUp className="h-16 w-16 mr-2" />
-            <span className="text-3xl font-medium leading-none">{product.score}</span>
+          <div className="flex items-center gap-1">
+            <ArrowUp strokeWidth={4} className="h-10 w-10" />
+            <span className="text-2xl font-medium leading-none">{product.score}</span>
           </div>
         </Button>
       </div>
