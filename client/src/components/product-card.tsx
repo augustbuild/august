@@ -28,7 +28,6 @@ export default function ProductCard({ product, showComments = true }: ProductCar
 
   const { data: author } = useQuery<User>({
     queryKey: ["/api/users", product.userId],
-    enabled: !!product.userId,
   });
 
   const { data: vote } = useQuery({
@@ -73,7 +72,7 @@ export default function ProductCard({ product, showComments = true }: ProductCar
             <div className="flex items-center gap-2 mb-1">
               <Avatar className="h-5 w-5">
                 <AvatarImage src={author?.avatarUrl || USER_AVATARS[product.userId % USER_AVATARS.length]} />
-                <AvatarFallback>{author?.username?.[0].toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{author?.username?.[0].toUpperCase() || "?"}</AvatarFallback>
               </Avatar>
               <span className="text-sm text-muted-foreground">
                 Posted by {author?.username || "Anonymous"}
