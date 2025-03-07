@@ -1,6 +1,6 @@
-# August - Product Discovery Platform
+# August
 
-A modern product discovery platform that enables users to submit, vote, and discuss extraordinary products with enhanced visual presentation and intuitive product interaction.
+A platform for celebrating extraordinary products and the people who build them.
 
 ## Features
 
