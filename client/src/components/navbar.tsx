@@ -19,14 +19,16 @@ const Navbar: React.FC = () => {
           {user ? (
             <>
               <Link href="/profile">
-                <Button variant="outline" size="icon" className="h-9 w-9">
+                <Button variant="outline" size="sm" className="h-9 w-9 p-0">
                   <User className="h-5 w-5" />
                 </Button>
               </Link>
               <Button 
-                variant="outline" 
+                variant="outline"
+                size="sm"
                 onClick={() => logoutMutation.mutate()}
                 disabled={logoutMutation.isPending}
+                className="h-9"
               >
                 Logout
               </Button>
@@ -34,10 +36,10 @@ const Navbar: React.FC = () => {
           ) : (
             <>
               <Link href="/auth">
-                <Button variant="outline">Login</Button>
+                <Button variant="outline" size="sm" className="h-9">Login</Button>
               </Link>
               <Link href="/auth">
-                <Button>Register</Button>
+                <Button size="sm" className="h-9">Register</Button>
               </Link>
             </>
           )}
