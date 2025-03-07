@@ -71,9 +71,11 @@ export default function HomePage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="divide-y divide-border">
           {products?.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <div key={product.id} className="py-6 first:pt-0 last:pb-0">
+              <ProductCard key={product.id} product={product} />
+            </div>
           ))}
         </div>
       )}
