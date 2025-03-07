@@ -68,7 +68,7 @@ export default function ProductPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
-            <div className="flex items-center space-x-4 text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
               <div className="flex items-center">
                 <Building2 className="h-4 w-4 mr-1" />
                 {product.companyName}
@@ -77,10 +77,10 @@ export default function ProductPage() {
                 <Globe className="h-4 w-4 mr-1" />
                 {product.country}
               </div>
-              {product.material && (
+              {product.material && product.material.length > 0 && (
                 <div className="flex items-center">
                   <Package className="h-4 w-4 mr-1" />
-                  {product.material}
+                  {product.material.join(", ")}
                 </div>
               )}
             </div>

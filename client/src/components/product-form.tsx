@@ -11,6 +11,71 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 
+// Materials list sorted alphabetically
+const materials = [
+  "ABS",
+  "Aluminum",
+  "Ash",
+  "Badger Hair",
+  "Bamboo",
+  "Beef Tallow",
+  "Beech",
+  "Beeswax",
+  "Boar Bristles",
+  "Brass",
+  "Carbon Fiber",
+  "Carbon Steel",
+  "Cashmere",
+  "Cedar",
+  "Ceramic",
+  "Cherry",
+  "Coconut Oil",
+  "Copper",
+  "Cork",
+  "Cotton",
+  "Damascus Steel",
+  "Dyneema",
+  "Elastane",
+  "Feathers",
+  "Felt",
+  "Fiberglass",
+  "Glass",
+  "Goose Down",
+  "Horse Hair",
+  "Leather",
+  "Linen",
+  "Maple",
+  "Marble",
+  "MDPE",
+  "Merino Wool",
+  "Nylon",
+  "Oak",
+  "Olive Wood",
+  "Pine",
+  "Plant Fibers",
+  "Plant Foam",
+  "Polycarbonate",
+  "Polyester",
+  "Polyethylene",
+  "Polypropylene",
+  "PVC",
+  "Resin",
+  "Rubber",
+  "Shearling",
+  "Silicone",
+  "Stainless Steel",
+  "Steel",
+  "Stone",
+  "Suede",
+  "Titanium",
+  "Twill",
+  "Walnut",
+  "Waxed Canvas",
+  "Wood",
+  "Wool",
+  "Zinc"
+];
+
 // Comprehensive list of countries for the dropdown
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
@@ -41,7 +106,7 @@ interface Product {
   imageUrl: string;
   companyName: string;
   country: string;
-  material?: string;
+  material: string[];
 }
 
 export default function ProductForm({ 
@@ -65,12 +130,12 @@ export default function ProductForm({
       imageUrl: "",
       companyName: "",
       country: "",
-      material: "",
+      material: [],
     },
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: Record<string, string>) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest(
         isEditing ? "PATCH" : "POST",
         isEditing ? `/api/products/${initialValues?.id}` : "/api/products",
@@ -141,9 +206,24 @@ export default function ProductForm({
             name="material"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Material</FormLabel>
+                <FormLabel>Materials</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="e.g. Leather, Steel, Cotton" />
+                  <Select 
+                    value={field.value} 
+                    onValueChange={field.onChange}
+                    multiple
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select materials" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {materials.map((material) => (
+                        <SelectItem key={material} value={material}>
+                          {material}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
