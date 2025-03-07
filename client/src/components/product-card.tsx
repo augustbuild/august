@@ -87,6 +87,10 @@ export default function ProductCard({
     voteMutation.mutate(newValue);
   };
 
+  const isUserProduct = user?.id === product.userId;
+  const hasUpvoted = vote?.value === 1;
+  const showDarkButton = hasUpvoted || isUserProduct;
+
   return (
     <Card>
       <CardContent className="p-3">
@@ -180,7 +184,7 @@ export default function ProductCard({
             disabled={!user || voteMutation.isPending}
             className={cn(
               "h-24 w-24 flex items-center justify-center",
-              vote?.value === 1 && "text-primary border-primary"
+              showDarkButton && "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
             )}
           >
             <div className="flex items-center">
