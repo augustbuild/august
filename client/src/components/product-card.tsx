@@ -142,7 +142,7 @@ export default function ProductCard({
             )}
           </div>
 
-          {showComments ? (
+          {!showComments ? (
             <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
               {product.description}
             </p>
