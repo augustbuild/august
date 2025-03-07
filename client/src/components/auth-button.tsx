@@ -40,6 +40,7 @@ export function AuthButton() {
         <DropdownMenuItem 
           onClick={() => logoutMutation.mutate()}
           className="text-destructive"
+          disabled={logoutMutation.isPending}
         >
           Logout
         </DropdownMenuItem>
