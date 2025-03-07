@@ -160,17 +160,13 @@ export default function ProductCard({
               <Link href={`/products/${product.id}`}>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-7 w-7"
+                  size="sm"
+                  className="h-7 gap-2"
                 >
                   <MessageSquare className="h-4 w-4" />
+                  {comments?.length || 0}
                 </Button>
               </Link>
-            )}
-            {showComments && (
-              <span className="text-sm text-muted-foreground">
-                {comments?.length || 0}
-              </span>
             )}
           </div>
         </div>
