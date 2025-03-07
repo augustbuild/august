@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { insertUserSchema } from "@shared/schema";
-import { ArrowUpDown } from "lucide-react";
 
 export default function AuthPage() {
   const [_, setLocation] = useLocation();
@@ -42,8 +41,7 @@ export default function AuthPage() {
       <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm">
           <div className="text-center mb-8">
-            <ArrowUpDown className="h-12 w-12 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Welcome to August</h1>
+            <h1 className="text-4xl font-instrument italic">August</h1>
             <p className="text-sm text-muted-foreground mt-2">
               Discover and vote on extraordinary products
             </p>
