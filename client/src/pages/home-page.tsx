@@ -44,12 +44,12 @@ export default function HomePage() {
           value={sortBy}
           onValueChange={(value: SortOption) => setSortBy(value)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[120px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Newest First</SelectItem>
-            <SelectItem value="top">Top Rated</SelectItem>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="top">Top</SelectItem>
           </SelectContent>
         </Select>
 
