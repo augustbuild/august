@@ -5,7 +5,7 @@ import ProductCard from "@/components/product-card";
 import CommentThread from "@/components/comment-thread";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Globe, Building2 } from "lucide-react";
+import { ArrowUp, Globe, Building2, Package } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
@@ -77,6 +77,12 @@ export default function ProductPage() {
                 <Globe className="h-4 w-4 mr-1" />
                 {product.country}
               </div>
+              {product.material && (
+                <div className="flex items-center">
+                  <Package className="h-4 w-4 mr-1" />
+                  {product.material}
+                </div>
+              )}
             </div>
           </div>
 

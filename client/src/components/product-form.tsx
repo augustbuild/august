@@ -41,6 +41,7 @@ interface Product {
   imageUrl: string;
   companyName: string;
   country: string;
+  material?: string;
 }
 
 export default function ProductForm({ 
@@ -64,6 +65,7 @@ export default function ProductForm({
       imageUrl: "",
       companyName: "",
       country: "",
+      material: "",
     },
   });
 
@@ -129,6 +131,19 @@ export default function ProductForm({
                     placeholder="Describe what makes this product extraordinary"
                     className="min-h-[100px]"
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="material"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Material</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g. Leather, Steel, Cotton" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
