@@ -2,7 +2,6 @@ import { Link } from "wouter";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { ArrowUpDown } from "lucide-react";
 
 export default function Navbar() {
   const { user, logoutMutation } = useAuth();
@@ -13,9 +12,8 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
             <Link href="/">
-              <a className="flex items-center">
-                <ArrowUpDown className="h-6 w-6 mr-2" />
-                <span className="text-2xl font-bold">August</span>
+              <a>
+                <span className="text-2xl font-bold font-instrument italic">August</span>
               </a>
             </Link>
           </div>
