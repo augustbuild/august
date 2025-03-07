@@ -1,6 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
@@ -163,54 +162,52 @@ export default function CommentThread({ productId }: CommentThreadProps) {
   });
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        {user ? (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="mb-6">
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="What are your thoughts?"
-                        className="min-h-[100px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="mt-2" disabled={mutation.isPending}>
-                Comment
-              </Button>
-            </form>
-          </Form>
-        ) : (
-          <div className="mb-6">
-            <Button
-              variant="outline"
-              onClick={() => setLocation("/auth")}
-              className="w-full"
-            >
-              Login to join the discussion
-            </Button>
-          </div>
-        )}
-
-        <div className="space-y-6">
-          {comments?.map((comment) => (
-            <CommentComponent
-              key={comment.id}
-              comment={comment}
-              productId={productId}
+    <div className="space-y-6">
+      {user ? (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="mb-6">
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="What are your thoughts?"
+                      className="min-h-[100px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          ))}
+            <Button type="submit" className="mt-2" disabled={mutation.isPending}>
+              Comment
+            </Button>
+          </form>
+        </Form>
+      ) : (
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => setLocation("/auth")}
+            className="w-full"
+          >
+            Login to join the discussion
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      <div className="space-y-6">
+        {comments?.map((comment) => (
+          <CommentComponent
+            key={comment.id}
+            comment={comment}
+            productId={productId}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
