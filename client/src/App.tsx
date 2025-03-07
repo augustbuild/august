@@ -17,7 +17,7 @@ function Router() {
       <Navbar />
       <Switch>
         <Route path="/" component={HomePage} />
-        <ProtectedRoute path="/products/:id" component={ProductPage} />
+        <Route path="/products/:id" component={ProductPage} />
         <ProtectedRoute path="/profile" component={ProfilePage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
