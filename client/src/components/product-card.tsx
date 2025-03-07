@@ -130,44 +130,43 @@ export default function ProductCard({
               )}
             </div>
 
-            <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
+            <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
               {product.description}
             </p>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleVote}
+                disabled={!user || voteMutation.isPending}
+                className={cn(vote?.value === 1 && "text-primary border-primary")}
+              >
+                <ArrowBigUp className="h-5 w-5 mr-1" />
+                {product.score}
+              </Button>
+
               <a 
                 href={product.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                className="no-underline"
               >
-                <LinkIcon className="h-4 w-4" />
-                Visit Product
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LinkIcon className="h-4 w-4" />
+                  Visit Product
+                </Button>
               </a>
 
               {showComments && (
                 <Link href={`/products/${product.id}`}>
-                  <a className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+                  <Button variant="outline" size="sm" className="gap-2">
                     <MessageSquare className="h-4 w-4" />
                     Discuss
-                  </a>
+                  </Button>
                 </Link>
               )}
             </div>
-          </div>
-
-          {/* Right side - Voting */}
-          <div className="flex flex-col items-center gap-1 ml-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleVote}
-              disabled={!user || voteMutation.isPending}
-              className={cn("h-8 w-8", vote?.value === 1 && "text-primary")}
-            >
-              <ArrowBigUp className="h-5 w-5" />
-            </Button>
-            <span className="font-bold text-sm">{product.score}</span>
           </div>
         </div>
       </CardContent>
