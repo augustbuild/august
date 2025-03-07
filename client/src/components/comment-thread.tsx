@@ -12,15 +12,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { Comment, User } from "@shared/schema";
 
-const USER_AVATARS = [
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
-  "https://images.unsplash.com/photo-1568602471122-7832951cc4c5",
-  "https://images.unsplash.com/photo-1499557354967-2b2d8910bcca",
-  "https://images.unsplash.com/photo-1503235930437-8c6293ba41f5",
-  "https://images.unsplash.com/photo-1502323777036-f29e3972d82f",
-  "https://images.unsplash.com/photo-1533636721434-0e2d61030955",
-];
-
 type CommentProps = {
   comment: Comment;
   productId: number;
@@ -32,13 +23,12 @@ function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
   const { toast } = useToast();
 
   const { data: author } = useQuery<User>({
-    queryKey: ["/api/users", comment.userId],
-    enabled: !!comment.userId,
+    queryKey: [`/api/users/${comment.userId}`],
   });
 
   const { data: replies } = useQuery<Comment[]>({
-    queryKey: ["/api/products", productId, "comments"],
-    select: (comments) => comments.filter((c) => c.parentId === comment.id),
+    queryKey: [`/api/products/${productId}/comments`],
+    select: (comments) => comments.filter((c) => c.parentId === comment.id && c.content?.trim()),
   });
 
   const form = useForm({
@@ -51,12 +41,12 @@ function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: typeof form.getValues) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/comments", data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products", productId, "comments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${productId}/comments`] });
       form.reset();
     },
     onError: (error: Error) => {
@@ -68,17 +58,17 @@ function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
     },
   });
 
-  if (depth > 5) return null;
+  if (depth > 5 || !comment.content?.trim()) return null;
 
   return (
     <div className="mt-4">
       <div className="flex items-start gap-3">
         <Avatar className="h-8 w-8">
-          <AvatarImage src={author?.avatarUrl || USER_AVATARS[comment.userId % USER_AVATARS.length]} />
+          <AvatarImage src={author?.avatarUrl} />
           <AvatarFallback>{author?.username?.[0].toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <div className="text-sm font-medium">{author?.username || "Anonymous"}</div>
+          <div className="text-sm font-medium">{author?.username}</div>
           <p className="text-muted-foreground mt-1">{comment.content}</p>
 
           {user && (
@@ -107,7 +97,7 @@ function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
             </Form>
           )}
 
-          {replies && replies.map((reply) => (
+          {replies?.map((reply) => (
             <CommentComponent
               key={reply.id}
               comment={reply}
@@ -130,8 +120,8 @@ export default function CommentThread({ productId }: CommentThreadProps) {
   const { toast } = useToast();
 
   const { data: comments } = useQuery<Comment[]>({
-    queryKey: ["/api/products", productId, "comments"],
-    select: (comments) => comments.filter((c) => !c.parentId),
+    queryKey: [`/api/products/${productId}/comments`],
+    select: (comments) => comments.filter((c) => !c.parentId && c.content?.trim()),
   });
 
   const form = useForm({
@@ -143,12 +133,12 @@ export default function CommentThread({ productId }: CommentThreadProps) {
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: typeof form.getValues) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/comments", data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products", productId, "comments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${productId}/comments`] });
       form.reset();
     },
     onError: (error: Error) => {

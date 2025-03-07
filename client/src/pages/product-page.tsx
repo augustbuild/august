@@ -6,11 +6,11 @@ import CommentThread from "@/components/comment-thread";
 import { Loader2 } from "lucide-react";
 
 export default function ProductPage() {
-  const [match, params] = useRoute<{ id: string }>("/products/:id");
-  
+  const [_, params] = useRoute<{ id: string }>("/products/:id");
+
   const { data: product, isLoading } = useQuery<Product>({
-    queryKey: ["/api/products", params.id],
-    enabled: !!params.id,
+    queryKey: [`/api/products/${params?.id}`],
+    enabled: !!params?.id,
   });
 
   if (isLoading) {
@@ -26,11 +26,9 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <ProductCard product={product} showComments={false} />
-      <div className="mt-8">
-        <CommentThread productId={product.id} />
-      </div>
+      <CommentThread productId={product.id} />
     </div>
   );
 }
