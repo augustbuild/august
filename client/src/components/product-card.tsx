@@ -177,12 +177,14 @@ export default function ProductCard({
           onClick={handleVote}
           disabled={!user || voteMutation.isPending}
           className={cn(
-            "h-24 w-24 flex flex-col items-center justify-center",
+            "h-24 w-24 flex items-center justify-center",
             showDarkButton && "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
           )}
         >
-          <ArrowBigUp className="h-8 w-8 mb-1" />
-          <span className="text-2xl font-medium">{product.score}</span>
+          <div className="flex items-center">
+            <ArrowBigUp className="h-8 w-8 mb-1" />
+            <span className="text-2xl font-medium">{product.score}</span>
+          </div>
         </Button>
       </div>
 
