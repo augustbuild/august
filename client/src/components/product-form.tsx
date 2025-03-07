@@ -209,15 +209,12 @@ export default function ProductForm({
                 <FormLabel>Materials</FormLabel>
                 <FormControl>
                   <Select 
+                    onValueChange={(value) => field.onChange(value)}
                     value={field.value}
-                    onValueChange={(value) => {
-                      // Handle the array of selected values
-                      field.onChange(Array.isArray(value) ? value : [value]);
-                    }}
                     multiple
                   >
-                    <SelectTrigger className="h-auto">
-                      <SelectValue placeholder="Select materials">
+                    <SelectTrigger className="h-auto min-h-[40px]">
+                      <SelectValue>
                         {field.value?.length > 0
                           ? field.value.join(", ")
                           : "Select materials"}
