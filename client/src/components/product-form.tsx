@@ -85,7 +85,7 @@ const materials = [
 // Countries list
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", 
+  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina",
   "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic",
   "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti",
   "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia",
@@ -115,11 +115,11 @@ interface Product {
   material: string[];
 }
 
-export default function ProductForm({ 
+export default function ProductForm({
   onSuccess,
   initialValues,
   isEditing = false
-}: { 
+}: {
   onSuccess?: () => void;
   initialValues?: Product;
   isEditing?: boolean;
@@ -131,14 +131,16 @@ export default function ProductForm({
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
-    defaultValues: initialValues || {
-      title: "",
-      description: "",
-      link: "",
-      imageUrl: "",
-      companyName: "",
-      country: "",
-      material: [],
+    defaultValues: {
+      ...(initialValues || {
+        title: "",
+        description: "",
+        link: "",
+        imageUrl: "",
+        companyName: "",
+        country: "",
+        material: [],
+      }),
     },
   });
 
@@ -158,7 +160,7 @@ export default function ProductForm({
       }
       toast({
         title: isEditing ? "Product updated" : "Product submitted",
-        description: isEditing 
+        description: isEditing
           ? "Your product has been successfully updated."
           : "Your product has been successfully submitted.",
       });
@@ -203,8 +205,8 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    {...field} 
+                  <Textarea
+                    {...field}
                     placeholder="Describe what makes this product extraordinary"
                     className="min-h-[100px]"
                   />
@@ -229,7 +231,7 @@ export default function ProductForm({
                         className="w-full justify-between h-auto min-h-[40px] flex-wrap"
                       >
                         <div className="flex flex-wrap gap-1">
-                          {field.value.map((material: string) => (
+                          {Array.isArray(field.value) && field.value.map((material: string) => (
                             <Badge
                               key={material}
                               variant="secondary"
@@ -240,12 +242,16 @@ export default function ProductForm({
                                 className="h-3 w-3 cursor-pointer hover:text-destructive"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  field.onChange(field.value.filter((m: string) => m !== material));
+                                  const newValue = field.value.filter((m: string) => m !== material);
+                                  field.onChange(newValue);
+                                  setMaterialsOpen(false);
                                 }}
                               />
                             </Badge>
                           ))}
-                          {field.value.length === 0 && "Select materials"}
+                          {(!Array.isArray(field.value) || field.value.length === 0) && (
+                            <span className="text-muted-foreground">Select materials</span>
+                          )}
                         </div>
                         <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -263,17 +269,19 @@ export default function ProductForm({
                             <CommandItem
                               key={material}
                               onSelect={() => {
-                                field.onChange(
-                                  field.value.includes(material)
-                                    ? field.value.filter((m: string) => m !== material)
-                                    : [...field.value, material]
-                                );
+                                const currentValue = Array.isArray(field.value) ? field.value : [];
+                                const newValue = currentValue.includes(material)
+                                  ? currentValue.filter((m) => m !== material)
+                                  : [...currentValue, material];
+                                field.onChange(newValue);
                               }}
                             >
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  field.value.includes(material) ? "opacity-100" : "opacity-0"
+                                  Array.isArray(field.value) && field.value.includes(material)
+                                    ? "opacity-100"
+                                    : "opacity-0"
                                 )}
                               />
                               {material}
@@ -308,8 +316,8 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Country</FormLabel>
                 <FormControl>
-                  <Select 
-                    value={field.value} 
+                  <Select
+                    value={field.value}
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger>
@@ -335,9 +343,9 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Link</FormLabel>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    type="url" 
+                  <Input
+                    {...field}
+                    type="url"
                     placeholder="https://example.com"
                   />
                 </FormControl>
@@ -352,9 +360,9 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Image URL</FormLabel>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    type="url" 
+                  <Input
+                    {...field}
+                    type="url"
                     placeholder="https://example.com/image.jpg"
                   />
                 </FormControl>
