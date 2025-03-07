@@ -218,7 +218,7 @@ export default function ProductForm({
                   >
                     <SelectTrigger className="h-auto min-h-[40px] flex-wrap gap-1">
                       <div className="flex flex-wrap gap-1">
-                        {(field.value || []).map((material) => (
+                        {Array.isArray(field.value) && field.value.map((material) => (
                           <Badge
                             key={material}
                             variant="secondary"
@@ -229,12 +229,16 @@ export default function ProductForm({
                               className="h-3 w-3 cursor-pointer hover:text-destructive"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                field.onChange((field.value || []).filter((m) => m !== material));
+                                field.onChange(
+                                  Array.isArray(field.value) 
+                                    ? field.value.filter((m) => m !== material)
+                                    : []
+                                );
                               }}
                             />
                           </Badge>
                         ))}
-                        {(!field.value || field.value.length === 0) && (
+                        {(!field.value || !Array.isArray(field.value) || field.value.length === 0) && (
                           <SelectValue placeholder="Select materials" />
                         )}
                       </div>
@@ -247,7 +251,7 @@ export default function ProductForm({
                           className="flex items-center gap-2"
                         >
                           <div className="flex-1">{material}</div>
-                          {(field.value || []).includes(material) && (
+                          {Array.isArray(field.value) && field.value.includes(material) && (
                             <Check className="h-4 w-4 opacity-70" />
                           )}
                         </SelectItem>
