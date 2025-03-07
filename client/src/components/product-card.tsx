@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
@@ -88,40 +88,10 @@ export default function ProductCard({
 
   const isUserProduct = user?.id === product.userId;
   const hasUpvoted = vote?.value === 1;
-  const showDarkButton = hasUpvoted || isUserProduct;
 
   return (
     <>
       <div className="flex gap-3">
-        {/* Upvote Button - Now on the left */}
-        <Button
-          variant="outline"
-          onClick={handleVote}
-          disabled={!user || voteMutation.isPending}
-          className={cn(
-            "h-24 w-24 flex items-center justify-center",
-            showDarkButton && "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-          )}
-        >
-          <div className="inline-flex items-center gap-1">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="mb-1"
-            >
-              <path 
-                d="M16 4L28 28H4L16 4Z" 
-                fill="currentColor"
-                strokeWidth={2}
-              />
-            </svg>
-            <span className="text-2xl font-medium leading-none">{product.score}</span>
-          </div>
-        </Button>
-
         {/* Product Image */}
         <div className="flex-shrink-0">
           <img
@@ -131,7 +101,7 @@ export default function ProductCard({
           />
         </div>
 
-        {/* Center - Content */}
+        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <Link href={`/products/${product.id}`}>
@@ -170,6 +140,17 @@ export default function ProductCard({
           </p>
 
           <div className="flex items-center gap-2 mt-3">
+            <Button
+              variant={hasUpvoted ? "default" : "outline"}
+              size="icon"
+              onClick={handleVote}
+              disabled={!user || voteMutation.isPending}
+              className="h-7 w-7"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium">{product.score}</span>
+
             <a
               href={product.link}
               target="_blank"
