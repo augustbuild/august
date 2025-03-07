@@ -105,7 +105,7 @@ export default function ProductCard({
             <div className="flex items-center justify-between">
               <Link href={`/products/${product.id}`}>
                 <a className="no-underline">
-                  <h3 className="text-lg font-semibold hover:text-primary truncate mb-2">
+                  <h3 className="text-lg font-semibold hover:text-primary truncate">
                     {product.title}
                   </h3>
                 </a>
@@ -134,51 +134,50 @@ export default function ProductCard({
               )}
             </div>
 
-            <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
+            <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
               {product.description}
             </p>
 
-            <a 
-              href={product.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-underline"
-            >
-              <Button variant="outline" size="sm">
-                <ShoppingBag className="h-4 w-4" />
-              </Button>
-            </a>
-          </div>
-
-          {/* Right side - Interaction Buttons */}
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleVote}
-              disabled={!user || voteMutation.isPending}
-              className={cn(
-                "w-[72px] flex items-center justify-center",
-                vote?.value === 1 && "text-primary border-primary"
-              )}
-            >
-              <ArrowBigUp className="h-5 w-5 mr-1" />
-              {product.score}
-            </Button>
-
-            {showComments && (
-              <Link href={`/products/${product.id}`}>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-[72px] flex items-center justify-center gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  {comments?.length || 0}
+            <div className="flex items-center gap-2 mt-4">
+              <a 
+                href={product.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="no-underline"
+              >
+                <Button variant="outline" size="sm">
+                  <ShoppingBag className="h-4 w-4" />
                 </Button>
-              </Link>
-            )}
+              </a>
+
+              {showComments && (
+                <Link href={`/products/${product.id}`}>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {comments?.length || 0}
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
+
+          {/* Right side - Vote Button */}
+          <Button
+            variant="outline"
+            onClick={handleVote}
+            disabled={!user || voteMutation.isPending}
+            className={cn(
+              "h-24 w-24 flex flex-col items-center justify-center",
+              vote?.value === 1 && "text-primary border-primary"
+            )}
+          >
+            <ArrowBigUp className="h-8 w-8" />
+            <span className="text-lg font-medium">{product.score}</span>
+          </Button>
         </div>
       </CardContent>
 
