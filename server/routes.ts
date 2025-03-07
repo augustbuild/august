@@ -7,6 +7,15 @@ import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@sha
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
+  // Users
+  app.get("/api/users/:id", async (req, res) => {
+    const user = await storage.getUser(parseInt(req.params.id));
+    if (!user) return res.sendStatus(404);
+    // Don't send the password hash to the client
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  });
+
   // Products
   app.get("/api/products", async (_req, res) => {
     const products = await storage.getProducts();
@@ -21,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const validated = insertProductSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
@@ -37,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/comments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const validated = insertCommentSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
@@ -48,13 +57,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Votes
   app.post("/api/votes", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const validated = insertVoteSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
     const existingVote = await storage.getVote(req.user!.id, validated.data.productId);
     let vote;
-    
+
     if (existingVote) {
       vote = await storage.updateVote(existingVote.id, validated.data.value);
     } else {
@@ -66,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const votes = Array.from((await storage.getProducts())
         .filter(p => p.id === validated.data.productId)
         .map(p => p.score))[0];
-      
+
       await storage.updateProductScore(
         validated.data.productId,
         votes + (existingVote ? validated.data.value - existingVote.value : validated.data.value)
