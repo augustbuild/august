@@ -10,17 +10,6 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-const PRODUCT_IMAGES = [
-  "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-  "https://images.unsplash.com/photo-1556228578-567ba127e37f",
-  "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
-  "https://images.unsplash.com/photo-1524678606370-a47ad25cb82a",
-  "https://images.unsplash.com/photo-1525904097878-94fb15835963",
-  "https://images.unsplash.com/photo-1509695507497-903c140c43b0",
-  "https://images.unsplash.com/photo-1479064555552-3ef4979f8908",
-  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-];
-
 export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
   const { toast } = useToast();
   const form = useForm({
@@ -28,7 +17,8 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
     defaultValues: {
       title: "",
       description: "",
-      imageUrl: PRODUCT_IMAGES[Math.floor(Math.random() * PRODUCT_IMAGES.length)],
+      link: "",
+      imageUrl: "",
     },
   });
 
@@ -68,9 +58,9 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Enter product name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -83,7 +73,45 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea 
+                      {...field} 
+                      placeholder="Describe what makes this product extraordinary"
+                      className="min-h-[100px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="url" 
+                      placeholder="https://example.com"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image URL</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="url" 
+                      placeholder="https://example.com/image.jpg"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

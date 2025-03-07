@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -13,6 +13,7 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
+  link: text("link").notNull(),
   imageUrl: text("image_url").notNull(),
   userId: integer("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -43,6 +44,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertProductSchema = createInsertSchema(products).pick({
   title: true,
   description: true,
+  link: true,
   imageUrl: true,
 });
 

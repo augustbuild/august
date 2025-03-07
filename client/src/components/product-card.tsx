@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowBigDown, ArrowBigUp, MessageSquare } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp, MessageSquare, Link as LinkIcon } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type User } from "@shared/schema";
@@ -107,16 +107,28 @@ export default function ProductCard({ product, showComments = true }: ProductCar
           alt={product.title}
           className="w-full h-48 object-cover rounded-md mb-4"
         />
-        <p className="text-muted-foreground">{product.description}</p>
-        
-        {showComments && (
-          <Link href={`/products/${product.id}`}>
-            <a className="inline-flex items-center gap-2 mt-4 text-sm text-muted-foreground hover:text-primary">
-              <MessageSquare className="h-4 w-4" />
-              Discuss
-            </a>
-          </Link>
-        )}
+        <p className="text-muted-foreground mb-4">{product.description}</p>
+
+        <div className="flex items-center gap-4">
+          <a 
+            href={product.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+          >
+            <LinkIcon className="h-4 w-4" />
+            Visit Product
+          </a>
+
+          {showComments && (
+            <Link href={`/products/${product.id}`}>
+              <a className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+                <MessageSquare className="h-4 w-4" />
+                Discuss
+              </a>
+            </Link>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
