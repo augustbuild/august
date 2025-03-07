@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { insertProductSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,12 +12,21 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 
+// List of countries for the dropdown
+const countries = [
+  "United States", "Canada", "United Kingdom", "Germany", "France", "Japan", "Australia", 
+  "Brazil", "China", "India", "Italy", "Mexico", "Netherlands", "New Zealand", "Singapore", 
+  "South Korea", "Spain", "Sweden", "Switzerland", "United Arab Emirates"
+];
+
 interface Product {
   id: number;
   title: string;
   description: string;
   link: string;
   imageUrl: string;
+  companyName: string;
+  country: string;
 }
 
 export default function ProductForm({ 
@@ -38,6 +48,8 @@ export default function ProductForm({
       description: "",
       link: "",
       imageUrl: "",
+      companyName: "",
+      country: "",
     },
   });
 
@@ -106,6 +118,46 @@ export default function ProductForm({
                       placeholder="Describe what makes this product extraordinary"
                       className="min-h-[100px]"
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter company name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <Select 
+                      value={field.value} 
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

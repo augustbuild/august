@@ -15,6 +15,8 @@ export const products = pgTable("products", {
   description: text("description").notNull(),
   link: text("link").notNull(),
   imageUrl: text("image_url").notNull(),
+  companyName: text("company_name").notNull(),
+  country: text("country").notNull(),
   userId: integer("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   score: integer("score").default(0).notNull(),
@@ -46,6 +48,8 @@ export const insertProductSchema = createInsertSchema(products).pick({
   description: true,
   link: true,
   imageUrl: true,
+  companyName: true,
+  country: true,
 });
 
 export const insertCommentSchema = createInsertSchema(comments).pick({
