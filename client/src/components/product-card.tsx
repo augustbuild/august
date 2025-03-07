@@ -161,7 +161,7 @@ export default function ProductCard({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 gap-2"
+                  className="h-7 px-2 flex items-center gap-1"
                 >
                   <MessageSquare className="h-4 w-4" />
                   {comments?.length || 0}
