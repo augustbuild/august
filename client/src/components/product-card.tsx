@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowBigDown, ArrowBigUp, MessageSquare, Link as LinkIcon } from "lucide-react";
@@ -57,77 +57,85 @@ export default function ProductCard({ product, showComments = true }: ProductCar
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start gap-4">
-        <div className="flex flex-col items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleVote(1)}
-            disabled={!user || voteMutation.isPending}
-            className={cn(vote?.value === 1 && "text-primary")}
-          >
-            <ArrowBigUp className="h-6 w-6" />
-          </Button>
-          <span className="font-bold">{product.score}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleVote(-1)}
-            disabled={!user || voteMutation.isPending}
-            className={cn(vote?.value === -1 && "text-primary")}
-          >
-            <ArrowBigDown className="h-6 w-6" />
-          </Button>
-        </div>
-
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={author?.avatarUrl || USER_AVATARS[product.userId % USER_AVATARS.length]} />
-              <AvatarFallback>{author?.username?.[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-muted-foreground">
-              Posted by {author?.username || "Anonymous"}
-            </span>
+      <CardContent className="p-4">
+        <div className="flex gap-4">
+          {/* Left side - Image */}
+          <div className="flex-shrink-0">
+            <img
+              src={product.imageUrl}
+              alt={product.title}
+              className="w-24 h-24 object-cover rounded-md"
+            />
           </div>
 
-          <Link href={`/products/${product.id}`}>
-            <a className="no-underline">
-              <h3 className="text-lg font-semibold hover:text-primary">
-                {product.title}
-              </h3>
-            </a>
-          </Link>
-        </div>
-      </CardHeader>
+          {/* Center - Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Avatar className="h-5 w-5">
+                <AvatarImage src={author?.avatarUrl || USER_AVATARS[product.userId % USER_AVATARS.length]} />
+                <AvatarFallback>{author?.username?.[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground">
+                Posted by {author?.username || "Anonymous"}
+              </span>
+            </div>
 
-      <CardContent>
-        <img
-          src={product.imageUrl}
-          alt={product.title}
-          className="w-full h-48 object-cover rounded-md mb-4"
-        />
-        <p className="text-muted-foreground mb-4">{product.description}</p>
-
-        <div className="flex items-center gap-4">
-          <a 
-            href={product.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-          >
-            <LinkIcon className="h-4 w-4" />
-            Visit Product
-          </a>
-
-          {showComments && (
             <Link href={`/products/${product.id}`}>
-              <a className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
-                <MessageSquare className="h-4 w-4" />
-                Discuss
+              <a className="no-underline">
+                <h3 className="text-lg font-semibold hover:text-primary truncate">
+                  {product.title}
+                </h3>
               </a>
             </Link>
-          )}
+
+            <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
+              {product.description}
+            </p>
+
+            <div className="flex items-center gap-4">
+              <a 
+                href={product.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+              >
+                <LinkIcon className="h-4 w-4" />
+                Visit Product
+              </a>
+
+              {showComments && (
+                <Link href={`/products/${product.id}`}>
+                  <a className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+                    <MessageSquare className="h-4 w-4" />
+                    Discuss
+                  </a>
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {/* Right side - Voting */}
+          <div className="flex flex-col items-center gap-1 ml-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleVote(1)}
+              disabled={!user || voteMutation.isPending}
+              className={cn("h-8 w-8", vote?.value === 1 && "text-primary")}
+            >
+              <ArrowBigUp className="h-5 w-5" />
+            </Button>
+            <span className="font-bold text-sm">{product.score}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleVote(-1)}
+              disabled={!user || voteMutation.isPending}
+              className={cn("h-8 w-8", vote?.value === -1 && "text-primary")}
+            >
+              <ArrowBigDown className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
