@@ -83,7 +83,6 @@ export default function ProductCard({
 
   const handleVote = () => {
     if (!user) return;
-    // If already upvoted, remove the vote (value: 0), otherwise upvote (value: 1)
     const newValue = vote?.value === 1 ? 0 : 1;
     voteMutation.mutate(newValue);
   };
@@ -139,38 +138,46 @@ export default function ProductCard({
               {product.description}
             </p>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleVote}
-                disabled={!user || voteMutation.isPending}
-                className={cn(vote?.value === 1 && "text-primary border-primary")}
-              >
-                <ArrowBigUp className="h-5 w-5 mr-1" />
-                {product.score}
+            <a 
+              href={product.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="no-underline"
+            >
+              <Button variant="outline" size="sm">
+                <ShoppingBag className="h-4 w-4" />
               </Button>
+            </a>
+          </div>
 
-              <a 
-                href={product.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="no-underline"
-              >
-                <Button variant="outline" size="sm">
-                  <ShoppingBag className="h-4 w-4" />
-                </Button>
-              </a>
-
-              {showComments && (
-                <Link href={`/products/${product.id}`}>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    {comments?.length || 0}
-                  </Button>
-                </Link>
+          {/* Right side - Interaction Buttons */}
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleVote}
+              disabled={!user || voteMutation.isPending}
+              className={cn(
+                "w-[72px] flex items-center justify-center",
+                vote?.value === 1 && "text-primary border-primary"
               )}
-            </div>
+            >
+              <ArrowBigUp className="h-5 w-5 mr-1" />
+              {product.score}
+            </Button>
+
+            {showComments && (
+              <Link href={`/products/${product.id}`}>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="w-[72px] flex items-center justify-center gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {comments?.length || 0}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </CardContent>
