@@ -1,5 +1,6 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2, Package } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
@@ -144,6 +145,20 @@ export default function ProductCard({
           <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
             {product.description}
           </p>
+
+          {/* Materials */}
+          {product.material && product.material.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              <div className="flex items-center text-muted-foreground">
+                <Package className="h-4 w-4 mr-1" />
+              </div>
+              {product.material.map((material) => (
+                <Badge key={material} variant="secondary" className="text-xs">
+                  {material}
+                </Badge>
+              ))}
+            </div>
+          )}
 
           <div className="flex items-center gap-2 mt-3">
             <Button
