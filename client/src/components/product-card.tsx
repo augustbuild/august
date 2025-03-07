@@ -140,45 +140,45 @@ export default function ProductCard({
           </p>
 
           <div className="flex items-center gap-2 mt-3">
-            <Button
-              variant={hasUpvoted ? "default" : "outline"}
-              size="icon"
-              onClick={handleVote}
-              disabled={!user || voteMutation.isPending}
-              className="h-7 w-7"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium">{product.score}</span>
-
-            <a
-              href={product.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-underline"
-            >
               <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
+                variant={hasUpvoted ? "default" : "outline"}
+                size="sm"
+                onClick={handleVote}
+                disabled={!user || voteMutation.isPending}
+                className="h-7 px-2 flex items-center gap-1"
               >
-                <ShoppingBag className="h-4 w-4" />
+                <ArrowUp className="h-4 w-4" />
+                <span className="text-sm font-medium">{product.score}</span>
               </Button>
-            </a>
 
-            {showComments && (
-              <Link href={`/products/${product.id}`}>
+              {showComments && (
+                <Link href={`/products/${product.id}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 flex items-center gap-1"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {comments?.length || 0}
+                  </Button>
+                </Link>
+              )}
+
+              <a
+                href={product.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="no-underline"
+              >
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="h-7 px-2 flex items-center gap-1"
+                  size="icon"
+                  className="h-7 w-7"
                 >
-                  <MessageSquare className="h-4 w-4" />
-                  {comments?.length || 0}
+                  <ShoppingBag className="h-4 w-4" />
                 </Button>
-              </Link>
-            )}
-          </div>
+              </a>
+            </div>
         </div>
       </div>
 
