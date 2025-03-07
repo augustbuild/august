@@ -21,11 +21,15 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             {user ? (
               <>
-                <Avatar>
-                  <AvatarImage src={user.avatarUrl} />
-                  <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">{user.username}</span>
+                <Link href="/profile">
+                  <Button variant="ghost" className="gap-2">
+                    <Avatar>
+                      <AvatarImage src={user.avatarUrl} />
+                      <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">{user.username}</span>
+                  </Button>
+                </Link>
                 <Button 
                   variant="outline" 
                   onClick={() => logoutMutation.mutate()}

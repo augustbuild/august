@@ -1,17 +1,42 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MessageSquare, Link as LinkIcon } from "lucide-react";
+import { ArrowBigUp, MessageSquare, Link as LinkIcon, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { type Product } from "@shared/schema";
+import { type Product, type Vote } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import ProductForm from "./product-form";
+import { useToast } from "@/hooks/use-toast";
 
-export default function ProductCard({ product, showComments = true }: { product: Product; showComments?: boolean }) {
+export default function ProductCard({ 
+  product, 
+  showComments = true,
+  isOwner = false 
+}: { 
+  product: Product; 
+  showComments?: boolean;
+  isOwner?: boolean;
+}) {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
-  const { data: vote } = useQuery({
+  const { data: vote } = useQuery<Vote>({
     queryKey: ["/api/votes", product.id],
     enabled: !!user,
   });
@@ -27,6 +52,27 @@ export default function ProductCard({ product, showComments = true }: { product:
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/votes", product.id] });
+    },
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/products/${product.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/products`] });
+      toast({
+        title: "Product deleted",
+        description: "Your product has been successfully deleted.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -52,13 +98,37 @@ export default function ProductCard({ product, showComments = true }: { product:
 
           {/* Center - Content */}
           <div className="flex-1 min-w-0">
-            <Link href={`/products/${product.id}`}>
-              <a className="no-underline">
-                <h3 className="text-lg font-semibold hover:text-primary truncate mb-2">
-                  {product.title}
-                </h3>
-              </a>
-            </Link>
+            <div className="flex items-center justify-between">
+              <Link href={`/products/${product.id}`}>
+                <a className="no-underline">
+                  <h3 className="text-lg font-semibold hover:text-primary truncate mb-2">
+                    {product.title}
+                  </h3>
+                </a>
+              </Link>
+              {isOwner && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onClick={() => deleteProductMutation.mutate()}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
 
             <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
               {product.description}
@@ -101,6 +171,19 @@ export default function ProductCard({ product, showComments = true }: { product:
           </div>
         </div>
       </CardContent>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+          </DialogHeader>
+          <ProductForm 
+            initialValues={product} 
+            onSuccess={() => setShowEditDialog(false)} 
+            isEditing={true}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

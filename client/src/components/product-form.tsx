@@ -9,12 +9,31 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
-export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
+interface Product {
+  id: number;
+  title: string;
+  description: string;
+  link: string;
+  imageUrl: string;
+}
+
+export default function ProductForm({ 
+  onSuccess,
+  initialValues,
+  isEditing = false
+}: { 
+  onSuccess?: () => void;
+  initialValues?: Product;
+  isEditing?: boolean;
+}) {
   const { toast } = useToast();
+  const { user } = useAuth();
+
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
-    defaultValues: {
+    defaultValues: initialValues || {
       title: "",
       description: "",
       link: "",
@@ -23,15 +42,24 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: typeof form.getValues) => {
-      const res = await apiRequest("POST", "/api/products", data);
+    mutationFn: async (data: Record<string, string>) => {
+      const res = await apiRequest(
+        isEditing ? "PATCH" : "POST",
+        isEditing ? `/api/products/${initialValues?.id}` : "/api/products",
+        data
+      );
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/products`] });
+      }
       toast({
-        title: "Product submitted",
-        description: "Your product has been successfully submitted.",
+        title: isEditing ? "Product updated" : "Product submitted",
+        description: isEditing 
+          ? "Your product has been successfully updated."
+          : "Your product has been successfully submitted.",
       });
       form.reset();
       onSuccess?.();
@@ -48,7 +76,7 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Submit a Product</CardTitle>
+        <CardTitle>{isEditing ? "Edit Product" : "Submit a Product"}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -118,7 +146,7 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
               )}
             />
             <Button type="submit" disabled={mutation.isPending}>
-              Submit Product
+              {isEditing ? "Save Changes" : "Submit Product"}
             </Button>
           </form>
         </Form>

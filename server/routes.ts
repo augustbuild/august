@@ -85,6 +85,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(vote);
   });
 
+  // User's products and comments
+  app.get("/api/users/:id/products", async (req, res) => {
+    const products = await storage.getUserProducts(parseInt(req.params.id));
+    res.json(products);
+  });
+
+  app.get("/api/users/:id/comments", async (req, res) => {
+    const comments = await storage.getUserComments(parseInt(req.params.id));
+    res.json(comments);
+  });
+
+  // Comment management
+  app.patch("/api/comments/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const comment = await storage.getComment(parseInt(req.params.id));
+    if (!comment) return res.sendStatus(404);
+    if (comment.userId !== req.user!.id) return res.sendStatus(403);
+
+    const updatedComment = await storage.updateComment(comment.id, req.body.content);
+    res.json(updatedComment);
+  });
+
+  app.delete("/api/comments/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const comment = await storage.getComment(parseInt(req.params.id));
+    if (!comment) return res.sendStatus(404);
+    if (comment.userId !== req.user!.id) return res.sendStatus(403);
+
+    await storage.deleteComment(comment.id);
+    res.sendStatus(204);
+  });
+
+  // Product management
+  app.patch("/api/products/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const product = await storage.getProduct(parseInt(req.params.id));
+    if (!product) return res.sendStatus(404);
+    if (product.userId !== req.user!.id) return res.sendStatus(403);
+
+    const validated = insertProductSchema.partial().safeParse(req.body);
+    if (!validated.success) return res.status(400).json(validated.error);
+
+    const updatedProduct = await storage.updateProduct(product.id, validated.data);
+    res.json(updatedProduct);
+  });
+
+  app.delete("/api/products/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const product = await storage.getProduct(parseInt(req.params.id));
+    if (!product) return res.sendStatus(404);
+    if (product.userId !== req.user!.id) return res.sendStatus(403);
+
+    await storage.deleteProduct(product.id);
+    res.sendStatus(204);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
