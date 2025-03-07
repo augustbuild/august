@@ -229,11 +229,10 @@ export default function ProductForm({
                               className="h-3 w-3 cursor-pointer hover:text-destructive"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                field.onChange(
-                                  Array.isArray(field.value) 
-                                    ? field.value.filter((m) => m !== material)
-                                    : []
-                                );
+                                const newValue = Array.isArray(field.value) 
+                                  ? field.value.filter((m) => m !== material)
+                                  : [];
+                                field.onChange(newValue);
                               }}
                             />
                           </Badge>
