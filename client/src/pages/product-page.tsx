@@ -11,34 +11,44 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 
 export default function ProductPage() {
-  const [_, params] = useRoute<{ id: string }>("/products/:id");
+  const [_, params] = useRoute<{ slug: string }>("/products/:slug");
   const { user } = useAuth();
 
-  const { data: product, isLoading } = useQuery<Product>({
-    queryKey: [`/api/products/${params?.id}`],
-    enabled: !!params?.id,
+  const { data: products } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
+  });
+
+  const product = products?.find(p => {
+    const titleSlug = `${p.title}-${p.companyName}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-+/g, '-');
+    return titleSlug === params?.slug;
   });
 
   const { data: vote } = useQuery<{ id: number; value: number }>({
-    queryKey: ["/api/votes", params?.id],
-    enabled: !!user && !!params?.id,
+    queryKey: ["/api/votes", product?.id],
+    enabled: !!user && !!product?.id,
   });
 
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
       const res = await apiRequest("POST", "/api/votes", {
-        productId: parseInt(params?.id || "0"),
+        productId: product?.id || 0,
         value,
       });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/products/${params?.id}`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/votes", params?.id] });
+      if (product?.id) {
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/votes", product.id] });
+      }
     },
   });
 
-  if (isLoading) {
+  if (!products) {
     return (
       <div className="flex justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

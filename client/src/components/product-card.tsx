@@ -23,6 +23,7 @@ import {
 import ProductForm from "./product-form";
 import { useToast } from "@/hooks/use-toast";
 import AuthModal from "./auth-modal";
+import { generateSlug } from "@/lib/utils";
 
 export default function ProductCard({
   product,
@@ -93,7 +94,7 @@ export default function ProductCard({
     voteMutation.mutate(newValue);
   };
 
-  const isUserProduct = user?.id === product.userId;
+  const productSlug = generateSlug(product.title, product.companyName);
   const hasUpvoted = vote?.value === 1;
 
   return (
@@ -111,7 +112,7 @@ export default function ProductCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <Link href={`/products/${product.id}`}>
+            <Link href={`/products/${productSlug}`}>
               <a className="no-underline">
                 <h3 className="text-lg font-semibold hover:text-primary truncate">
                   {product.title}
@@ -143,12 +144,12 @@ export default function ProductCard({
           </div>
 
           {!showComments ? (
-            <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
-              {product.description}
-            </p>
-          ) : (
             <p className="text-muted-foreground text-sm mt-1">
               {product.companyName}
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
+              {product.description}
             </p>
           )}
 
@@ -179,7 +180,7 @@ export default function ProductCard({
             </Button>
 
             {showComments && (
-              <Link href={`/products/${product.id}`}>
+              <Link href={`/products/${productSlug}`}>
                 <Button
                   variant="outline"
                   size="sm"
