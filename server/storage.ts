@@ -1,23 +1,26 @@
 import { users, products, votes, comments } from "@shared/schema";
 import type { User, InsertUser, Product, Comment, Vote } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   createProduct(product: Omit<Product, "id" | "score" | "createdAt">, userId: number): Promise<Product>;
   updateProductScore(id: number, score: number): Promise<void>;
-  
+
   getComments(productId: number): Promise<Comment[]>;
   createComment(comment: Omit<Comment, "id" | "createdAt">, userId: number): Promise<Comment>;
-  
+
   getVote(userId: number, productId: number): Promise<Vote | undefined>;
   createVote(vote: Omit<Vote, "id">, userId: number): Promise<Vote>;
   updateVote(id: number, value: number): Promise<Vote>;
@@ -25,119 +28,108 @@ export interface IStorage {
   sessionStore: session.SessionStore;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private products: Map<number, Product>;
-  private comments: Map<number, Comment>;
-  private votes: Map<number, Vote>;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.SessionStore;
-  
-  private userId: number = 1;
-  private productId: number = 1;
-  private commentId: number = 1;
-  private voteId: number = 1;
 
   constructor() {
-    this.users = new Map();
-    this.products = new Map();
-    this.comments = new Map();
-    this.votes = new Map();
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const user = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getProducts(): Promise<Product[]> {
-    return Array.from(this.products.values());
+    return await db.select().from(products);
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
-    return this.products.get(id);
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product;
   }
 
   async createProduct(
     product: Omit<Product, "id" | "score" | "createdAt">,
     userId: number,
   ): Promise<Product> {
-    const id = this.productId++;
-    const newProduct = {
-      ...product,
-      id,
-      userId,
-      score: 0,
-      createdAt: new Date(),
-    };
-    this.products.set(id, newProduct);
+    const [newProduct] = await db
+      .insert(products)
+      .values({ ...product, userId, score: 0 })
+      .returning();
     return newProduct;
   }
 
   async updateProductScore(id: number, score: number): Promise<void> {
-    const product = await this.getProduct(id);
-    if (product) {
-      this.products.set(id, { ...product, score });
-    }
+    await db
+      .update(products)
+      .set({ score })
+      .where(eq(products.id, id));
   }
 
   async getComments(productId: number): Promise<Comment[]> {
-    return Array.from(this.comments.values()).filter(
-      (comment) => comment.productId === productId,
-    );
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.productId, productId));
   }
 
   async createComment(
     comment: Omit<Comment, "id" | "createdAt">,
     userId: number,
   ): Promise<Comment> {
-    const id = this.commentId++;
-    const newComment = {
-      ...comment,
-      id,
-      userId,
-      createdAt: new Date(),
-    };
-    this.comments.set(id, newComment);
+    const [newComment] = await db
+      .insert(comments)
+      .values({ ...comment, userId })
+      .returning();
     return newComment;
   }
 
   async getVote(userId: number, productId: number): Promise<Vote | undefined> {
-    return Array.from(this.votes.values()).find(
-      (vote) => vote.userId === userId && vote.productId === productId,
-    );
+    const [vote] = await db
+      .select()
+      .from(votes)
+      .where(
+        and(
+          eq(votes.userId, userId),
+          eq(votes.productId, productId)
+        )
+      );
+    return vote;
   }
 
   async createVote(
     vote: Omit<Vote, "id">,
     userId: number,
   ): Promise<Vote> {
-    const id = this.voteId++;
-    const newVote = { ...vote, id, userId };
-    this.votes.set(id, newVote);
+    const [newVote] = await db
+      .insert(votes)
+      .values({ ...vote, userId })
+      .returning();
     return newVote;
   }
 
   async updateVote(id: number, value: number): Promise<Vote> {
-    const vote = this.votes.get(id)!;
-    const updatedVote = { ...vote, value };
-    this.votes.set(id, updatedVote);
+    const [updatedVote] = await db
+      .update(votes)
+      .set({ value })
+      .where(eq(votes.id, id))
+      .returning();
     return updatedVote;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
