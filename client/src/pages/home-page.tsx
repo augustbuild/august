@@ -77,7 +77,7 @@ export default function HomePage() {
               <ProductCard 
                 key={product.id} 
                 product={product}
-                showComments={false}
+                isFullView={false}
               />
             </div>
           ))}

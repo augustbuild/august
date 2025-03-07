@@ -30,7 +30,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">My Profile</h1>
-      
+
       <Tabs defaultValue="submissions" className="space-y-4">
         <TabsList>
           <TabsTrigger value="submissions">My Submissions</TabsTrigger>
@@ -45,7 +45,7 @@ export default function ProfilePage() {
               <ProductCard 
                 key={product.id} 
                 product={product} 
-                showComments={false}
+                isFullView={false}
                 isOwner={true}
               />
             ))

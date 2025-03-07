@@ -27,11 +27,11 @@ import { generateSlug } from "@/lib/utils";
 
 export default function ProductCard({
   product,
-  showComments = true,
+  isFullView = false,
   isOwner = false
 }: {
   product: Product;
-  showComments?: boolean;
+  isFullView?: boolean;
   isOwner?: boolean;
 }) {
   const { user } = useAuth();
@@ -47,7 +47,7 @@ export default function ProductCard({
 
   const { data: comments } = useQuery<Comment[]>({
     queryKey: [`/api/products/${product.id}/comments`],
-    enabled: showComments,
+    enabled: true,
   });
 
   const voteMutation = useMutation({
@@ -143,7 +143,7 @@ export default function ProductCard({
             )}
           </div>
 
-          {showComments ? (
+          {isFullView ? (
             <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
               {product.description}
             </p>
@@ -179,18 +179,16 @@ export default function ProductCard({
               <span className="text-sm font-medium">{product.score}</span>
             </Button>
 
-            {showComments && (
-              <Link href={`/products/${productSlug}`}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 flex items-center gap-1"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  {comments?.length || 0}
-                </Button>
-              </Link>
-            )}
+            <Link href={`/products/${productSlug}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 flex items-center gap-1"
+              >
+                <MessageSquare className="h-4 w-4" />
+                {comments?.length || 0}
+              </Button>
+            </Link>
 
             <a
               href={product.link}
