@@ -143,13 +143,13 @@ export default function ProductCard({
             )}
           </div>
 
-          {!showComments ? (
-            <p className="text-muted-foreground text-sm mt-1">
-              {product.companyName}
-            </p>
-          ) : (
+          {showComments ? (
             <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
               {product.description}
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-sm mt-1">
+              {product.companyName}
             </p>
           )}
 
