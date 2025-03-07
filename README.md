@@ -2,16 +2,6 @@
 
 A platform for celebrating extraordinary products and the people who build them.
 
-## Features
-
-- 🏷️ Submit and discover interesting products
-- ⬆️ Vote on your favorite submissions
-- 💬 Engage in discussions through comments
-- 👤 User authentication system
-- 📱 Responsive design
-- 🖼️ Image-enabled product cards
-- 🎯 Dynamic product card layout
-
 ## Tech Stack
 
 - Frontend: React.js with TypeScript
