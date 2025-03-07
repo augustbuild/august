@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowBigDown, ArrowBigUp, MessageSquare, Link as LinkIcon } from "lucide-react";
+import { ArrowBigUp, MessageSquare, Link as LinkIcon } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product } from "@shared/schema";
@@ -30,9 +30,11 @@ export default function ProductCard({ product, showComments = true }: { product:
     },
   });
 
-  const handleVote = (value: number) => {
+  const handleVote = () => {
     if (!user) return;
-    voteMutation.mutate(value);
+    // If already upvoted, remove the vote (value: 0), otherwise upvote (value: 1)
+    const newValue = vote?.value === 1 ? 0 : 1;
+    voteMutation.mutate(newValue);
   };
 
   return (
@@ -89,22 +91,13 @@ export default function ProductCard({ product, showComments = true }: { product:
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleVote(1)}
+              onClick={handleVote}
               disabled={!user || voteMutation.isPending}
               className={cn("h-8 w-8", vote?.value === 1 && "text-primary")}
             >
               <ArrowBigUp className="h-5 w-5" />
             </Button>
             <span className="font-bold text-sm">{product.score}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleVote(-1)}
-              disabled={!user || voteMutation.isPending}
-              className={cn("h-8 w-8", vote?.value === -1 && "text-primary")}
-            >
-              <ArrowBigDown className="h-5 w-5" />
-            </Button>
           </div>
         </div>
       </CardContent>
