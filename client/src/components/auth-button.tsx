@@ -11,7 +11,12 @@ import { User } from "lucide-react";
 
 export function AuthButton() {
   const { user, logoutMutation } = useAuth();
-  const [_, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+
+  // Don't show the auth button on the auth page
+  if (location === "/auth") {
+    return null;
+  }
 
   if (!user) {
     return (
