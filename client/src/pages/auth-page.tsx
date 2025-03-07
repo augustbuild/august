@@ -43,7 +43,7 @@ export default function AuthPage() {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-instrument italic">August</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Discover and vote on extraordinary products
+              A place to celebrate extraordinary products and the people who build them
             </p>
           </div>
 
@@ -56,7 +56,7 @@ export default function AuthPage() {
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Login to your account</CardTitle>
+                  <CardTitle>Login</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Form {...loginForm}>
@@ -148,16 +148,16 @@ export default function AuthPage() {
             <div className="flex h-full items-center justify-center p-8">
               <div className="max-w-md text-white">
                 <h2 className="text-3xl font-bold mb-6">
-                  Share and discover extraordinary products
+                  Discover extraordinary products
                 </h2>
                 <ul className="space-y-4">
                   <li className="flex items-center">
                     <span className="w-6 h-6 flex items-center justify-center rounded-full border border-white mr-3">1</span>
-                    Submit your favorite products
+                    Share your favorite products
                   </li>
                   <li className="flex items-center">
                     <span className="w-6 h-6 flex items-center justify-center rounded-full border border-white mr-3">2</span>
-                    Vote on submissions
+                    Vote for the best products
                   </li>
                   <li className="flex items-center">
                     <span className="w-6 h-6 flex items-center justify-center rounded-full border border-white mr-3">3</span>
