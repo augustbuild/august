@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { User } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { user, logoutMutation } = useAuth();
@@ -18,8 +19,8 @@ const Navbar: React.FC = () => {
           {user ? (
             <>
               <Link href="/profile">
-                <Button variant="outline" className="gap-2">
-                  <span className="text-sm font-medium">{user.username}</span>
+                <Button variant="outline" size="icon" className="h-9 w-9">
+                  <User className="h-5 w-5" />
                 </Button>
               </Link>
               <Button 
