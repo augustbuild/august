@@ -26,8 +26,9 @@ type ProductCardProps = {
 export default function ProductCard({ product, showComments = true }: ProductCardProps) {
   const { user } = useAuth();
 
-  const { data: author } = useQuery<User>({
-    queryKey: ["/api/users", product.userId],
+  const { data: author } = useQuery<Omit<User, "password">>({
+    queryKey: [`/api/users/${product.userId}`],
+    enabled: !!product.userId,
   });
 
   const { data: vote } = useQuery({
