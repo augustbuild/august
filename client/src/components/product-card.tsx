@@ -182,7 +182,7 @@ export default function ProductCard({
           )}
         >
           <div className="flex items-center gap-1">
-            <ArrowUp strokeWidth={4} className="h-10 w-10" />
+            <ArrowUp strokeWidth={4} className="h-14 w-14" />
             <span className="text-2xl font-medium leading-none">{product.score}</span>
           </div>
         </Button>
