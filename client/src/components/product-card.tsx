@@ -1,9 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MessageSquare, Link as LinkIcon, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { ArrowBigUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { type Product, type Vote } from "@shared/schema";
+import { type Product, type Vote, type Comment } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,11 @@ export default function ProductCard({
   const { data: vote } = useQuery<Vote>({
     queryKey: ["/api/votes", product.id],
     enabled: !!user,
+  });
+
+  const { data: comments } = useQuery<Comment[]>({
+    queryKey: [`/api/products/${product.id}/comments`],
+    enabled: showComments,
   });
 
   const voteMutation = useMutation({
@@ -152,9 +157,8 @@ export default function ProductCard({
                 rel="noopener noreferrer"
                 className="no-underline"
               >
-                <Button variant="outline" size="sm" className="gap-2">
-                  <LinkIcon className="h-4 w-4" />
-                  Visit Product
+                <Button variant="outline" size="sm">
+                  <ShoppingBag className="h-4 w-4" />
                 </Button>
               </a>
 
@@ -162,7 +166,7 @@ export default function ProductCard({
                 <Link href={`/products/${product.id}`}>
                   <Button variant="outline" size="sm" className="gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    Discuss
+                    {comments?.length || 0}
                   </Button>
                 </Link>
               )}
