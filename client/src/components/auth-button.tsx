@@ -1,6 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,25 +7,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "lucide-react";
+import { useState } from "react";
+import { useLocation } from "wouter";
+import AuthModal from "./auth-modal";
 
 export function AuthButton() {
   const { user, logoutMutation } = useAuth();
-  const [location, setLocation] = useLocation();
-
-  // Don't show the auth button on the auth page
-  if (location === "/auth") {
-    return null;
-  }
+  const [_, setLocation] = useLocation();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   if (!user) {
     return (
-      <Button 
-        variant="ghost" 
-        onClick={() => setLocation("/auth")}
-        className="text-foreground"
-      >
-        Login
-      </Button>
+      <>
+        <Button 
+          variant="ghost" 
+          onClick={() => setShowAuthModal(true)}
+          className="text-foreground"
+        >
+          Login
+        </Button>
+        <AuthModal
+          open={showAuthModal}
+          onOpenChange={setShowAuthModal}
+        />
+      </>
     );
   }
 

@@ -10,7 +10,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { Comment, User } from "@shared/schema";
-import { useLocation } from "wouter";
+import { useState } from "react";
+import AuthModal from "./auth-modal";
 
 type CommentProps = {
   comment: Comment;
@@ -21,7 +22,7 @@ type CommentProps = {
 function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [_, setLocation] = useLocation();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const { data: author } = useQuery<User>({
     queryKey: [`/api/users/${comment.userId}`],
@@ -97,14 +98,20 @@ function CommentComponent({ comment, productId, depth = 0 }: CommentProps) {
               </form>
             </Form>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation("/auth")}
-              className="mt-2"
-            >
-              Login to reply
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAuthModal(true)}
+                className="mt-2"
+              >
+                Login to reply
+              </Button>
+              <AuthModal
+                open={showAuthModal}
+                onOpenChange={setShowAuthModal}
+              />
+            </>
           )}
 
           {replies?.map((reply) => (
@@ -128,7 +135,7 @@ type CommentThreadProps = {
 export default function CommentThread({ productId }: CommentThreadProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [_, setLocation] = useLocation();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const { data: comments } = useQuery<Comment[]>({
     queryKey: [`/api/products/${productId}/comments`],
@@ -191,11 +198,15 @@ export default function CommentThread({ productId }: CommentThreadProps) {
         <div className="mb-6">
           <Button
             variant="outline"
-            onClick={() => setLocation("/auth")}
+            onClick={() => setShowAuthModal(true)}
             className="w-full"
           >
             Login to join the discussion
           </Button>
+          <AuthModal
+            open={showAuthModal}
+            onOpenChange={setShowAuthModal}
+          />
         </div>
       )}
 

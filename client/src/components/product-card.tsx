@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import ProductForm from "./product-form";
 import { useToast } from "@/hooks/use-toast";
+import AuthModal from "./auth-modal";
 
 export default function ProductCard({
   product,
@@ -35,6 +36,7 @@ export default function ProductCard({
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const { data: vote } = useQuery<Vote>({
     queryKey: ["/api/votes", product.id],
@@ -83,7 +85,7 @@ export default function ProductCard({
 
   const handleVote = () => {
     if (!user) {
-      setLocation("/auth");
+      setShowAuthModal(true);
       return;
     }
     const newValue = vote?.value === 1 ? 0 : 1;
@@ -144,45 +146,45 @@ export default function ProductCard({
           </p>
 
           <div className="flex items-center gap-2 mt-3">
-              <Button
-                variant={hasUpvoted ? "default" : "outline"}
-                size="sm"
-                onClick={handleVote}
-                disabled={voteMutation.isPending}
-                className="h-7 px-2 flex items-center gap-1"
-              >
-                <ArrowUp className="h-4 w-4" />
-                <span className="text-sm font-medium">{product.score}</span>
-              </Button>
+            <Button
+              variant={hasUpvoted ? "default" : "outline"}
+              size="sm"
+              onClick={handleVote}
+              disabled={voteMutation.isPending}
+              className="h-7 px-2 flex items-center gap-1"
+            >
+              <ArrowUp className="h-4 w-4" />
+              <span className="text-sm font-medium">{product.score}</span>
+            </Button>
 
-              {showComments && (
-                <Link href={`/products/${product.id}`}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 flex items-center gap-1"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    {comments?.length || 0}
-                  </Button>
-                </Link>
-              )}
-
-              <a
-                href={product.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="no-underline"
-              >
+            {showComments && (
+              <Link href={`/products/${product.id}`}>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-7 w-7"
+                  size="sm"
+                  className="h-7 px-2 flex items-center gap-1"
                 >
-                  <ShoppingBag className="h-4 w-4" />
+                  <MessageSquare className="h-4 w-4" />
+                  {comments?.length || 0}
                 </Button>
-              </a>
-            </div>
+              </Link>
+            )}
+
+            <a
+              href={product.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="no-underline"
+            >
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+              >
+                <ShoppingBag className="h-4 w-4" />
+              </Button>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -198,6 +200,11 @@ export default function ProductCard({
           />
         </DialogContent>
       </Dialog>
+
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+      />
     </>
   );
 }
