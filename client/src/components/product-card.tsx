@@ -182,8 +182,8 @@ export default function ProductCard({
           )}
         >
           <div className="flex items-center">
-            <ArrowBigUp className="h-12 w-12 mr-2" />
-            <span className="text-2xl font-medium">{product.score}</span>
+            <ArrowBigUp className="h-16 w-16 mr-2" />
+            <span className="text-3xl font-medium leading-none">{product.score}</span>
           </div>
         </Button>
       </div>
