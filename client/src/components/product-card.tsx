@@ -107,17 +107,24 @@ export default function ProductCard({
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <Link href={`/products/${productSlug}`}>
             <a className="no-underline">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold hover:text-primary truncate">
-                  {product.title}
-                </h3>
-                {product.featured && (
-                  <Badge variant="default" className="text-xs">
-                    Featured
-                  </Badge>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold hover:text-primary truncate">
+                    {product.title}
+                  </h3>
+                  {product.featured && (
+                    <Badge variant="default" className="text-xs">
+                      Featured
+                    </Badge>
+                  )}
+                </div>
+                {!isFullView && (
+                  <p className="text-muted-foreground text-sm">
+                    {product.companyName}
+                  </p>
                 )}
               </div>
             </a>
@@ -146,13 +153,9 @@ export default function ProductCard({
           )}
         </div>
 
-        {isFullView ? (
-          <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
+        {isFullView && (
+          <p className="text-muted-foreground whitespace-pre-wrap mt-2">
             {product.description}
-          </p>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            {product.companyName}
           </p>
         )}
 
