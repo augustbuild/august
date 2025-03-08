@@ -151,7 +151,7 @@ export default function ProductCard({
             {product.description}
           </p>
         ) : (
-          <p className="text-muted-foreground text-sm mt-1"> {/* Changed mt-0.5 to mt-1 for consistency */}
+          <p className="text-muted-foreground text-sm">
             {product.companyName}
           </p>
         )}
