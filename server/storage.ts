@@ -9,30 +9,34 @@ import { pool } from "./db";
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
+  sessionStore: session.Store;
+
+  // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
+  // Product operations
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   createProduct(product: Omit<Product, "id" | "score" | "createdAt">): Promise<Product>;
-  updateProductScore(id: number, score: number): Promise<void>;
-  getUserProducts(userId: number): Promise<Product[]>;
-  deleteProduct(id: number): Promise<void>;
   updateProduct(id: number, product: Partial<Product>): Promise<Product>;
+  deleteProduct(id: number): Promise<void>;
+  getUserProducts(userId: number): Promise<Product[]>;
+  updateProductScore(id: number, score: number): Promise<void>;
 
+  // Comment operations
   getComments(productId: number): Promise<Comment[]>;
   createComment(comment: Omit<Comment, "id" | "createdAt">): Promise<Comment>;
   getUserComments(userId: number): Promise<Comment[]>;
-  deleteComment(id: number): Promise<void>;
-  updateComment(id: number, content: string): Promise<Comment>;
   getComment(id: number): Promise<Comment | undefined>;
+  updateComment(id: number, content: string): Promise<Comment>;
+  deleteComment(id: number): Promise<void>;
 
+  // Vote operations
   getVote(userId: number, productId: number): Promise<Vote | undefined>;
   createVote(vote: Omit<Vote, "id">): Promise<Vote>;
   updateVote(id: number, value: number): Promise<Vote>;
-
-  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -45,6 +49,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -60,6 +65,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  // Product operations
   async getProducts(): Promise<Product[]> {
     return await db.select().from(products);
   }
@@ -70,17 +76,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(product: Omit<Product, "id" | "score" | "createdAt">): Promise<Product> {
-    // Validate required fields
     if (!product.userId || typeof product.userId !== 'number') {
       throw new Error("Valid user ID is required to create a product");
     }
 
     try {
-      console.log('[Storage] Creating product with data:', {
-        ...product,
-        userId: product.userId
-      });
-
       const [newProduct] = await db
         .insert(products)
         .values({ 
@@ -100,26 +100,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateProductScore(id: number, score: number): Promise<void> {
-    await db
-      .update(products)
-      .set({ score })
-      .where(eq(products.id, id));
-  }
-
-  async getUserProducts(userId: number): Promise<Product[]> {
-    return await db
-      .select()
-      .from(products)
-      .where(eq(products.userId, userId));
-  }
-
-  async deleteProduct(id: number): Promise<void> {
-    await db
-      .delete(products)
-      .where(eq(products.id, id));
-  }
-
   async updateProduct(id: number, product: Partial<Product>): Promise<Product> {
     const [updatedProduct] = await db
       .update(products)
@@ -129,6 +109,25 @@ export class DatabaseStorage implements IStorage {
     return updatedProduct;
   }
 
+  async deleteProduct(id: number): Promise<void> {
+    await db.delete(products).where(eq(products.id, id));
+  }
+
+  async getUserProducts(userId: number): Promise<Product[]> {
+    return await db
+      .select()
+      .from(products)
+      .where(eq(products.userId, userId));
+  }
+
+  async updateProductScore(id: number, score: number): Promise<void> {
+    await db
+      .update(products)
+      .set({ score })
+      .where(eq(products.id, id));
+  }
+
+  // Comment operations
   async getComments(productId: number): Promise<Comment[]> {
     return await db
       .select()
@@ -151,10 +150,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(comments.userId, userId));
   }
 
-  async deleteComment(id: number): Promise<void> {
-    await db
-      .delete(comments)
+  async getComment(id: number): Promise<Comment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(comments)
       .where(eq(comments.id, id));
+    return comment;
   }
 
   async updateComment(id: number, content: string): Promise<Comment> {
@@ -166,14 +167,11 @@ export class DatabaseStorage implements IStorage {
     return comment;
   }
 
-  async getComment(id: number): Promise<Comment | undefined> {
-    const [comment] = await db
-      .select()
-      .from(comments)
-      .where(eq(comments.id, id));
-    return comment;
+  async deleteComment(id: number): Promise<void> {
+    await db.delete(comments).where(eq(comments.id, id));
   }
 
+  // Vote operations
   async getVote(userId: number, productId: number): Promise<Vote | undefined> {
     const [vote] = await db
       .select()
