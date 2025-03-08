@@ -5,25 +5,21 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 
-type FilterType = "material" | "country" | "collection";
-
 export default function FilteredProductsPage() {
   const [location, setLocation] = useLocation();
-  const params = new URLSearchParams(location.split("?")[1]);
-  const filterType = params.get("type") as FilterType;
-  const value = params.get("value");
+  const [_, type, value] = location.split('/');
 
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     select: (products) => {
       return products.filter((product) => {
-        switch (filterType) {
-          case "material":
-            return product.material?.includes(value!);
-          case "country":
-            return product.country === value;
-          case "collection":
-            return product.collection === value;
+        switch (type) {
+          case "materials":
+            return product.material?.includes(decodeURIComponent(value));
+          case "countries":
+            return product.country === decodeURIComponent(value);
+          case "collections":
+            return product.collection === decodeURIComponent(value);
           default:
             return false;
         }
@@ -31,7 +27,8 @@ export default function FilteredProductsPage() {
     },
   });
 
-  const filterTypeDisplay = filterType.charAt(0).toUpperCase() + filterType.slice(1);
+  const typeDisplay = type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1).substring(1);
+  const valueDisplay = decodeURIComponent(value);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -40,7 +37,7 @@ export default function FilteredProductsPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-2xl font-bold">
-          {filterTypeDisplay}: {value}
+          {typeDisplay}: {valueDisplay}
         </h1>
       </div>
 
@@ -50,7 +47,7 @@ export default function FilteredProductsPage() {
         </div>
       ) : products?.length === 0 ? (
         <p className="text-muted-foreground">
-          No products found for this {filterType}.
+          No products found for this {typeDisplay.toLowerCase()}.
         </p>
       ) : (
         <div className="divide-y divide-border">

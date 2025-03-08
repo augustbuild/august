@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { cn } from "@/lib/utils";
+import { cn, generateSlug, getCountryFlag } from "@/lib/utils";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -23,7 +23,6 @@ import {
 import ProductForm from "./product-form";
 import { useToast } from "@/hooks/use-toast";
 import AuthModal from "./auth-modal";
-import { generateSlug, getCountryFlag } from "@/lib/utils";
 
 export default function ProductCard({
   product,
@@ -196,7 +195,7 @@ export default function ProductCard({
               {product.material.map((material) => (
                 <Link
                   key={material}
-                  href={`/products/filter?type=material&value=${encodeURIComponent(material)}`}
+                  href={`/materials/${encodeURIComponent(material)}`}
                 >
                   <Badge
                     variant="secondary"
@@ -210,7 +209,7 @@ export default function ProductCard({
           )}
           <div className="flex items-center gap-1">
             <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            <Link href={`/products/filter?type=collection&value=${encodeURIComponent(product.collection)}`}>
+            <Link href={`/collections/${encodeURIComponent(product.collection)}`}>
               <Badge
                 variant="secondary"
                 className="text-xs cursor-pointer hover:bg-secondary/80"
@@ -221,7 +220,7 @@ export default function ProductCard({
           </div>
           <div className="flex items-center gap-1">
             <Globe className="h-4 w-4 text-muted-foreground" />
-            <Link href={`/products/filter?type=country&value=${encodeURIComponent(product.country)}`}>
+            <Link href={`/countries/${encodeURIComponent(product.country)}`}>
               <Badge
                 variant="secondary"
                 className="text-xs cursor-pointer hover:bg-secondary/80"
