@@ -104,7 +104,7 @@ export default function ProductCard({
           <img
             src={product.imageUrl}
             alt={product.title}
-            className="w-24 h-24 object-cover rounded-md"
+            className="w-24 h-24 object-contain bg-white rounded-md"
           />
         </div>
 
