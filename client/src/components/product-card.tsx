@@ -121,11 +121,11 @@ export default function ProductCard({
 
   return (
     <div className="flex gap-3">
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 relative w-24 aspect-square rounded-md overflow-hidden bg-white">
         <img
           src={product.imageUrl}
           alt={product.title}
-          className="w-24 h-24 object-contain bg-white rounded-md"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
 
