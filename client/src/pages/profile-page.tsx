@@ -41,14 +41,18 @@ export default function ProfilePage() {
           {userProducts?.length === 0 ? (
             <p className="text-muted-foreground">You haven't submitted any products yet.</p>
           ) : (
-            userProducts?.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                isFullView={false}
-                isOwner={true}
-              />
-            ))
+            <div className="divide-y divide-border">
+              {userProducts?.map((product) => (
+                <div key={product.id} className="py-4 first:pt-0 last:pb-0">
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    isFullView={false}
+                    isOwner={true}
+                  />
+                </div>
+              ))}
+            </div>
           )}
         </TabsContent>
 
