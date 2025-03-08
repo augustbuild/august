@@ -60,8 +60,10 @@ export default function HomePage() {
               Submit Product
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <ProductForm onSuccess={() => setShowProductForm(false)} />
+          <DialogContent className="max-h-[90vh] flex flex-col">
+            <div className="overflow-y-auto pr-2">
+              <ProductForm onSuccess={() => setShowProductForm(false)} />
+            </div>
           </DialogContent>
         </Dialog>
       </div>

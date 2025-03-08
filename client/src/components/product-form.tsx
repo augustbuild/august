@@ -184,7 +184,7 @@ export default function ProductForm({
     <div>
       <h2 className="text-2xl font-semibold mb-6">{isEditing ? "Edit Product" : "Submit a Product"}</h2>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+        <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4 pb-4">
           <FormField
             control={form.control}
             name="title"
@@ -365,9 +365,11 @@ export default function ProductForm({
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={mutation.isPending}>
-            {isEditing ? "Save Changes" : "Submit Product"}
-          </Button>
+          <div className="sticky bottom-0 pt-4 bg-background">
+            <Button type="submit" disabled={mutation.isPending}>
+              {isEditing ? "Save Changes" : "Submit Product"}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>
