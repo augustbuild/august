@@ -201,7 +201,8 @@ export default function ProductForm({
   const [countrySearch, setCountrySearch] = useState("");
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
-  const [wantsFeatured, setWantsFeatured] = useState(false);
+  const [wantsFeatured, setWantsFeatured] = useState(initialValues?.featured || false); // Preserve featured status
+
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
@@ -215,7 +216,7 @@ export default function ProductForm({
         country: "",
         material: [] as string[],
         collection: "",
-        featured: false, // Added default value for featured
+        featured: false,
       }),
     },
   });
@@ -273,8 +274,8 @@ export default function ProductForm({
   );
 
   const handleSubmit = async (data: any) => {
-    if (wantsFeatured && !isEditing) {
-      // Get payment intent from server
+    // If in edit mode and user wants to enable featured
+    if (isEditing && wantsFeatured && !initialValues?.featured) {
       const res = await apiRequest("POST", "/api/create-payment-intent");
       const { clientSecret } = await res.json();
       setStripeClientSecret(clientSecret);
@@ -282,7 +283,16 @@ export default function ProductForm({
       return;
     }
 
-    mutation.mutate(data);
+    // For new products
+    if (!isEditing && wantsFeatured) {
+      const res = await apiRequest("POST", "/api/create-payment-intent");
+      const { clientSecret } = await res.json();
+      setStripeClientSecret(clientSecret);
+      setShowStripeCheckout(true);
+      return;
+    }
+
+    mutation.mutate({ ...data, featured: wantsFeatured });
   };
 
   return (
@@ -577,7 +587,10 @@ export default function ProductForm({
                   <Checkbox
                     id="featured"
                     checked={form.getValues("featured")}
-                    disabled={true}
+                    onCheckedChange={(checked) => {
+                      form.setValue("featured", checked);
+                      setWantsFeatured(checked);
+                    }}
                   />
                   <label
                     htmlFor="featured"
