@@ -98,144 +98,160 @@ export default function ProductCard({
   const hasUpvoted = vote?.value === 1;
 
   return (
-    <>
-      <div className="flex gap-3">
-        <div className="flex-shrink-0">
-          <img
-            src={product.imageUrl}
-            alt={product.title}
-            className="w-24 h-24 object-contain bg-white rounded-md"
-          />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <Link href={`/products/${productSlug}`}>
-              <a className="no-underline">
-                <h3 className="text-lg font-semibold hover:text-primary truncate">
-                  {product.title}
-                </h3>
-              </a>
-            </Link>
-            {isOwner && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => deleteProductMutation.mutate()}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-
-          {isFullView ? (
-            <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
-              {product.description}
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm mt-1">
-              {product.companyName}
-            </p>
-          )}
-
-          <div className="flex items-center gap-2 mt-3">
-            <Button
-              variant={hasUpvoted ? "default" : "outline"}
-              size="sm"
-              onClick={handleVote}
-              disabled={voteMutation.isPending}
-              className="h-7 px-2 flex items-center gap-1"
-            >
-              <ArrowUp className="h-4 w-4" />
-              <span className="text-sm font-medium">{product.score}</span>
-            </Button>
-
-            <Link href={`/products/${productSlug}`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 flex items-center gap-1"
-              >
-                <MessageSquare className="h-4 w-4" />
-                {comments?.length || 0}
-              </Button>
-            </Link>
-
-            <a
-              href={product.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-underline"
-            >
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-              >
-                <ShoppingBag className="h-4 w-4" />
-              </Button>
-            </a>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-3">
-            {product.material && product.material.length > 0 && (
-              <div className="flex flex-wrap gap-1 items-center">
-                <Package className="h-4 w-4 text-muted-foreground" />
-                {product.material.map((material) => (
-                  <Badge key={material} variant="secondary" className="text-xs">
-                    {material}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <FolderOpen className="h-4 w-4 text-muted-foreground" />
-              <Badge variant="secondary" className="text-xs">
-                {product.collection}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-1">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <Badge variant="secondary" className="text-xs">
-                {getCountryFlag(product.country)} {product.country}
-              </Badge>
-            </div>
-          </div>
-        </div>
+    <div className="flex gap-3">
+      <div className="flex-shrink-0">
+        <img
+          src={product.imageUrl}
+          alt={product.title}
+          className="w-24 h-24 object-contain bg-white rounded-md"
+        />
       </div>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-          </DialogHeader>
-          <div className="overflow-y-auto pr-2">
-            <ProductForm
-              initialValues={{...product}}
-              onSuccess={() => setShowEditDialog(false)}
-              isEditing={true}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <Link href={`/products/${productSlug}`}>
+            <a className="no-underline">
+              <h3 className="text-lg font-semibold hover:text-primary truncate">
+                {product.title}
+              </h3>
+            </a>
+          </Link>
+          {isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => deleteProductMutation.mutate()}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
 
-      <AuthModal
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-      />
-    </>
+        {isFullView ? (
+          <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
+            {product.description}
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-sm mt-1">
+            {product.companyName}
+          </p>
+        )}
+
+        <div className="flex items-center gap-2 mt-3">
+          <Button
+            variant={hasUpvoted ? "default" : "outline"}
+            size="sm"
+            onClick={handleVote}
+            disabled={voteMutation.isPending}
+            className="h-7 px-2 flex items-center gap-1"
+          >
+            <ArrowUp className="h-4 w-4" />
+            <span className="text-sm font-medium">{product.score}</span>
+          </Button>
+
+          <Link href={`/products/${productSlug}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 flex items-center gap-1"
+            >
+              <MessageSquare className="h-4 w-4" />
+              {comments?.length || 0}
+            </Button>
+          </Link>
+
+          <a
+            href={product.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="no-underline"
+          >
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+            >
+              <ShoppingBag className="h-4 w-4" />
+            </Button>
+          </a>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-3">
+          {product.material && product.material.length > 0 && (
+            <div className="flex flex-wrap gap-1 items-center">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              {product.material.map((material) => (
+                <Link
+                  key={material}
+                  href={`/products/filter?type=material&value=${encodeURIComponent(material)}`}
+                >
+                  <Badge
+                    variant="secondary"
+                    className="text-xs cursor-pointer hover:bg-secondary/80"
+                  >
+                    {material}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <Link href={`/products/filter?type=collection&value=${encodeURIComponent(product.collection)}`}>
+              <Badge
+                variant="secondary"
+                className="text-xs cursor-pointer hover:bg-secondary/80"
+              >
+                {product.collection}
+              </Badge>
+            </Link>
+          </div>
+          <div className="flex items-center gap-1">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <Link href={`/products/filter?type=country&value=${encodeURIComponent(product.country)}`}>
+              <Badge
+                variant="secondary"
+                className="text-xs cursor-pointer hover:bg-secondary/80"
+              >
+                {getCountryFlag(product.country)} {product.country}
+              </Badge>
+            </Link>
+          </div>
+        </div>
+
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Edit Product</DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto pr-2">
+              <ProductForm
+                initialValues={{ ...product }}
+                onSuccess={() => setShowEditDialog(false)}
+                isEditing={true}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <AuthModal
+          open={showAuthModal}
+          onOpenChange={setShowAuthModal}
+        />
+      </div>
+    </div>
   );
 }
