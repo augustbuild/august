@@ -5,22 +5,57 @@ import { setupAuth } from "./auth";
 import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
 import Stripe from "stripe";
 
-// Initialize Stripe only if secret key is available
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
-  : null;
+// Initialize Stripe with better error handling
+let stripe: Stripe | null = null;
+try {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn('Stripe payments disabled: Missing STRIPE_SECRET_KEY');
+  } else {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { 
+      apiVersion: "2023-10-16" as const 
+    });
+  }
+} catch (error) {
+  console.error('Failed to initialize Stripe:', error);
+}
 
 // Helper function to safely access Stripe
 const getStripe = () => {
   if (!stripe) {
-    console.warn('Stripe is not configured. Set STRIPE_SECRET_KEY environment variable.');
-    return null;
+    throw new Error('Stripe is not configured. Please check your environment variables.');
   }
   return stripe;
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Stripe payment intent route with better error handling
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(503).json({ 
+          error: "Stripe payments are currently unavailable",
+          stripeNotConfigured: true
+        });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: 10000, // $100 in cents
+        currency: "usd",
+        payment_method_types: ["card"],
+        setup_future_usage: "off_session",
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Stripe payment intent creation failed:", error);
+      res.status(500).json({ 
+        error: "Failed to create payment intent",
+        message: error.message 
+      });
+    }
+  });
 
   // Users
   app.get("/api/users/:id", async (req, res) => {
@@ -70,30 +105,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Stripe payment intent
-  app.post("/api/create-payment-intent", async (req, res) => {
-    const stripeInstance = getStripe();
-    
-    if (!stripeInstance) {
-      return res.status(503).json({ 
-        message: "Payment service unavailable. Please contact support.",
-        stripeNotConfigured: true
-      });
-    }
-    
-    try {
-      const paymentIntent = await stripeInstance.paymentIntents.create({
-        amount: 10000, // $100 in cents
-        currency: "usd",
-        payment_method_types: ["card"],
-        // Set up recurring billing
-        setup_future_usage: "off_session",
-      });
-      res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error: any) {
-      res.status(500).json({ message: "Error creating payment intent: " + error.message });
-    }
-  });
 
   // Comments
   app.get("/api/products/:id/comments", async (req, res) => {
