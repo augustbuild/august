@@ -27,7 +27,21 @@ export default function FilteredProductsPage() {
     },
   });
 
-  const typeDisplay = type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1).substring(1);
+  // Mapping plural route names to singular display names
+  const getTypeDisplay = (type: string) => {
+    switch (type) {
+      case "materials":
+        return "Material";
+      case "countries":
+        return "Country";
+      case "collections":
+        return "Collection";
+      default:
+        return type;
+    }
+  };
+
+  const typeDisplay = getTypeDisplay(type);
   const valueDisplay = decodeURIComponent(value);
 
   return (
