@@ -260,7 +260,11 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter product name" />
+                  <Input 
+                    {...field} 
+                    placeholder="Enter product name" 
+                    className="focus:ring-0 focus:border-foreground"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -276,7 +280,7 @@ export default function ProductForm({
                   <Textarea
                     {...field}
                     placeholder="Describe what makes this product extraordinary"
-                    className="min-h-[100px]"
+                    className="min-h-[100px] focus:ring-0 focus:border-foreground"
                   />
                 </FormControl>
                 <FormMessage />
@@ -294,7 +298,7 @@ export default function ProductForm({
                     value={field.value}
                     onValueChange={field.onChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="focus:ring-0 focus:border-foreground">
                       <SelectValue placeholder="Select collection" />
                     </SelectTrigger>
                     <SelectContent>
@@ -340,7 +344,7 @@ export default function ProductForm({
                         variant="outline"
                         role="combobox"
                         aria-expanded={materialsOpen}
-                        className="w-full justify-between"
+                        className="w-full justify-between focus:ring-0 focus:border-foreground"
                       >
                         <span className="text-muted-foreground">Select materials</span>
                         <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -352,6 +356,7 @@ export default function ProductForm({
                           placeholder="Search materials..."
                           value={materialSearch}
                           onValueChange={setMaterialSearch}
+                          className="focus:ring-0 focus:border-foreground"
                         />
                         <CommandEmpty>No materials found.</CommandEmpty>
                         <CommandGroup className="max-h-64 overflow-auto">
@@ -387,7 +392,11 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Company Name</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter company name" />
+                  <Input 
+                    {...field} 
+                    placeholder="Enter company name" 
+                    className="focus:ring-0 focus:border-foreground"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -404,7 +413,7 @@ export default function ProductForm({
                     value={field.value}
                     onValueChange={field.onChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="focus:ring-0 focus:border-foreground">
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent>
@@ -431,6 +440,7 @@ export default function ProductForm({
                     {...field}
                     type="url"
                     placeholder="https://example.com"
+                    className="focus:ring-0 focus:border-foreground"
                   />
                 </FormControl>
                 <FormMessage />
@@ -448,6 +458,7 @@ export default function ProductForm({
                     {...field}
                     type="url"
                     placeholder="https://example.com/image.jpg"
+                    className="focus:ring-0 focus:border-foreground"
                   />
                 </FormControl>
                 <FormMessage />
