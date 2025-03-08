@@ -3,6 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
+import Stripe from "stripe";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -36,6 +44,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const product = await storage.createProduct(validated.data, req.user!.id);
     res.status(201).json(product);
+  });
+
+  // Stripe payment intent
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: 10000, // $100 in cents
+        currency: "usd",
+        payment_method_types: ["card"],
+        // Set up recurring billing
+        setup_future_usage: "off_session",
+      });
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
   });
 
   // Comments

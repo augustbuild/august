@@ -16,6 +16,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import StripeCheckout from "./stripe-checkout";
 
 // Materials list sorted alphabetically
 const materials = [
@@ -172,6 +174,7 @@ interface Product {
   country: string;
   material: string[];
   collection: string;
+  featured?: boolean; // Added featured property
 }
 
 const getCountryFlag = (country: string) => {
@@ -196,6 +199,9 @@ export default function ProductForm({
   const [collectionSearch, setCollectionSearch] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [stripeClientSecret, setStripeClientSecret] = useState("");
+  const [wantsFeatured, setWantsFeatured] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
@@ -209,6 +215,7 @@ export default function ProductForm({
         country: "",
         material: [] as string[],
         collection: "",
+        featured: false, // Added default value for featured
       }),
     },
   });
@@ -265,11 +272,24 @@ export default function ProductForm({
     country.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
+  const handleSubmit = async (data: any) => {
+    if (wantsFeatured && !isEditing) {
+      // Get payment intent from server
+      const res = await apiRequest("POST", "/api/create-payment-intent");
+      const { clientSecret } = await res.json();
+      setStripeClientSecret(clientSecret);
+      setShowStripeCheckout(true);
+      return;
+    }
+
+    mutation.mutate(data);
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">{isEditing ? "Edit Product" : "Submit a Product"}</h2>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4 pb-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pb-4">
           <FormField
             control={form.control}
             name="title"
@@ -277,9 +297,9 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Enter product name" 
+                  <Input
+                    {...field}
+                    placeholder="Enter product name"
                     className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                   />
                 </FormControl>
@@ -294,9 +314,9 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Company</FormLabel>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Enter company name" 
+                  <Input
+                    {...field}
+                    placeholder="Enter company name"
                     className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                   />
                 </FormControl>
@@ -550,6 +570,21 @@ export default function ProductForm({
               </FormItem>
             )}
           />
+          {!isEditing && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="featured"
+                checked={wantsFeatured}
+                onCheckedChange={(checked) => setWantsFeatured(checked as boolean)}
+              />
+              <label
+                htmlFor="featured"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Feature this product on the homepage ($100/month)
+              </label>
+            </div>
+          )}
           <div className="sticky bottom-0 pt-4 bg-background">
             <Button type="submit" disabled={mutation.isPending}>
               {isEditing ? "Save Changes" : "Submit Product"}
@@ -557,6 +592,16 @@ export default function ProductForm({
           </div>
         </form>
       </Form>
+
+      <StripeCheckout
+        open={showStripeCheckout}
+        onOpenChange={setShowStripeCheckout}
+        onSuccess={() => {
+          setShowStripeCheckout(false);
+          mutation.mutate({ ...form.getValues(), featured: true });
+        }}
+        clientSecret={stripeClientSecret}
+      />
     </div>
   );
 }
