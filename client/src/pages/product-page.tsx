@@ -5,10 +5,13 @@ import ProductCard from "@/components/product-card";
 import CommentThread from "@/components/comment-thread";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Globe, Building2, Package } from "lucide-react";
+import { ArrowUp, Globe, Building2, Package, FolderOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
+import { getCountryFlag } from "@/lib/utils";
 
 export default function ProductPage() {
   const [_, params] = useRoute<{ slug: string }>("/products/:slug");
@@ -121,6 +124,50 @@ export default function ProductPage() {
                 Visit Website
               </Button>
             </a>
+          </div>
+
+          {/* Tags Section */}
+          <div className="flex flex-wrap gap-2">
+            {product.material && product.material.length > 0 && (
+              <div className="flex flex-wrap gap-1 items-center">
+                <Package className="h-4 w-4 text-muted-foreground" />
+                {product.material.map((material) => (
+                  <Link
+                    key={material}
+                    href={`/materials/${encodeURIComponent(material)}`}
+                  >
+                    <Badge
+                      variant="secondary"
+                      className="text-xs cursor-pointer hover:bg-secondary/80"
+                    >
+                      {material}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+              <Link href={`/collections/${encodeURIComponent(product.collection)}`}>
+                <Badge
+                  variant="secondary"
+                  className="text-xs cursor-pointer hover:bg-secondary/80"
+                >
+                  {product.collection}
+                </Badge>
+              </Link>
+            </div>
+            <div className="flex items-center gap-1">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <Link href={`/countries/${encodeURIComponent(product.country)}`}>
+                <Badge
+                  variant="secondary"
+                  className="text-xs cursor-pointer hover:bg-secondary/80"
+                >
+                  {getCountryFlag(product.country)} {product.country}
+                </Badge>
+              </Link>
+            </div>
           </div>
 
           <div>
