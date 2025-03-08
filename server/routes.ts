@@ -43,14 +43,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!validated.success) return res.status(400).json(validated.error);
 
     // Create the product
-    const product = await storage.createProduct({
-      ...validated.data,
-      userId: req.user!.id,
-      featured: validated.data.featured || false
-    });
+    const product = await storage.createProduct(validated.data, req.user!.id);
 
     // Automatically create an upvote from the creator
-    const vote = await storage.createVote({
+    await storage.createVote({
       productId: product.id,
       userId: req.user!.id,
       value: 1
@@ -90,10 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertCommentSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    const comment = await storage.createComment({
-      ...validated.data,
-      userId: req.user!.id
-    });
+    const comment = await storage.createComment(validated.data, req.user!.id);
     res.status(201).json(comment);
   });
 
@@ -117,10 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (existingVote) {
       vote = await storage.updateVote(existingVote.id, validated.data.value);
     } else {
-      vote = await storage.createVote({
-        ...validated.data,
-        userId: req.user!.id
-      });
+      vote = await storage.createVote(validated.data, req.user!.id);
     }
 
     if (product) {
