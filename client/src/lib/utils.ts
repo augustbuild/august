@@ -16,3 +16,23 @@ export function generateSlug(title: string, companyName: string): string {
     .replace(/^-+|-+$/g, '')     // Remove leading/trailing hyphens
     .replace(/-+/g, '-');        // Replace multiple consecutive hyphens with single hyphen
 }
+
+export function getCountryFlag(country: string): string {
+  // Special cases for countries that don't follow the two-letter code pattern
+  const specialCases: Record<string, string> = {
+    "United States": "US",
+    "United Kingdom": "GB",
+    "South Korea": "KR",
+    "North Korea": "KP",
+  };
+
+  // Get the two-letter country code
+  const countryCode = specialCases[country] || 
+    country.split(' ')[0].slice(0, 2).toUpperCase();
+
+  // Convert country code to regional indicator symbols
+  return countryCode
+    .split('')
+    .map(char => String.fromCodePoint(char.charCodeAt(0) + 127397))
+    .join('');
+}

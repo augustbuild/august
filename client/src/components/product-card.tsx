@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2, Package } from "lucide-react";
+import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2, Package, Globe } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
@@ -23,7 +23,7 @@ import {
 import ProductForm from "./product-form";
 import { useToast } from "@/hooks/use-toast";
 import AuthModal from "./auth-modal";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, getCountryFlag } from "@/lib/utils";
 
 export default function ProductCard({
   product,
@@ -153,19 +153,25 @@ export default function ProductCard({
             </p>
           )}
 
-          {/* Materials */}
-          {product.material && product.material.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              <div className="flex items-center text-muted-foreground">
-                <Package className="h-4 w-4 mr-1" />
+          {/* Materials and Country */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {product.material && product.material.length > 0 && (
+              <div className="flex flex-wrap gap-1 items-center">
+                <Package className="h-4 w-4 text-muted-foreground" />
+                {product.material.map((material) => (
+                  <Badge key={material} variant="secondary" className="text-xs">
+                    {material}
+                  </Badge>
+                ))}
               </div>
-              {product.material.map((material) => (
-                <Badge key={material} variant="secondary" className="text-xs">
-                  {material}
-                </Badge>
-              ))}
+            )}
+            <div className="flex items-center gap-1">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="secondary" className="text-xs">
+                {getCountryFlag(product.country)} {product.country}
+              </Badge>
             </div>
-          )}
+          </div>
 
           <div className="flex items-center gap-2 mt-3">
             <Button
