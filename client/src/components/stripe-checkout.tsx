@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Initialize Stripe with better error handling and logging
+// Initialize Stripe with comprehensive error handling and logging
 let stripePromise;
 try {
   const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
