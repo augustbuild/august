@@ -570,25 +570,46 @@ export default function ProductForm({
               </FormItem>
             )}
           />
-          {!isEditing && (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="featured"
-                checked={wantsFeatured}
-                onCheckedChange={(checked) => setWantsFeatured(checked as boolean)}
-              />
-              <label
-                htmlFor="featured"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Feature this product on the homepage ($100/month)
-              </label>
-            </div>
-          )}
           <div className="sticky bottom-0 pt-4 bg-background">
-            <Button type="submit" disabled={mutation.isPending}>
-              {isEditing ? "Save Changes" : "Submit Product"}
-            </Button>
+            {isEditing ? (
+              <>
+                <div className="flex items-center space-x-2 mb-4">
+                  <Checkbox
+                    id="featured"
+                    checked={form.getValues("featured")}
+                    disabled={true}
+                  />
+                  <label
+                    htmlFor="featured"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Featured product ($100/month)
+                  </label>
+                </div>
+                <Button type="submit" disabled={mutation.isPending}>
+                  Save Changes
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center space-x-2 mb-4">
+                  <Checkbox
+                    id="featured"
+                    checked={wantsFeatured}
+                    onCheckedChange={(checked) => setWantsFeatured(checked as boolean)}
+                  />
+                  <label
+                    htmlFor="featured"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Feature this product on the homepage ($100/month)
+                  </label>
+                </div>
+                <Button type="submit" disabled={mutation.isPending}>
+                  Submit Product
+                </Button>
+              </>
+            )}
           </div>
         </form>
       </Form>
