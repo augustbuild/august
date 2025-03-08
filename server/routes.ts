@@ -42,20 +42,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertProductSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    // Create the product
-    const product = await storage.createProduct(validated.data, req.user!.id);
+    try {
+      // Create the product
+      const product = await storage.createProduct(validated.data, req.user!.id);
 
-    // Automatically create an upvote from the creator
-    await storage.createVote({
-      productId: product.id,
-      userId: req.user!.id,
-      value: 1
-    });
+      // Automatically create an upvote from the creator
+      await storage.createVote({
+        productId: product.id,
+        userId: req.user!.id,
+        value: 1
+      });
 
-    // Update the product score
-    await storage.updateProductScore(product.id, 1);
+      // Update the product score
+      await storage.updateProductScore(product.id, 1);
 
-    res.status(201).json(product);
+      res.status(201).json(product);
+    } catch (error: any) {
+      console.error("Error creating product:", error);
+      res.status(500).json({ message: error.message });
+    }
   });
 
   // Stripe payment intent
@@ -86,11 +91,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertCommentSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    const comment = await storage.createComment(validated.data, req.user!.id);
+    const comment = await storage.createComment({
+      ...validated.data,
+      userId: req.user!.id
+    });
     res.status(201).json(comment);
   });
 
   // Votes
+  app.get("/api/votes", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const votes = await storage.getUserVotes(req.user!.id);
+    res.json(votes);
+  });
+
   app.post("/api/votes", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -110,7 +124,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (existingVote) {
       vote = await storage.updateVote(existingVote.id, validated.data.value);
     } else {
-      vote = await storage.createVote(validated.data, req.user!.id);
+      vote = await storage.createVote({
+        ...validated.data,
+        userId: req.user!.id
+      });
     }
 
     if (product) {
