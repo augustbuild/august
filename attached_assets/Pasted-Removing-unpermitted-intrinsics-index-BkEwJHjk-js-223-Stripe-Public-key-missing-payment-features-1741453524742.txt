@@ -1,0 +1,34 @@
+Removing unpermitted intrinsics
+index-BkEwJHjk.js:223 [Stripe] Public key missing - payment features will be disabled
+(anonymous) @ index-BkEwJHjk.js:223Understand this warningAI
+web-client-content-script.js:2 Uncaught (in promise) Error: Access to storage is not allowed from this context.Understand this errorAI
+318index-BkEwJHjk.js:223 [Stripe] Checkout unavailable - Stripe not initialized
+CT @ index-BkEwJHjk.js:223Understand this warningAI
+6index-BkEwJHjk.js:40 Error: Minified React error #301; visit https://reactjs.org/docs/error-decoder.html?invariant=301 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Xh (index-BkEwJHjk.js:38:17042)
+    at gp (index-BkEwJHjk.js:40:3139)
+    at JC (index-BkEwJHjk.js:40:44804)
+    at ZC (index-BkEwJHjk.js:40:39766)
+    at eI (index-BkEwJHjk.js:40:39694)
+    at ac (index-BkEwJHjk.js:40:39547)
+    at Pp (index-BkEwJHjk.js:40:35914)
+    at Rv (index-BkEwJHjk.js:40:36717)
+    at Ts (index-BkEwJHjk.js:38:3274)
+    at index-BkEwJHjk.js:40:34246
+mp @ index-BkEwJHjk.js:40Understand this errorAI
+index-BkEwJHjk.js:38 Uncaught Error: Minified React error #301; visit https://reactjs.org/docs/error-decoder.html?invariant=301 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Xh (index-BkEwJHjk.js:38:17042)
+    at gp (index-BkEwJHjk.js:40:3139)
+    at JC (index-BkEwJHjk.js:40:44804)
+    at ZC (index-BkEwJHjk.js:40:39766)
+    at eI (index-BkEwJHjk.js:40:39694)
+    at ac (index-BkEwJHjk.js:40:39547)
+    at Pp (index-BkEwJHjk.js:40:35914)
+    at Rv (index-BkEwJHjk.js:40:36717)
+    at Ts (index-BkEwJHjk.js:38:3274)
+    at index-BkEwJHjk.js:40:34246Understand this errorAI
+lockdown-install.js:1 Removing unpermitted intrinsics
+web-client-content-script.js:2 Uncaught (in promise) Error: Access to storage is not allowed from this context.Understand this errorAI
+lockdown-install.js:1 Removing unpermitted intrinsics
+web-client-content-script.js:2 Uncaught (in promise) Error: Access to storage is not allowed from this context.Understand this errorAI
+37Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warningAI

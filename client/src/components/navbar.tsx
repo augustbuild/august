@@ -8,7 +8,9 @@ const Navbar: React.FC = () => {
       <div className="max-w-4xl mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex gap-6 items-center">
           <Link href="/">
-            <a className="text-3xl font-bold font-instrument italic">August</a>
+            <span className="text-3xl font-bold font-instrument italic cursor-pointer">
+              August
+            </span>
           </Link>
         </div>
         <div className="flex items-center gap-4">

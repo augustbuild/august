@@ -93,27 +93,51 @@ export default function ProductCard({
       return;
     }
 
-    // If it's the user's own product and it's not featured yet, show feature dialog
-    if (product.userId === user.id && !product.featured) {
-      const res = await apiRequest("POST", "/api/create-payment-intent");
-      const { clientSecret } = await res.json();
-      setStripeClientSecret(clientSecret);
-      setShowStripeCheckout(true);
-      return;
-    }
+    try {
+      // If it's the user's own product and it's not featured yet, show feature dialog
+      if (product.userId === user.id && !product.featured) {
+        const res = await apiRequest("POST", "/api/create-payment-intent");
+        if (res.status === 503) {
+          toast({
+            title: "Feature Unavailable",
+            description: "Featured product listing is temporarily unavailable.",
+            variant: "destructive",
+          });
+          return;
+        }
+        const data = await res.json();
+        if (data.error) {
+          toast({
+            title: "Error",
+            description: data.error,
+            variant: "destructive",
+          });
+          return;
+        }
+        setStripeClientSecret(data.clientSecret);
+        setShowStripeCheckout(true);
+        return;
+      }
 
-    // If it's the user's own product and it's already featured, show a message
-    if (product.userId === user.id && product.featured) {
+      // If it's the user's own product and it's already featured, show a message
+      if (product.userId === user.id && product.featured) {
+        toast({
+          title: "Already Featured",
+          description: "This product is already featured.",
+        });
+        return;
+      }
+
+      // For other users' products, handle normal voting
+      const newValue = vote?.value === 1 ? 0 : 1;
+      voteMutation.mutate(newValue);
+    } catch (error: any) {
       toast({
-        title: "Already featured",
-        description: "This product is already featured on the homepage.",
+        title: "Error",
+        description: error.message || "An error occurred",
+        variant: "destructive",
       });
-      return;
     }
-
-    // For other users' products, handle normal voting
-    const newValue = vote?.value === 1 ? 0 : 1;
-    voteMutation.mutate(newValue);
   };
 
   const productSlug = generateSlug(product.title, product.companyName);
@@ -132,26 +156,25 @@ export default function ProductCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <Link href={`/products/${productSlug}`}>
-            <a className="no-underline">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold hover:text-primary truncate">
-                    {product.title}
-                  </h3>
-                  {product.featured && (
-                    <Badge variant="default" className="text-xs">
-                      Featured
-                    </Badge>
-                  )}
-                </div>
-                {!isFullView && (
-                  <p className="text-muted-foreground text-sm">
-                    {product.companyName}
-                  </p>
+            <div className="cursor-pointer">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold hover:text-primary truncate">
+                  {product.title}
+                </h3>
+                {product.featured && (
+                  <Badge variant="default" className="text-xs">
+                    Featured
+                  </Badge>
                 )}
               </div>
-            </a>
+              {!isFullView && (
+                <p className="text-muted-foreground text-sm">
+                  {product.companyName}
+                </p>
+              )}
+            </div>
           </Link>
+
           {isOwner && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -205,20 +228,14 @@ export default function ProductCard({
             </Button>
           </Link>
 
-          <a
-            href={product.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="no-underline"
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => window.open(product.link, '_blank', 'noopener,noreferrer')}
           >
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-            >
-              <ShoppingBag className="h-4 w-4" />
-            </Button>
-          </a>
+            <ShoppingBag className="h-4 w-4" />
+          </Button>
         </div>
 
         <div className="flex flex-wrap gap-2 mt-3">
@@ -289,7 +306,6 @@ export default function ProductCard({
           onOpenChange={setShowStripeCheckout}
           onSuccess={() => {
             setShowStripeCheckout(false);
-            // After successful payment, update the product to be featured
             queryClient.invalidateQueries({ queryKey: ["/api/products"] });
           }}
           clientSecret={stripeClientSecret}
