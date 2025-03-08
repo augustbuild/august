@@ -125,7 +125,7 @@ export default function ProductCard({
         <img
           src={product.imageUrl}
           alt={product.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain"
         />
       </div>
 
