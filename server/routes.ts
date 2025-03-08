@@ -79,18 +79,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!validated.success) return res.status(400).json(validated.error);
 
     try {
+      if (!req.user?.id) {
+        throw new Error("User ID not found in session");
+      }
+
       // Create product with custom fields for storage
       const { featured, ...productData } = validated.data;
       const product = await storage.createProduct({
         ...productData,
-        userId: req.user!.id,
+        userId: req.user.id,
         featured: stripe ? !!featured : false // Ensure boolean and disable if Stripe is not available
       });
 
       // Automatically create an upvote from the creator
       await storage.createVote({
         productId: product.id,
-        userId: req.user!.id,
+        userId: req.user.id,
         value: 1
       });
 

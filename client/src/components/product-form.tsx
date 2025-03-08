@@ -34,6 +34,7 @@ const materials = [
   "Carbon Fiber",
   "Carbon Steel",
   "Cashmere",
+  "Cast Iron",
   "Cedar",
   "Ceramic",
   "Cherry",
