@@ -110,9 +110,16 @@ export default function ProductCard({
         <div className="flex items-center justify-between">
           <Link href={`/products/${productSlug}`}>
             <a className="no-underline">
-              <h3 className="text-lg font-semibold hover:text-primary truncate">
-                {product.title}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold hover:text-primary truncate">
+                  {product.title}
+                </h3>
+                {product.featured && (
+                  <Badge variant="default" className="text-xs">
+                    Featured
+                  </Badge>
+                )}
+              </div>
             </a>
           </Link>
           {isOwner && (

@@ -12,7 +12,8 @@ export default function FilteredProductsPage() {
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     select: (products) => {
-      return products.filter((product) => {
+      // Filter products based on the route type
+      const filteredProducts = products.filter((product) => {
         switch (type) {
           case "materials":
             return product.material?.includes(decodeURIComponent(value));
@@ -24,6 +25,15 @@ export default function FilteredProductsPage() {
             return false;
         }
       });
+
+      // Separate and sort featured and non-featured products
+      const featured = filteredProducts.filter(p => p.featured)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const nonFeatured = filteredProducts.filter(p => !p.featured)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // Combine the sorted groups
+      return [...featured, ...nonFeatured];
     },
   });
 
@@ -66,7 +76,7 @@ export default function FilteredProductsPage() {
       ) : (
         <div className="divide-y divide-border">
           {products?.map((product) => (
-            <div key={product.id} className="py-6 first:pt-0 last:pb-0">
+            <div key={product.id} className="py-4 first:pt-0 last:pb-0">
               <ProductCard
                 product={product}
                 isFullView={false}

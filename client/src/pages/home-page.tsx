@@ -27,13 +27,21 @@ export default function HomePage() {
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     select: (products) => {
-      return [...products].sort((a, b) => {
+      // First, separate featured and non-featured products
+      const featured = products.filter(p => p.featured);
+      const nonFeatured = products.filter(p => !p.featured);
+
+      // Sort each group according to the selected sort option
+      const sortFn = (a: Product, b: Product) => {
         if (sortBy === "newest") {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         } else {
           return b.score - a.score;
         }
-      });
+      };
+
+      // Sort each group and concatenate them
+      return [...featured.sort(sortFn), ...nonFeatured.sort(sortFn)];
     },
   });
 
