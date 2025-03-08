@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2, Package, Globe } from "lucide-react";
+import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2, Package, Globe, FolderOpen } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product, type Vote, type Comment } from "@shared/schema";
@@ -192,7 +192,7 @@ export default function ProductCard({
             </a>
           </div>
 
-          {/* Materials and Country */}
+          {/* Materials, Collection and Country */}
           <div className="flex flex-wrap gap-2 mt-3">
             {product.material && product.material.length > 0 && (
               <div className="flex flex-wrap gap-1 items-center">
@@ -204,6 +204,12 @@ export default function ProductCard({
                 ))}
               </div>
             )}
+            <div className="flex items-center gap-1">
+              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="secondary" className="text-xs">
+                {product.collection}
+              </Badge>
+            </div>
             <div className="flex items-center gap-1">
               <Globe className="h-4 w-4 text-muted-foreground" />
               <Badge variant="secondary" className="text-xs">
@@ -220,7 +226,7 @@ export default function ProductCard({
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
           <ProductForm
-            initialValues={product}
+            initialValues={{...product}}
             onSuccess={() => setShowEditDialog(false)}
             isEditing={true}
           />

@@ -198,8 +198,8 @@ export default function ProductForm({
         imageUrl: "",
         companyName: "",
         country: "",
-        material: [],
-        collection: "", // Added collection field to defaultValues
+        material: [] as string[],
+        collection: "",
       }),
     },
   });
@@ -235,6 +235,14 @@ export default function ProductForm({
       });
     },
   });
+
+  const handleMaterialSelect = (selectedMaterial: string) => {
+    const currentValue = form.getValues("material") || [];
+    const newValue = currentValue.includes(selectedMaterial)
+      ? currentValue.filter((m) => m !== selectedMaterial)
+      : [...currentValue, selectedMaterial];
+    form.setValue("material", newValue);
+  };
 
   const filteredMaterials = materials.filter((material) =>
     material.toLowerCase().includes(materialSearch.toLowerCase())
@@ -319,7 +327,7 @@ export default function ProductForm({
                       <X
                         className="h-3 w-3 cursor-pointer hover:text-destructive"
                         onClick={() => {
-                          field.onChange((field.value || []).filter((m: string) => m !== material));
+                          handleMaterialSelect(material)
                         }}
                       />
                     </Badge>
@@ -350,13 +358,7 @@ export default function ProductForm({
                           {filteredMaterials.map((material) => (
                             <CommandItem
                               key={material}
-                              onSelect={() => {
-                                const currentValue = field.value || [];
-                                const newValue = currentValue.includes(material)
-                                  ? currentValue.filter((m: string) => m !== material)
-                                  : [...currentValue, material];
-                                field.onChange(newValue);
-                              }}
+                              onSelect={() => handleMaterialSelect(material)}
                             >
                               <Check
                                 className={cn(
