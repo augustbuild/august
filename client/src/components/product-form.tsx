@@ -174,6 +174,11 @@ interface Product {
   collection: string;
 }
 
+const getCountryFlag = (country: string) => {
+    // Add your country flag logic here.  This is a placeholder.  A real implementation would require an external library or a mapping to flag images.
+    return "";
+};
+
 export default function ProductForm({
   onSuccess,
   initialValues,
@@ -187,6 +192,10 @@ export default function ProductForm({
   const { user } = useAuth();
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [materialSearch, setMaterialSearch] = useState("");
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [collectionSearch, setCollectionSearch] = useState("");
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
@@ -246,6 +255,14 @@ export default function ProductForm({
 
   const filteredMaterials = materials.filter((material) =>
     material.toLowerCase().includes(materialSearch.toLowerCase())
+  );
+
+  const filteredCollections = collections.filter((collection) =>
+    collection.toLowerCase().includes(collectionSearch.toLowerCase())
+  );
+
+  const filteredCountries = countries.filter((country) =>
+    country.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
   return (
@@ -347,21 +364,55 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Collection</FormLabel>
                 <FormControl>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none">
-                      <SelectValue placeholder="Select collection" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {collections.map((collection) => (
-                        <SelectItem key={collection} value={collection}>
-                          {collection}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={collectionOpen} onOpenChange={setCollectionOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={collectionOpen}
+                        className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                      >
+                        {field.value ? (
+                          field.value
+                        ) : (
+                          <span className="text-muted-foreground">Select collection</span>
+                        )}
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search collections..."
+                          value={collectionSearch}
+                          onValueChange={setCollectionSearch}
+                          className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                        />
+                        <CommandEmpty>No collections found.</CommandEmpty>
+                        <CommandGroup className="max-h-64 overflow-auto">
+                          {filteredCollections.map((collection) => (
+                            <CommandItem
+                              key={collection}
+                              onSelect={() => {
+                                form.setValue("collection", collection);
+                                setCollectionOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === collection
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {collection}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -374,21 +425,55 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Country</FormLabel>
                 <FormControl>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={countryOpen}
+                        className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                      >
+                        {field.value ? (
+                          `${field.value}`
+                        ) : (
+                          <span className="text-muted-foreground">Select country</span>
+                        )}
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search countries..."
+                          value={countrySearch}
+                          onValueChange={setCountrySearch}
+                          className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                        />
+                        <CommandEmpty>No countries found.</CommandEmpty>
+                        <CommandGroup className="max-h-64 overflow-auto">
+                          {filteredCountries.map((country) => (
+                            <CommandItem
+                              key={country}
+                              onSelect={() => {
+                                form.setValue("country", country);
+                                setCountryOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === country
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {getCountryFlag(country)} {country}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -411,7 +496,7 @@ export default function ProductForm({
                       <X
                         className="h-3 w-3 cursor-pointer hover:text-destructive"
                         onClick={() => {
-                          handleMaterialSelect(material)
+                          handleMaterialSelect(material);
                         }}
                       />
                     </Badge>
