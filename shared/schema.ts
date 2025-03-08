@@ -17,7 +17,8 @@ export const products = pgTable("products", {
   imageUrl: text("image_url").notNull(),
   companyName: text("company_name").notNull(),
   country: text("country").notNull(),
-  material: text("material").array(),  // Changed to text array to store multiple materials
+  material: text("material").array(),
+  collection: text("collection").notNull(),
   userId: integer("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   score: integer("score").default(0).notNull(),
@@ -52,6 +53,7 @@ export const insertProductSchema = createInsertSchema(products).pick({
   companyName: true,
   country: true,
   material: true,
+  collection: true,
 });
 
 export const insertCommentSchema = createInsertSchema(comments).pick({

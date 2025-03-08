@@ -104,6 +104,64 @@ const countries = [
   "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ];
 
+// Add this after the existing material and countries arrays
+const collections = [
+  "Pans",
+  "Bags",
+  "Appliances",
+  "Razors",
+  "Footwear",
+  "Tableware",
+  "Tools",
+  "Shirts",
+  "Pens & Pencils",
+  "Wallets",
+  "Food Containers",
+  "Kitchen Accessories",
+  "Music",
+  "Camping Gear",
+  "Luggage",
+  "Brushes",
+  "Pots",
+  "Bottles",
+  "Hats",
+  "Desk Accessories",
+  "Jackets",
+  "Chairs & Stools",
+  "Towels & Blankets",
+  "Purifiers",
+  "Glasses",
+  "Furniture",
+  "Knives",
+  "Oral Care",
+  "Keycases",
+  "Belts",
+  "Fitness Gear",
+  "Cameras & Binoculars",
+  "Games",
+  "Cutting Boards",
+  "Kettles",
+  "Dishes",
+  "Lighting",
+  "Water Equipment",
+  "Pants",
+  "Bed & Bedding",
+  "Home Accessories",
+  "Computer Accessories",
+  "Socks",
+  "Umbrellas",
+  "Toys",
+  "Blenders",
+  "Watches",
+  "Bowls",
+  "Soaps",
+  "Yoga Mats",
+  "Underwear",
+  "Tubs",
+  "Coops",
+  "Gloves"
+].sort();
+
 interface Product {
   id: number;
   title: string;
@@ -113,6 +171,7 @@ interface Product {
   companyName: string;
   country: string;
   material: string[];
+  collection: string; // Added collection field
 }
 
 export default function ProductForm({
@@ -140,6 +199,7 @@ export default function ProductForm({
         companyName: "",
         country: "",
         material: [],
+        collection: "", // Added collection field to defaultValues
       }),
     },
   });
@@ -210,6 +270,33 @@ export default function ProductForm({
                     placeholder="Describe what makes this product extraordinary"
                     className="min-h-[100px]"
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="collection"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Collection</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select collection" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {collections.map((collection) => (
+                        <SelectItem key={collection} value={collection}>
+                          {collection}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
