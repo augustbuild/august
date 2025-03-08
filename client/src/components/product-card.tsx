@@ -89,6 +89,17 @@ export default function ProductCard({
       setShowAuthModal(true);
       return;
     }
+
+    // Prevent voting on own products
+    if (product.userId === user.id) {
+      toast({
+        title: "Cannot vote on own product",
+        description: "You automatically upvoted this product when you created it.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newValue = vote?.value === 1 ? 0 : 1;
     voteMutation.mutate(newValue);
   };

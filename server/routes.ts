@@ -42,7 +42,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertProductSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    const product = await storage.createProduct(validated.data, req.user!.id);
+    // Create the product
+    const product = await storage.createProduct({
+      ...validated.data,
+      userId: req.user!.id,
+      featured: validated.data.featured || false
+    });
+
+    // Automatically create an upvote from the creator
+    const vote = await storage.createVote({
+      productId: product.id,
+      userId: req.user!.id,
+      value: 1
+    });
+
+    // Update the product score
+    await storage.updateProductScore(product.id, 1);
+
     res.status(201).json(product);
   });
 
@@ -74,7 +90,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertCommentSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    const comment = await storage.createComment(validated.data, req.user!.id);
+    const comment = await storage.createComment({
+      ...validated.data,
+      userId: req.user!.id
+    });
     res.status(201).json(comment);
   });
 
@@ -85,16 +104,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertVoteSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
+    // Check if the user is the product creator
+    const product = await storage.getProduct(validated.data.productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (product.userId === req.user!.id) {
+      return res.status(403).json({ message: "Cannot vote on your own product" });
+    }
+
     const existingVote = await storage.getVote(req.user!.id, validated.data.productId);
     let vote;
 
     if (existingVote) {
       vote = await storage.updateVote(existingVote.id, validated.data.value);
     } else {
-      vote = await storage.createVote(validated.data, req.user!.id);
+      vote = await storage.createVote({
+        ...validated.data,
+        userId: req.user!.id
+      });
     }
 
-    const product = await storage.getProduct(validated.data.productId);
     if (product) {
       const votes = Array.from((await storage.getProducts())
         .filter(p => p.id === validated.data.productId)
