@@ -5,12 +5,19 @@ import { setupAuth } from "./auth";
 import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
-});
+// Initialize Stripe only if secret key is available
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  : null;
+
+// Helper function to safely access Stripe
+const getStripe = () => {
+  if (!stripe) {
+    console.warn('Stripe is not configured. Set STRIPE_SECRET_KEY environment variable.');
+    return null;
+  }
+  return stripe;
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -65,8 +72,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Stripe payment intent
   app.post("/api/create-payment-intent", async (req, res) => {
+    const stripeInstance = getStripe();
+    
+    if (!stripeInstance) {
+      return res.status(503).json({ 
+        message: "Payment service unavailable. Please contact support.",
+        stripeNotConfigured: true
+      });
+    }
+    
     try {
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await stripeInstance.paymentIntents.create({
         amount: 10000, // $100 in cents
         currency: "usd",
         payment_method_types: ["card"],
