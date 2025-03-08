@@ -1,0 +1,136 @@
+2025-03-08 07:21:55.94
+fc5170bc
+User
+12:21:55 PM [express] GET /api/products/10/comments 304 in 96ms :: []
+2025-03-08 07:21:56.01
+fc5170bc
+User
+12:21:56 PM [express] GET /api/products/3/comments 304 in 172ms :: []
+2025-03-08 07:21:56.01
+fc5170bc
+User
+12:21:56 PM [express] GET /api/votes 304 in 71ms
+2025-03-08 07:21:56.02
+fc5170bc
+User
+12:21:56 PM [express] GET /api/products/4/comments 304 in 180ms :: []
+2025-03-08 07:21:56.02
+fc5170bc
+User
+12:21:56 PM [express] GET /api/products/6/comments 304 in 183ms :: []
+2025-03-08 07:21:56.02
+fc5170bc
+User
+12:21:56 PM [express] GET /api/products/2/comments 304 in 194ms :: []
+2025-03-08 07:21:56.13
+fc5170bc
+User
+12:21:56 PM [express] GET /api/votes 304 in 78ms
+2025-03-08 07:21:56.26
+fc5170bc
+User
+12:21:56 PM [express] GET /api/votes 304 in 77ms
+2025-03-08 07:21:56.39
+fc5170bc
+User
+12:21:56 PM [express] GET /api/votes 304 in 85ms
+2025-03-08 07:21:56.52
+fc5170bc
+User
+12:21:56 PM [express] GET /api/votes 304 in 78ms
+2025-03-08 07:23:05.91
+f146adb8
+System
+starting up user application
+2025-03-08 07:23:06.18
+f146adb8
+System
+forwarding local port 5000 to external port 80
+2025-03-08 07:23:07.73
+f146adb8
+User
+> rest-express@1.0.0 start
+2025-03-08 07:23:07.73
+f146adb8
+User
+> NODE_ENV=production node dist/index.js
+2025-03-08 07:23:09.04
+f146adb8
+User
+[Stripe] Secret key missing - payment features will be disabled
+2025-03-08 07:23:09.15
+f146adb8
+User
+12:23:09 PM [express] serving on port 5000
+2025-03-08 07:23:41.47
+f146adb8
+User
+12:23:41 PM [express] GET /api/user 304 in 72ms :: {"id":1,"username":"kr","password":"3bb34d5690a550…
+2025-03-08 07:23:41.50
+f146adb8
+User
+12:23:41 PM [express] GET /api/products 304 in 101ms :: [{"id":10,"title":"10.5\" Frying Skillet","de…
+2025-03-08 07:23:41.65
+f146adb8
+User
+12:23:41 PM [express] GET /api/products/3/comments 304 in 95ms :: []
+2025-03-08 07:23:41.65
+f146adb8
+User
+12:23:41 PM [express] GET /api/products/10/comments 304 in 97ms :: []
+2025-03-08 07:23:41.73
+f146adb8
+User
+12:23:41 PM [express] GET /api/products/5/comments 304 in 175ms :: []
+2025-03-08 07:23:41.75
+f146adb8
+User
+12:23:41 PM [express] GET /api/products/6/comments 304 in 168ms :: []
+2025-03-08 07:23:43.70
+f146adb8
+User
+12:23:43 PM [express] GET /api/votes 200 in 2147ms
+2025-03-08 07:23:43.74
+f146adb8
+User
+12:23:43 PM [express] GET /api/products/4/comments 304 in 2160ms :: []
+2025-03-08 07:23:43.76
+f146adb8
+User
+12:23:43 PM [express] GET /api/products/2/comments 304 in 2176ms :: []
+2025-03-08 07:23:43.80
+f146adb8
+User
+12:23:43 PM [express] GET /api/votes 304 in 67ms
+2025-03-08 07:23:43.92
+f146adb8
+User
+12:23:43 PM [express] GET /api/votes 304 in 72ms
+2025-03-08 07:23:44.03
+f146adb8
+User
+12:23:44 PM [express] GET /api/votes 304 in 70ms
+2025-03-08 07:23:44.14
+f146adb8
+User
+12:23:44 PM [express] GET /api/votes 304 in 68ms
+2025-03-08 07:23:44.25
+f146adb8
+User
+12:23:44 PM [express] GET /api/votes 304 in 71ms
+2025-03-08 07:24:18.03
+fc5170bc
+System
+system: received signal terminated
+2025-03-08 07:24:18.06
+fc5170bc
+System
+command finished with error [npm run start]: signal: terminated
+2025-03-08 07:24:18.09
+fc5170bc
+System
+main done, exiting
+
+Wrap
+
+Colors

@@ -274,22 +274,33 @@ export default function ProductForm({
   );
 
   const handleSubmit = async (data: any) => {
-    // If in edit mode and user wants to enable featured
-    if (isEditing && wantsFeatured && !initialValues?.featured) {
-      const res = await apiRequest("POST", "/api/create-payment-intent");
-      const { clientSecret } = await res.json();
-      setStripeClientSecret(clientSecret);
-      setShowStripeCheckout(true);
-      return;
-    }
-
-    // For new products
-    if (!isEditing && wantsFeatured) {
-      const res = await apiRequest("POST", "/api/create-payment-intent");
-      const { clientSecret } = await res.json();
-      setStripeClientSecret(clientSecret);
-      setShowStripeCheckout(true);
-      return;
+    // If Stripe is not configured, show a message and submit without featured flag
+    if (wantsFeatured) {
+      try {
+        const res = await apiRequest("POST", "/api/create-payment-intent");
+        if (res.status === 503) {
+          toast({
+            title: "Feature Unavailable",
+            description: "Featured product listing is temporarily unavailable. Your product will be submitted without the featured flag.",
+            variant: "destructive",
+          });
+          mutation.mutate({ ...data, featured: false });
+          return;
+        }
+        const { clientSecret } = await res.json();
+        setStripeClientSecret(clientSecret);
+        setShowStripeCheckout(true);
+        return;
+      } catch (error) {
+        console.error('[Product Form] Payment intent creation failed:', error);
+        toast({
+          title: "Feature Unavailable",
+          description: "Featured product listing is currently unavailable. Your product will be submitted without the featured flag.",
+          variant: "destructive",
+        });
+        mutation.mutate({ ...data, featured: false });
+        return;
+      }
     }
 
     mutation.mutate({ ...data, featured: wantsFeatured });

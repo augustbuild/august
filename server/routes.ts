@@ -14,36 +14,28 @@ try {
   } else {
     console.log('[Stripe] Initializing with secret key');
     stripe = new Stripe(secretKey, { 
-      apiVersion: "2023-10-16" as const 
+      apiVersion: '2023-10-16' 
     });
   }
 } catch (error) {
   console.error('[Stripe] Failed to initialize:', error);
 }
 
-// Helper function to safely access Stripe
-const getStripe = () => {
-  if (!stripe) {
-    throw new Error('[Stripe] Not configured - check environment variables');
-  }
-  return stripe;
-};
-
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Stripe payment intent route with enhanced error handling
   app.post("/api/create-payment-intent", async (req, res) => {
-    try {
-      if (!stripe) {
-        console.warn('[Stripe] Payment attempt failed - Stripe not initialized');
-        return res.status(503).json({ 
-          error: "Payment system temporarily unavailable",
-          details: "The payment system is not properly configured",
-          code: "STRIPE_NOT_CONFIGURED"
-        });
-      }
+    if (!stripe) {
+      console.warn('[Stripe] Payment attempt failed - Stripe not initialized');
+      return res.status(503).json({ 
+        error: "Payment system temporarily unavailable",
+        details: "The payment system is not properly configured",
+        code: "STRIPE_NOT_CONFIGURED"
+      });
+    }
 
+    try {
       console.log('[Stripe] Creating payment intent');
       const paymentIntent = await stripe.paymentIntents.create({
         amount: 10000, // $100 in cents
@@ -70,7 +62,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:id", async (req, res) => {
     const user = await storage.getUser(parseInt(req.params.id));
     if (!user) return res.sendStatus(404);
-    // Don't send the password hash to the client
     const { password, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   });
@@ -81,12 +72,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(products);
   });
 
-  app.get("/api/products/:id", async (req, res) => {
-    const product = await storage.getProduct(parseInt(req.params.id));
-    if (!product) return res.sendStatus(404);
-    res.json(product);
-  });
-
   app.post("/api/products", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -94,8 +79,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!validated.success) return res.status(400).json(validated.error);
 
     try {
-      // Create the product
-      const product = await storage.createProduct(validated.data, req.user!.id);
+      // Create product with custom fields for storage
+      const { featured, ...productData } = validated.data;
+      const product = await storage.createProduct({
+        ...productData,
+        userId: req.user!.id,
+        featured: stripe ? !!featured : false // Ensure boolean and disable if Stripe is not available
+      });
 
       // Automatically create an upvote from the creator
       await storage.createVote({
@@ -109,11 +99,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json(product);
     } catch (error: any) {
-      console.error("Error creating product:", error);
-      res.status(500).json({ message: error.message });
+      console.error('[Products] Creation error:', error);
+      res.status(500).json({ 
+        error: "Failed to create product",
+        details: error.message 
+      });
     }
   });
 
+  app.get("/api/products/:id", async (req, res) => {
+    const product = await storage.getProduct(parseInt(req.params.id));
+    if (!product) return res.sendStatus(404);
+    res.json(product);
+  });
 
   // Comments
   app.get("/api/products/:id/comments", async (req, res) => {
@@ -127,8 +125,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertCommentSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    const comment = await storage.createComment(validated.data, req.user!.id);
-    res.status(201).json(comment);
+    try {
+      const comment = await storage.createComment({
+        ...validated.data,
+        userId: req.user!.id
+      });
+      res.status(201).json(comment);
+    } catch (error: any) {
+      console.error('[Comments] Creation error:', error);
+      res.status(500).json({ 
+        error: "Failed to create comment",
+        details: error.message 
+      });
+    }
   });
 
   // Votes
@@ -144,37 +153,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertVoteSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    // Check if the user is the product creator
-    const product = await storage.getProduct(validated.data.productId);
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    if (product.userId === req.user!.id) {
-      return res.status(403).json({ message: "Cannot vote on your own product" });
-    }
+    try {
+      // Check if the user is the product creator
+      const product = await storage.getProduct(validated.data.productId);
+      if (!product) return res.status(404).json({ message: "Product not found" });
+      if (product.userId === req.user!.id) {
+        return res.status(403).json({ message: "Cannot vote on your own product" });
+      }
 
-    const existingVote = await storage.getVote(req.user!.id, validated.data.productId);
-    let vote;
+      const existingVote = await storage.getVote(req.user!.id, validated.data.productId);
+      let vote;
 
-    if (existingVote) {
-      vote = await storage.updateVote(existingVote.id, validated.data.value);
-    } else {
-      vote = await storage.createVote({
-        ...validated.data,
-        userId: req.user!.id
+      if (existingVote) {
+        vote = await storage.updateVote(existingVote.id, validated.data.value);
+      } else {
+        vote = await storage.createVote({
+          ...validated.data,
+          userId: req.user!.id
+        });
+      }
+
+      // Update product score
+      if (product) {
+        const votes = (await storage.getProducts())
+          .find(p => p.id === validated.data.productId)?.score ?? 0;
+
+        await storage.updateProductScore(
+          validated.data.productId,
+          votes + (existingVote ? validated.data.value - existingVote.value : validated.data.value)
+        );
+      }
+
+      res.json(vote);
+    } catch (error: any) {
+      console.error('[Votes] Operation error:', error);
+      res.status(500).json({ 
+        error: "Failed to process vote",
+        details: error.message 
       });
     }
-
-    if (product) {
-      const votes = Array.from((await storage.getProducts())
-        .filter(p => p.id === validated.data.productId)
-        .map(p => p.score))[0];
-
-      await storage.updateProductScore(
-        validated.data.productId,
-        votes + (existingVote ? validated.data.value - existingVote.value : validated.data.value)
-      );
-    }
-
-    res.json(vote);
   });
 
   // User's products and comments
@@ -199,7 +216,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertProductSchema.partial().safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    const updatedProduct = await storage.updateProduct(product.id, validated.data);
+    const updatedProduct = await storage.updateProduct(product.id, {
+      ...validated.data,
+      featured: stripe ? validated.data.featured : false // Disable featured if Stripe is not available
+    });
     res.json(updatedProduct);
   });
 
