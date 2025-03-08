@@ -5,24 +5,26 @@ import { setupAuth } from "./auth";
 import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
 import Stripe from "stripe";
 
-// Initialize Stripe with better error handling
+// Initialize Stripe with comprehensive error handling
 let stripe: Stripe | null = null;
 try {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    console.warn('Stripe payments disabled: Missing STRIPE_SECRET_KEY');
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    console.warn('[Stripe] Secret key missing - payment features will be disabled');
   } else {
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { 
+    console.log('[Stripe] Initializing with secret key');
+    stripe = new Stripe(secretKey, { 
       apiVersion: "2023-10-16" as const 
     });
   }
 } catch (error) {
-  console.error('Failed to initialize Stripe:', error);
+  console.error('[Stripe] Failed to initialize:', error);
 }
 
 // Helper function to safely access Stripe
 const getStripe = () => {
   if (!stripe) {
-    throw new Error('Stripe is not configured. Please check your environment variables.');
+    throw new Error('[Stripe] Not configured - check environment variables');
   }
   return stripe;
 };
@@ -30,16 +32,19 @@ const getStripe = () => {
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Stripe payment intent route with better error handling
+  // Stripe payment intent route with enhanced error handling
   app.post("/api/create-payment-intent", async (req, res) => {
     try {
       if (!stripe) {
+        console.warn('[Stripe] Payment attempt failed - Stripe not initialized');
         return res.status(503).json({ 
-          error: "Stripe payments are currently unavailable",
-          stripeNotConfigured: true
+          error: "Payment system temporarily unavailable",
+          details: "The payment system is not properly configured",
+          code: "STRIPE_NOT_CONFIGURED"
         });
       }
 
+      console.log('[Stripe] Creating payment intent');
       const paymentIntent = await stripe.paymentIntents.create({
         amount: 10000, // $100 in cents
         currency: "usd",
@@ -47,12 +52,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         setup_future_usage: "off_session",
       });
 
-      res.json({ clientSecret: paymentIntent.client_secret });
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        status: "success"
+      });
     } catch (error: any) {
-      console.error("Stripe payment intent creation failed:", error);
+      console.error('[Stripe] Payment intent creation failed:', error);
       res.status(500).json({ 
-        error: "Failed to create payment intent",
-        message: error.message 
+        error: "Failed to process payment request",
+        details: error.message,
+        code: error.code || "UNKNOWN_ERROR"
       });
     }
   });

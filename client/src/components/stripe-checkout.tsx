@@ -6,16 +6,21 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Initialize Stripe with error handling
+// Initialize Stripe with better error handling and logging
 let stripePromise;
 try {
-  if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-    console.error('Missing Stripe public key');
+  const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+  if (!publicKey) {
+    console.warn('[Stripe] Public key missing - payment features will be disabled');
   } else {
-    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+    console.log('[Stripe] Initializing with public key');
+    stripePromise = loadStripe(publicKey).catch(error => {
+      console.error('[Stripe] Failed to initialize:', error);
+      return null;
+    });
   }
 } catch (error) {
-  console.error('Failed to initialize Stripe:', error);
+  console.error('[Stripe] Initialization error:', error);
 }
 
 function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
@@ -26,10 +31,11 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!stripe || !elements) {
       toast({
-        title: "Error",
-        description: "Stripe is not properly configured. Please try again later.",
+        title: "Payment System Unavailable",
+        description: "The payment system is not properly configured. Please try again later.",
         variant: "destructive",
       });
       return;
@@ -40,23 +46,25 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: window.location.origin,
+          return_url: `${window.location.origin}/payment-success`,
         },
       });
 
       if (error) {
+        console.error('[Stripe] Payment confirmation error:', error);
         toast({
-          title: "Payment failed",
-          description: error.message,
+          title: "Payment Failed",
+          description: error.message || "An error occurred during payment processing.",
           variant: "destructive",
         });
       } else {
         onSuccess();
       }
     } catch (error: any) {
+      console.error('[Stripe] Payment submission error:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Payment Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -95,11 +103,13 @@ export default function StripeCheckout({
   const { toast } = useToast();
 
   if (!stripePromise) {
+    console.warn('[Stripe] Checkout unavailable - Stripe not initialized');
     toast({
-      title: "Error",
-      description: "Payment system is not properly configured. Please try again later.",
+      title: "Payment System Unavailable",
+      description: "The payment system is temporarily unavailable. Please try again later.",
       variant: "destructive",
     });
+    onOpenChange(false);
     return null;
   }
 
