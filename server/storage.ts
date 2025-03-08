@@ -21,16 +21,15 @@ export interface IStorage {
   deleteProduct(id: number): Promise<void>;
   updateProduct(id: number, product: Partial<Product>): Promise<Product>;
 
-
   getComments(productId: number): Promise<Comment[]>;
   createComment(comment: Omit<Comment, "id" | "createdAt">, userId: number): Promise<Comment>;
   getUserComments(userId: number): Promise<Comment[]>;
   deleteComment(id: number): Promise<void>;
   updateComment(id: number, content: string): Promise<Comment>;
-  getComment(id: number): Promise<Comment | undefined>; // Added method signature
+  getComment(id: number): Promise<Comment | undefined>;
 
   getVote(userId: number, productId: number): Promise<Vote | undefined>;
-  createVote(vote: Omit<Vote, "id">, userId: number): Promise<Vote>;
+  createVote(vote: Omit<Vote, "id">): Promise<Vote>;
   updateVote(id: number, value: number): Promise<Vote>;
 
   sessionStore: session.SessionStore;
@@ -150,7 +149,7 @@ export class DatabaseStorage implements IStorage {
     return comment;
   }
 
-  async getComment(id: number): Promise<Comment | undefined> { // Added method implementation
+  async getComment(id: number): Promise<Comment | undefined> {
     const [comment] = await db
       .select()
       .from(comments)
@@ -171,13 +170,10 @@ export class DatabaseStorage implements IStorage {
     return vote;
   }
 
-  async createVote(
-    vote: Omit<Vote, "id">,
-    userId: number,
-  ): Promise<Vote> {
+  async createVote(vote: Omit<Vote, "id">): Promise<Vote> {
     const [newVote] = await db
       .insert(votes)
-      .values({ ...vote, userId })
+      .values(vote)
       .returning();
     return newVote;
   }

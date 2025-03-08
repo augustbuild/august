@@ -91,18 +91,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validated = insertCommentSchema.safeParse(req.body);
     if (!validated.success) return res.status(400).json(validated.error);
 
-    const comment = await storage.createComment({
-      ...validated.data,
-      userId: req.user!.id
-    });
+    const comment = await storage.createComment(validated.data, req.user!.id);
     res.status(201).json(comment);
   });
 
   // Votes
-  app.get("/api/votes", async (req, res) => {
+  app.get("/api/votes/:productId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const votes = await storage.getUserVotes(req.user!.id);
-    res.json(votes);
+    const vote = await storage.getVote(req.user!.id, parseInt(req.params.productId));
+    res.json(vote);
   });
 
   app.post("/api/votes", async (req, res) => {
@@ -153,29 +150,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:id/comments", async (req, res) => {
     const comments = await storage.getUserComments(parseInt(req.params.id));
     res.json(comments);
-  });
-
-  // Comment management
-  app.patch("/api/comments/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const comment = await storage.getComment(parseInt(req.params.id));
-    if (!comment) return res.sendStatus(404);
-    if (comment.userId !== req.user!.id) return res.sendStatus(403);
-
-    const updatedComment = await storage.updateComment(comment.id, req.body.content);
-    res.json(updatedComment);
-  });
-
-  app.delete("/api/comments/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const comment = await storage.getComment(parseInt(req.params.id));
-    if (!comment) return res.sendStatus(404);
-    if (comment.userId !== req.user!.id) return res.sendStatus(403);
-
-    await storage.deleteComment(comment.id);
-    res.sendStatus(204);
   });
 
   // Product management
