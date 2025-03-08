@@ -15,14 +15,14 @@ export interface IStorage {
 
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
-  createProduct(product: Omit<Product, "id" | "score" | "createdAt">, userId: number): Promise<Product>;
+  createProduct(product: Omit<Product, "id" | "score" | "createdAt">): Promise<Product>;
   updateProductScore(id: number, score: number): Promise<void>;
   getUserProducts(userId: number): Promise<Product[]>;
   deleteProduct(id: number): Promise<void>;
   updateProduct(id: number, product: Partial<Product>): Promise<Product>;
 
   getComments(productId: number): Promise<Comment[]>;
-  createComment(comment: Omit<Comment, "id" | "createdAt">, userId: number): Promise<Comment>;
+  createComment(comment: Omit<Comment, "id" | "createdAt">): Promise<Comment>;
   getUserComments(userId: number): Promise<Comment[]>;
   deleteComment(id: number): Promise<void>;
   updateComment(id: number, content: string): Promise<Comment>;
@@ -32,11 +32,11 @@ export interface IStorage {
   createVote(vote: Omit<Vote, "id">): Promise<Vote>;
   updateVote(id: number, value: number): Promise<Vote>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
@@ -69,15 +69,35 @@ export class DatabaseStorage implements IStorage {
     return product;
   }
 
-  async createProduct(
-    product: Omit<Product, "id" | "score" | "createdAt">,
-    userId: number,
-  ): Promise<Product> {
-    const [newProduct] = await db
-      .insert(products)
-      .values({ ...product, userId, score: 0 })
-      .returning();
-    return newProduct;
+  async createProduct(product: Omit<Product, "id" | "score" | "createdAt">): Promise<Product> {
+    // Validate required fields
+    if (!product.userId || typeof product.userId !== 'number') {
+      throw new Error("Valid user ID is required to create a product");
+    }
+
+    try {
+      console.log('[Storage] Creating product with data:', {
+        ...product,
+        userId: product.userId
+      });
+
+      const [newProduct] = await db
+        .insert(products)
+        .values({ 
+          ...product,
+          score: 0 
+        })
+        .returning();
+
+      if (!newProduct) {
+        throw new Error("Failed to create product in database");
+      }
+
+      return newProduct;
+    } catch (error: any) {
+      console.error('[Storage] Product creation error:', error);
+      throw error;
+    }
   }
 
   async updateProductScore(id: number, score: number): Promise<void> {
@@ -116,13 +136,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(comments.productId, productId));
   }
 
-  async createComment(
-    comment: Omit<Comment, "id" | "createdAt">,
-    userId: number,
-  ): Promise<Comment> {
+  async createComment(comment: Omit<Comment, "id" | "createdAt">): Promise<Comment> {
     const [newComment] = await db
       .insert(comments)
-      .values({ ...comment, userId })
+      .values(comment)
       .returning();
     return newComment;
   }

@@ -76,29 +76,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const validated = insertProductSchema.safeParse(req.body);
-    if (!validated.success) return res.status(400).json(validated.error);
+    if (!validated.success) {
+      console.error('[Products] Validation error:', validated.error);
+      return res.status(400).json(validated.error);
+    }
 
     try {
       if (!req.user?.id) {
         throw new Error("User ID not found in session");
       }
 
-      // Create product with custom fields for storage
-      const { featured, ...productData } = validated.data;
-      const product = await storage.createProduct({
-        ...productData,
+      // Prepare product data with user ID
+      const productData = {
+        ...validated.data,
         userId: req.user.id,
-        featured: stripe ? !!featured : false // Ensure boolean and disable if Stripe is not available
+        featured: stripe ? validated.data.featured : false
+      };
+
+      console.log('[Products] Creating product with data:', {
+        ...productData,
+        userId: req.user.id // Log userId explicitly
       });
 
-      // Automatically create an upvote from the creator
+      const product = await storage.createProduct(productData);
+
+      // Create initial upvote
       await storage.createVote({
         productId: product.id,
         userId: req.user.id,
         value: 1
       });
 
-      // Update the product score
+      // Update score
       await storage.updateProductScore(product.id, 1);
 
       res.status(201).json(product);
