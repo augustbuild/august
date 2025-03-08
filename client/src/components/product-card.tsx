@@ -100,7 +100,6 @@ export default function ProductCard({
   return (
     <>
       <div className="flex gap-3">
-        {/* Product Image */}
         <div className="flex-shrink-0">
           <img
             src={product.imageUrl}
@@ -109,7 +108,6 @@ export default function ProductCard({
           />
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <Link href={`/products/${productSlug}`}>
@@ -192,7 +190,6 @@ export default function ProductCard({
             </a>
           </div>
 
-          {/* Materials, Collection and Country */}
           <div className="flex flex-wrap gap-2 mt-3">
             {product.material && product.material.length > 0 && (
               <div className="flex flex-wrap gap-1 items-center">
@@ -221,15 +218,17 @@ export default function ProductCard({
       </div>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          <ProductForm
-            initialValues={{...product}}
-            onSuccess={() => setShowEditDialog(false)}
-            isEditing={true}
-          />
+          <div className="overflow-y-auto pr-2">
+            <ProductForm
+              initialValues={{...product}}
+              onSuccess={() => setShowEditDialog(false)}
+              isEditing={true}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
