@@ -153,26 +153,6 @@ export default function ProductCard({
             </p>
           )}
 
-          {/* Materials and Country */}
-          <div className="flex flex-wrap gap-2 mt-2">
-            {product.material && product.material.length > 0 && (
-              <div className="flex flex-wrap gap-1 items-center">
-                <Package className="h-4 w-4 text-muted-foreground" />
-                {product.material.map((material) => (
-                  <Badge key={material} variant="secondary" className="text-xs">
-                    {material}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <Badge variant="secondary" className="text-xs">
-                {getCountryFlag(product.country)} {product.country}
-              </Badge>
-            </div>
-          </div>
-
           <div className="flex items-center gap-2 mt-3">
             <Button
               variant={hasUpvoted ? "default" : "outline"}
@@ -210,6 +190,26 @@ export default function ProductCard({
                 <ShoppingBag className="h-4 w-4" />
               </Button>
             </a>
+          </div>
+
+          {/* Materials and Country */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {product.material && product.material.length > 0 && (
+              <div className="flex flex-wrap gap-1 items-center">
+                <Package className="h-4 w-4 text-muted-foreground" />
+                {product.material.map((material) => (
+                  <Badge key={material} variant="secondary" className="text-xs">
+                    {material}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="secondary" className="text-xs">
+                {getCountryFlag(product.country)} {product.country}
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
