@@ -275,7 +275,7 @@ export default function ProductForm({
             name="companyName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company Name</FormLabel>
+                <FormLabel>Company</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
@@ -296,7 +296,7 @@ export default function ProductForm({
                 <FormControl>
                   <Textarea
                     {...field}
-                    placeholder="Describe what makes this product extraordinary"
+                    placeholder="What makes this product extraordinary?"
                     className="min-h-[100px] focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                   />
                 </FormControl>
@@ -327,7 +327,7 @@ export default function ProductForm({
             name="imageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Image URL</FormLabel>
+                <FormLabel>Image</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
