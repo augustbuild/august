@@ -23,6 +23,7 @@ import {
 import ProductForm from "./product-form";
 import { useToast } from "@/hooks/use-toast";
 import AuthModal from "./auth-modal";
+import StripeCheckout from "./stripe-checkout";
 
 export default function ProductCard({
   product,
@@ -38,6 +39,8 @@ export default function ProductCard({
   const [_, setLocation] = useLocation();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [stripeClientSecret, setStripeClientSecret] = useState("");
 
   const { data: vote } = useQuery<Vote>({
     queryKey: ["/api/votes", product.id],
@@ -84,22 +87,31 @@ export default function ProductCard({
     },
   });
 
-  const handleVote = () => {
+  const handleVote = async () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
 
-    // Prevent voting on own products
-    if (product.userId === user.id) {
+    // If it's the user's own product and it's not featured yet, show feature dialog
+    if (product.userId === user.id && !product.featured) {
+      const res = await apiRequest("POST", "/api/create-payment-intent");
+      const { clientSecret } = await res.json();
+      setStripeClientSecret(clientSecret);
+      setShowStripeCheckout(true);
+      return;
+    }
+
+    // If it's the user's own product and it's already featured, show a message
+    if (product.userId === user.id && product.featured) {
       toast({
-        title: "Cannot vote on own product",
-        description: "You automatically upvoted this product when you created it.",
-        variant: "destructive",
+        title: "Already featured",
+        description: "This product is already featured on the homepage.",
       });
       return;
     }
 
+    // For other users' products, handle normal voting
     const newValue = vote?.value === 1 ? 0 : 1;
     voteMutation.mutate(newValue);
   };
@@ -270,6 +282,17 @@ export default function ProductCard({
         <AuthModal
           open={showAuthModal}
           onOpenChange={setShowAuthModal}
+        />
+
+        <StripeCheckout
+          open={showStripeCheckout}
+          onOpenChange={setShowStripeCheckout}
+          onSuccess={() => {
+            setShowStripeCheckout(false);
+            // After successful payment, update the product to be featured
+            queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+          }}
+          clientSecret={stripeClientSecret}
         />
       </div>
     </div>
