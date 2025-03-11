@@ -5,6 +5,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import CategoryNavigation from "@/components/category-navigation";
+import { materials, countries, collections } from "@/components/product-form";
 
 export default function FilteredProductsPage() {
   const [location, setLocation] = useLocation();
@@ -36,6 +37,45 @@ export default function FilteredProductsPage() {
       // Combine the sorted groups
       return [...featured, ...nonFeatured];
     },
+  });
+
+  // Count and sort categories by frequency
+  const categoryItems = useQuery<{ name: string; count: number }[]>({
+    queryKey: ["/api/products", "categories", type],
+    enabled: !!products,
+    select: (products) => {
+      let allItems: string[] = [];
+      let referenceList: string[] = [];
+
+      switch (type) {
+        case "materials":
+          referenceList = materials;
+          allItems = products?.flatMap(p => p.material || []) || [];
+          break;
+        case "countries":
+          referenceList = countries;
+          allItems = products?.map(p => p.country) || [];
+          break;
+        case "collections":
+          referenceList = collections;
+          allItems = products?.map(p => p.collection) || [];
+          break;
+      }
+
+      // Count occurrences
+      const counts = new Map<string, number>();
+      allItems.forEach(item => {
+        counts.set(item, (counts.get(item) || 0) + 1);
+      });
+
+      // Create sorted items array
+      return referenceList
+        .map(name => ({
+          name,
+          count: counts.get(name) || 0
+        }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    }
   });
 
   // Mapping plural route names to singular display names
@@ -73,6 +113,7 @@ export default function FilteredProductsPage() {
         <CategoryNavigation
           type={type as "materials" | "countries" | "collections"}
           currentValue={value}
+          items={categoryItems.data || []}
         />
       </div>
 
