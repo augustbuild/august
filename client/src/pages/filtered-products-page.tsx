@@ -68,12 +68,13 @@ export default function FilteredProductsPage() {
         counts.set(item, (counts.get(item) || 0) + 1);
       });
 
-      // Create sorted items array
+      // Create sorted items array with only non-zero counts
       return referenceList
         .map(name => ({
           name,
           count: counts.get(name) || 0
         }))
+        .filter(item => item.count > 0)
         .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
     }
   });
