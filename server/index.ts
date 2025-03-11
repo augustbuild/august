@@ -58,7 +58,7 @@ app.use((req, res, next) => {
     });
 
     // Development vs Production setup
-    if (app.get("env") === "development") {
+    if (process.env.NODE_ENV !== "production") {
       log("Setting up development environment with Vite...");
       await setupVite(app, server);
     } else {
@@ -78,7 +78,6 @@ app.use((req, res, next) => {
 
   } catch (error) {
     console.error("Failed to start server:", error);
-    // Log error but don't exit - let the process manager handle restarts if needed
-    log("Server startup failed, but continuing to run for diagnostics");
+    process.exit(1); // Exit on startup failure in production
   }
 })();
