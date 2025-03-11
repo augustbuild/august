@@ -28,11 +28,11 @@ export default function FilteredProductsPage() {
         }
       });
 
-      // Separate and sort featured and non-featured products
+      // Separate and sort featured and non-featured products by score
       const featured = filteredProducts.filter(p => p.featured)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        .sort((a, b) => b.score - a.score || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       const nonFeatured = filteredProducts.filter(p => !p.featured)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        .sort((a, b) => b.score - a.score || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       // Combine the sorted groups
       return [...featured, ...nonFeatured];

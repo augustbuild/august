@@ -21,7 +21,7 @@ import {
 type SortOption = "newest" | "top";
 
 export default function HomePage() {
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [sortBy, setSortBy] = useState<SortOption>("top"); // Changed default to "top"
   const [showProductForm, setShowProductForm] = useState(false);
 
   const { data: products, isLoading } = useQuery<Product[]>({
@@ -36,7 +36,7 @@ export default function HomePage() {
         if (sortBy === "newest") {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         } else {
-          return b.score - a.score;
+          return b.score - a.score || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         }
       };
 
@@ -56,8 +56,8 @@ export default function HomePage() {
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
             <SelectItem value="top">Top</SelectItem>
+            <SelectItem value="newest">Newest</SelectItem>
           </SelectContent>
         </Select>
 
