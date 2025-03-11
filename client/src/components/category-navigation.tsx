@@ -28,7 +28,7 @@ export default function CategoryNavigation({ type, currentValue, items }: Catego
                 }`}
               >
                 {type === "countries" && getCountryFlag(item.name)}{" "}
-                {item.name} {item.count}
+                {item.name}
               </Badge>
             </Link>
           );
