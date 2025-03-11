@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import StripeCheckout from "./stripe-checkout";
 
 // Materials list sorted alphabetically
-const materials = [
+export const materials = [
   "ABS",
   "Aluminum",
   "Ash",
@@ -83,10 +83,10 @@ const materials = [
   "Wood",
   "Wool",
   "Zinc"
-];
+].sort();
 
 // Countries list
-const countries = [
+export const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
   "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina",
   "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic",
@@ -108,7 +108,7 @@ const countries = [
 ];
 
 // Collections list
-const collections = [
+export const collections = [
   "Pans",
   "Bags",
   "Appliances",

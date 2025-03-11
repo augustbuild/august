@@ -4,6 +4,7 @@ import ProductCard from "@/components/product-card";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import CategoryNavigation from "@/components/category-navigation";
 
 export default function FilteredProductsPage() {
   const [location, setLocation] = useLocation();
@@ -56,13 +57,23 @@ export default function FilteredProductsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-4">
         <Button variant="ghost" onClick={() => setLocation("/")} className="p-0 h-auto">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-2xl font-bold">
           {typeDisplay}: {valueDisplay}
         </h1>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-sm font-medium text-muted-foreground mb-2">
+          Browse other {type}:
+        </h2>
+        <CategoryNavigation
+          type={type as "materials" | "countries" | "collections"}
+          currentValue={value}
+        />
       </div>
 
       {isLoading ? (
