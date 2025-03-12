@@ -16,8 +16,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByGithubId(githubId: string): Promise<User | undefined>;
   createUser(user: { 
-    email: string;
     username: string;
+    email?: string;
     githubId?: string;
     githubAccessToken?: string;
     avatarUrl?: string;
@@ -68,7 +68,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(insertUser: { email: string; username: string; githubId?: string; githubAccessToken?: string; avatarUrl?: string; }): Promise<User> {
+  async createUser(insertUser: { username: string; email?: string; githubId?: string; githubAccessToken?: string; avatarUrl?: string; }): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }

@@ -33,19 +33,33 @@ export function setupAuth(app: Express) {
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
+          // First try to find user by GitHub ID
           let user = await storage.getUserByGithubId(profile.id);
 
           if (!user) {
-            // Create new user if doesn't exist
-            user = await storage.createUser({
-              email: profile.emails?.[0]?.value || `${profile.username}@github.com`,
-              username: profile.username!,
-              githubId: profile.id,
-              githubAccessToken: accessToken,
-              avatarUrl: profile.photos?.[0]?.value,
-            });
+            // If no user found by GitHub ID, try to find by username
+            user = await storage.getUserByUsername(profile.username!);
+
+            if (user) {
+              // If user exists but hasn't linked GitHub, update their GitHub info
+              user = await storage.updateUser(user.id, {
+                githubId: profile.id,
+                githubAccessToken: accessToken,
+                email: profile.emails?.[0]?.value,
+                avatarUrl: profile.photos?.[0]?.value,
+              });
+            } else {
+              // Create new user if no existing user found
+              user = await storage.createUser({
+                username: profile.username!,
+                email: profile.emails?.[0]?.value,
+                githubId: profile.id,
+                githubAccessToken: accessToken,
+                avatarUrl: profile.photos?.[0]?.value,
+              });
+            }
           } else {
-            // Update existing user's GitHub token and avatar
+            // Update existing GitHub user's token and avatar
             user = await storage.updateUser(user.id, {
               githubAccessToken: accessToken,
               avatarUrl: profile.photos?.[0]?.value,

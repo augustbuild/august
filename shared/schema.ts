@@ -4,8 +4,8 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
   username: text("username").notNull().unique(),
+  email: text("email").unique(),  // Made optional for backward compatibility
   avatarUrl: text("avatar_url"),
   githubId: text("github_id").unique(),
   githubAccessToken: text("github_access_token"),
