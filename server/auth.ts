@@ -43,8 +43,12 @@ async function sendMagicLink(email: string, token: string) {
   try {
     const magicLink = `https://${process.env.REPL_SLUG}.replit.dev/api/auth/verify-magic-link?token=${token}`;
 
+    // Get domain from SMTP_USER for the display name
+    const fromEmail = process.env.SMTP_USER;
+    const fromName = "August";
+
     await transporter.sendMail({
-      from: process.env.SMTP_USER,
+      from: `"${fromName}" <${fromEmail}>`,
       to: email,
       subject: "Sign in to August",
       text: `Click this link to sign in: ${magicLink}`,
