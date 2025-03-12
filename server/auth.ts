@@ -17,30 +17,49 @@ function generateToken(): string {
   return randomBytes(32).toString('hex');
 }
 
-const transporter = createTransport({
+const smtpConfig = {
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || "587"),
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+};
+
+console.log('[Auth] Setting up SMTP with host:', process.env.SMTP_HOST);
+
+const transporter = createTransport(smtpConfig);
+
+// Verify SMTP connection
+transporter.verify((error) => {
+  if (error) {
+    console.error('[Auth] SMTP connection error:', error);
+  } else {
+    console.log('[Auth] SMTP connection successful');
+  }
 });
 
 async function sendMagicLink(email: string, token: string) {
-  const magicLink = `${process.env.REPL_SLUG}.replit.dev/api/auth/verify-magic-link?token=${token}`;
+  try {
+    const magicLink = `https://${process.env.REPL_SLUG}.replit.dev/api/auth/verify-magic-link?token=${token}`;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_USER,
-    to: email,
-    subject: "Sign in to August",
-    text: `Click this link to sign in: ${magicLink}`,
-    html: `
-      <p>Click the button below to sign in to August:</p>
-      <a href="${magicLink}" style="display:inline-block;padding:12px 20px;background:#000;color:#fff;text-decoration:none;border-radius:5px;">
-        Sign In
-      </a>
-    `,
-  });
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: "Sign in to August",
+      text: `Click this link to sign in: ${magicLink}`,
+      html: `
+        <p>Click the button below to sign in to August:</p>
+        <a href="${magicLink}" style="display:inline-block;padding:12px 20px;background:#000;color:#fff;text-decoration:none;border-radius:5px;">
+          Sign In
+        </a>
+      `,
+    });
+    console.log('[Auth] Magic link email sent successfully to:', email);
+  } catch (error) {
+    console.error('[Auth] Error sending magic link email:', error);
+    throw error;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -117,6 +136,10 @@ export function setupAuth(app: Express) {
   app.post("/api/auth/magic-link", async (req, res) => {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
     try {
       const token = generateToken();
       const expiry = new Date();
@@ -154,8 +177,11 @@ export function setupAuth(app: Express) {
 
       res.status(200).json({ message: "Magic link sent" });
     } catch (error: any) {
-      console.error('Error sending magic link:', error);
-      res.status(500).json({ message: "Error sending magic link" });
+      console.error('[Auth] Error in magic link flow:', error);
+      res.status(500).json({ 
+        message: "Failed to send magic link email. Please try again later or use GitHub login.",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
 
