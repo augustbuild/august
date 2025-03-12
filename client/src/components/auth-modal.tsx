@@ -38,7 +38,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to send magic link. Please try logging in with GitHub instead.",
         variant: "destructive",
       });
     }
