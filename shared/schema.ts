@@ -6,6 +6,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").unique(),  // Made optional for backward compatibility
+  password: text("password"),     // Made optional for OAuth users
   avatarUrl: text("avatar_url"),
   githubId: text("github_id").unique(),
   githubAccessToken: text("github_access_token"),
