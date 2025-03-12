@@ -27,6 +27,8 @@ const smtpConfig = {
 };
 
 console.log('[Auth] Setting up SMTP with host:', process.env.SMTP_HOST);
+console.log('[Auth] SMTP port:', process.env.SMTP_PORT);
+console.log('[Auth] SMTP user:', process.env.SMTP_USER);
 
 const transporter = createTransport(smtpConfig);
 
@@ -47,7 +49,7 @@ async function sendMagicLink(email: string, token: string) {
     const fromEmail = process.env.SMTP_USER;
     const fromName = "August";
 
-    await transporter.sendMail({
+    const mailOptions = {
       from: `"${fromName}" <${fromEmail}>`,
       to: email,
       subject: "Sign in to August",
@@ -58,11 +60,28 @@ async function sendMagicLink(email: string, token: string) {
           Sign In
         </a>
       `,
+    };
+
+    console.log('[Auth] Attempting to send email with options:', { 
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject 
     });
+
+    await transporter.sendMail(mailOptions);
     console.log('[Auth] Magic link email sent successfully to:', email);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Auth] Error sending magic link email:', error);
-    throw error;
+    if (error.code === 'EAUTH') {
+      console.error('[Auth] Authentication failed. Please check SMTP credentials.');
+    } else if (error.code === 'ECONNECTION') {
+      console.error('[Auth] Connection failed. Please check SMTP host and port.');
+    }
+    throw new Error(
+      error.responseCode === 550 
+        ? "This email address is not authorized in the Mailgun sandbox. Please use GitHub login instead."
+        : "Failed to send magic link email. Please try again later or use GitHub login."
+    );
   }
 }
 
@@ -183,7 +202,7 @@ export function setupAuth(app: Express) {
     } catch (error: any) {
       console.error('[Auth] Error in magic link flow:', error);
       res.status(500).json({ 
-        message: "Failed to send magic link email. Please try again later or use GitHub login.",
+        message: error.message || "Failed to send magic link email. Please try again later or use GitHub login.",
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
