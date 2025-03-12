@@ -22,7 +22,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const loginForm = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -30,7 +30,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const registerForm = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -56,12 +56,12 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
                 <FormField
                   control={loginForm.control}
-                  name="username"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input type="email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -92,12 +92,12 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
                 <FormField
                   control={registerForm.control}
-                  name="username"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input type="email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
