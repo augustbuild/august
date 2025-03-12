@@ -80,9 +80,22 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                  Login
-                </Button>
+                <div className="flex flex-col space-y-2">
+                  <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                    Login
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                    onClick={() => {
+                      // Will implement password reset functionality later
+                      alert("Password reset functionality coming soon!");
+                    }}
+                  >
+                    Forgot your password?
+                  </Button>
+                </div>
               </form>
             </Form>
           </TabsContent>
