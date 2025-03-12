@@ -14,7 +14,9 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGithubId(githubId: string): Promise<User | undefined>;
+  getUserByMagicLinkToken(token: string): Promise<User | undefined>;
   createUser(user: { 
     username: string;
     email?: string;
@@ -57,7 +59,6 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -65,11 +66,6 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
-  }
-
-  async createUser(insertUser: { username: string; email?: string; githubId?: string; githubAccessToken?: string; avatarUrl?: string; }): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
@@ -86,6 +82,25 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByMagicLinkToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.magicLinkToken, token));
+    return user;
+  }
+
+  async createUser(insertUser: { 
+    username: string;
+    email?: string;
+    githubId?: string;
+    githubAccessToken?: string;
+    avatarUrl?: string;
+  }): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
     const [user] = await db
       .update(users)
@@ -96,7 +111,6 @@ export class DatabaseStorage implements IStorage {
   }
 
 
-  // Product operations
   async getProducts(): Promise<Product[]> {
     return await db.select().from(products);
   }
@@ -158,7 +172,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(products.id, id));
   }
 
-  // Comment operations
   async getComments(productId: number): Promise<Comment[]> {
     return await db
       .select()
@@ -202,7 +215,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(comments).where(eq(comments.id, id));
   }
 
-  // Vote operations
   async getVote(userId: number, productId: number): Promise<Vote | undefined> {
     const [vote] = await db
       .select()

@@ -1,12 +1,11 @@
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
-import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import { randomBytes } from "crypto";
+import { createTransport } from "nodemailer";
 
 declare global {
   namespace Express {
@@ -14,19 +13,34 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+function generateToken(): string {
+  return randomBytes(32).toString('hex');
 }
 
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+const transporter = createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+async function sendMagicLink(email: string, token: string) {
+  const magicLink = `${process.env.REPL_SLUG}.replit.dev/api/auth/verify-magic-link?token=${token}`;
+
+  await transporter.sendMail({
+    from: process.env.SMTP_USER,
+    to: email,
+    subject: "Sign in to August",
+    text: `Click this link to sign in: ${magicLink}`,
+    html: `
+      <p>Click the button below to sign in to August:</p>
+      <a href="${magicLink}" style="display:inline-block;padding:12px 20px;background:#000;color:#fff;text-decoration:none;border-radius:5px;">
+        Sign In
+      </a>
+    `,
+  });
 }
 
 export function setupAuth(app: Express) {
@@ -41,24 +55,6 @@ export function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // Local Strategy for email/password login
-  passport.use(
-    new LocalStrategy(
-      { usernameField: 'email' },
-      async (email, password, done) => {
-        try {
-          const user = await storage.getUserByEmail(email);
-          if (!user || !user.password || !(await comparePasswords(password, user.password))) {
-            return done(null, false);
-          }
-          return done(null, user);
-        } catch (error) {
-          return done(error);
-        }
-      }
-    )
-  );
 
   // GitHub Strategy
   passport.use(
@@ -117,45 +113,84 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  // Local auth routes
-  app.post("/api/register", async (req, res, next) => {
-    const { email, password } = req.body;
+  // Magic link endpoints
+  app.post("/api/auth/magic-link", async (req, res) => {
+    const { email } = req.body;
+
     try {
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already registered" });
+      const token = generateToken();
+      const expiry = new Date();
+      expiry.setHours(expiry.getHours() + 1); // Token expires in 1 hour
+
+      let user = await storage.getUserByEmail(email);
+
+      if (!user) {
+        // Generate username from email
+        const username = email.split('@')[0];
+        let finalUsername = username;
+        let counter = 1;
+
+        // Ensure unique username
+        while (await storage.getUserByUsername(finalUsername)) {
+          finalUsername = `${username}${counter}`;
+          counter++;
+        }
+
+        // Create new user
+        user = await storage.createUser({
+          email,
+          username: finalUsername,
+        });
       }
 
-      // Generate username from email
-      const username = email.split('@')[0];
-      let finalUsername = username;
-      let counter = 1;
-
-      // Ensure unique username
-      while (await storage.getUserByUsername(finalUsername)) {
-        finalUsername = `${username}${counter}`;
-        counter++;
-      }
-
-      // Create user
-      const user = await storage.createUser({
-        email,
-        username: finalUsername,
-        password: await hashPassword(password),
+      // Update user with magic link token
+      await storage.updateUser(user.id, {
+        magicLinkToken: token,
+        magicLinkExpiry: expiry,
       });
 
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
-    } catch (error) {
-      next(error);
+      // Send magic link email
+      await sendMagicLink(email, token);
+
+      res.status(200).json({ message: "Magic link sent" });
+    } catch (error: any) {
+      console.error('Error sending magic link:', error);
+      res.status(500).json({ message: "Error sending magic link" });
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.json(req.user);
+  app.get("/api/auth/verify-magic-link", async (req, res) => {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+      return res.redirect('/?error=invalid-token');
+    }
+
+    try {
+      const user = await storage.getUserByMagicLinkToken(token);
+
+      if (!user || !user.magicLinkExpiry || new Date() > new Date(user.magicLinkExpiry)) {
+        return res.redirect('/?error=expired-token');
+      }
+
+      // Clear the magic link token
+      await storage.updateUser(user.id, {
+        magicLinkToken: null,
+        magicLinkExpiry: null,
+      });
+
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Error logging in user:', err);
+          return res.redirect('/?error=login-failed');
+        }
+        res.redirect('/');
+      });
+    } catch (error) {
+      console.error('Error verifying magic link:', error);
+      res.redirect('/?error=verification-failed');
+    }
   });
 
   // GitHub OAuth routes

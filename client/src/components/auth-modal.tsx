@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { insertUserSchema } from "@shared/schema";
+import { magicLinkSchema } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SiGithub } from "react-icons/si";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface AuthModalProps {
   open: boolean;
@@ -18,23 +17,32 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
-  const { loginMutation, registerMutation } = useAuth();
+  const [emailSent, setEmailSent] = useState(false);
+  const { toast } = useToast();
 
-  const loginForm = useForm({
-    resolver: zodResolver(insertUserSchema),
+  const form = useForm({
+    resolver: zodResolver(magicLinkSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
-  const registerForm = useForm({
-    resolver: zodResolver(insertUserSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  const handleSubmit = async (data: { email: string }) => {
+    try {
+      await apiRequest("POST", "/api/auth/magic-link", data);
+      setEmailSent(true);
+      toast({
+        title: "Check your email",
+        description: "We've sent you a magic link to sign in.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,84 +73,44 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </div>
           </div>
 
-          <Tabs defaultValue="login" className="mt-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                    Login
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-                    Register
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
+          {emailSent ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">
+                Check your email for a magic link to sign in.
+              </p>
+              <Button
+                variant="link"
+                className="mt-2"
+                onClick={() => {
+                  setEmailSent(false);
+                  form.reset();
+                }}
+              >
+                Try another email
+              </Button>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} placeholder="Enter your email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full">
+                  Send Magic Link
+                </Button>
+              </form>
+            </Form>
+          )}
         </div>
       </DialogContent>
     </Dialog>

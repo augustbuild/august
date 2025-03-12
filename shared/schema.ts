@@ -6,10 +6,11 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").unique(),  // Made optional for backward compatibility
-  password: text("password"),     // Made optional for OAuth users
   avatarUrl: text("avatar_url"),
   githubId: text("github_id").unique(),
   githubAccessToken: text("github_access_token"),
+  magicLinkToken: text("magic_link_token"),
+  magicLinkExpiry: timestamp("magic_link_expiry"),
 });
 
 export const products = pgTable("products", {
@@ -79,6 +80,10 @@ export const insertCommentSchema = createInsertSchema(comments).pick({
 export const insertVoteSchema = createInsertSchema(votes).pick({
   productId: true,
   value: true,
+});
+
+export const magicLinkSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
 });
 
 export const resetPasswordSchema = z.object({
