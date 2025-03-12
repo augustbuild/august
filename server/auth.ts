@@ -84,7 +84,7 @@ async function sendMagicLink(email: string, token: string) {
     }
     throw new Error(
       error.message.includes("is not allowed to send: Free accounts are for test purposes only")
-        ? "Email sending is restricted in Mailgun sandbox mode. Please try using GitHub login instead."
+        ? "Email sending is temporarily restricted. Please try using GitHub login instead."
         : "Failed to send magic link email. Please try again later or use GitHub login."
     );
   }
@@ -156,7 +156,7 @@ export function setupAuth(app: Express) {
     } catch (error: any) {
       console.error('[Auth] Error in magic link flow:', error);
       res.status(503).json({ 
-        message: error.message || "Failed to send magic link email. Please try again later or use GitHub login.",
+        message: error.message || "Failed to send magic link email. Please try using GitHub login as an alternative.",
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
@@ -210,15 +210,17 @@ export function setupAuth(app: Express) {
           let user = await storage.getUserByGithubId(profile.id);
 
           if (!user) {
-            // If no user found by GitHub ID, try to find by username
-            user = await storage.getUserByUsername(profile.username!);
+            // If no user found by GitHub ID, try to find by email
+            const email = profile.emails?.[0]?.value;
+            if (email) {
+              user = await storage.getUserByEmail(email);
+            }
 
             if (user) {
               // If user exists but hasn't linked GitHub, update their GitHub info
               user = await storage.updateUser(user.id, {
                 githubId: profile.id,
                 githubAccessToken: accessToken,
-                email: profile.emails?.[0]?.value,
                 avatarUrl: profile.photos?.[0]?.value,
               });
             } else {

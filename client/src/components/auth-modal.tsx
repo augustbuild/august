@@ -29,7 +29,13 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   const handleSubmit = async (data: { email: string }) => {
     try {
-      await apiRequest("POST", "/api/auth/magic-link", data);
+      const res = await apiRequest("POST", "/api/auth/magic-link", data);
+      const response = await res.json();
+
+      if (!res.ok) {
+        throw new Error(response.message);
+      }
+
       setEmailSent(true);
       toast({
         title: "Check your email",
@@ -38,7 +44,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to send magic link. Please try logging in with GitHub instead.",
+        description: error.message,
         variant: "destructive",
       });
     }
