@@ -1,9 +1,7 @@
 import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as GitHubStrategy } from "passport-github2";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
@@ -11,21 +9,6 @@ declare global {
   namespace Express {
     interface User extends SelectUser {}
   }
-}
-
-const scryptAsync = promisify(scrypt);
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
-
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function setupAuth(app: Express) {
@@ -42,17 +25,39 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(
-      { usernameField: 'email' },
-      async (email, password, done) => {
-        const user = await storage.getUserByEmail(email);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        } else {
+    new GitHubStrategy(
+      {
+        clientID: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+        callbackURL: "/api/auth/github/callback",
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          let user = await storage.getUserByGithubId(profile.id);
+
+          if (!user) {
+            // Create new user if doesn't exist
+            user = await storage.createUser({
+              email: profile.emails?.[0]?.value || `${profile.username}@github.com`,
+              username: profile.username!,
+              githubId: profile.id,
+              githubAccessToken: accessToken,
+              avatarUrl: profile.photos?.[0]?.value,
+            });
+          } else {
+            // Update existing user's GitHub token and avatar
+            user = await storage.updateUser(user.id, {
+              githubAccessToken: accessToken,
+              avatarUrl: profile.photos?.[0]?.value,
+            });
+          }
+
           return done(null, user);
+        } catch (error) {
+          return done(error as Error);
         }
       }
-    ),
+    )
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
@@ -61,40 +66,16 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  app.post("/api/register", async (req, res, next) => {
-    const { email, password } = req.body;
+  // GitHub OAuth routes
+  app.get("/api/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
 
-    const existingUser = await storage.getUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).send("Email already registered");
+  app.get(
+    "/api/auth/github/callback",
+    passport.authenticate("github", { failureRedirect: "/login" }),
+    (req, res) => {
+      res.redirect("/");
     }
-
-    // Generate username from email (everything before @)
-    const username = email.split('@')[0];
-    let finalUsername = username;
-    let counter = 1;
-
-    // If username exists, append numbers until we find a unique one
-    while (await storage.getUserByUsername(finalUsername)) {
-      finalUsername = `${username}${counter}`;
-      counter++;
-    }
-
-    const user = await storage.createUser({
-      email,
-      username: finalUsername,
-      password: await hashPassword(password),
-    });
-
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(201).json(user);
-    });
-  });
-
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
-  });
+  );
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {

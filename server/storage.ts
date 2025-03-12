@@ -14,8 +14,15 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: { email: string; username: string; password: string }): Promise<User>;
-  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGithubId(githubId: string): Promise<User | undefined>;
+  createUser(user: { 
+    email: string;
+    username: string;
+    githubId?: string;
+    githubAccessToken?: string;
+    avatarUrl?: string;
+  }): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User>;
 
   // Product operations
   getProducts(): Promise<Product[]>;
@@ -61,7 +68,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(insertUser: { email: string; username: string; password: string }): Promise<User> {
+  async createUser(insertUser: { email: string; username: string; githubId?: string; githubAccessToken?: string; avatarUrl?: string; }): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
@@ -70,6 +77,24 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
+
+  async getUserByGithubId(githubId: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.githubId, githubId));
+    return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
 
   // Product operations
   async getProducts(): Promise<Product[]> {

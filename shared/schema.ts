@@ -6,8 +6,9 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
   avatarUrl: text("avatar_url"),
+  githubId: text("github_id").unique(),
+  githubAccessToken: text("github_access_token"),
 });
 
 export const products = pgTable("products", {
@@ -44,10 +45,8 @@ export const comments = pgTable("comments", {
 
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
-  password: true,
 }).extend({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const insertProductSchema = createInsertSchema(products).pick({
@@ -79,6 +78,15 @@ export const insertCommentSchema = createInsertSchema(comments).pick({
 export const insertVoteSchema = createInsertSchema(votes).pick({
   productId: true,
   value: true,
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+export const updatePasswordSchema = z.object({
+  token: z.string(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
