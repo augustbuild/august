@@ -43,7 +43,12 @@ transporter.verify((error) => {
 
 async function sendMagicLink(email: string, token: string) {
   try {
-    const magicLink = `https://${process.env.REPL_SLUG}.replit.dev/api/auth/verify-magic-link?token=${token}`;
+    // Determine the base URL based on environment
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://august.build'
+      : `https://${process.env.REPL_SLUG}.replit.dev`;
+
+    const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
     // Get domain from SMTP_USER for the display name
     const fromEmail = process.env.SMTP_USER;
@@ -94,9 +99,17 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? '.august.build' : undefined
+    }
   };
 
-  app.set("trust proxy", 1);
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
+
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
