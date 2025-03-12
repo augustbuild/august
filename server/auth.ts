@@ -83,9 +83,7 @@ async function sendMagicLink(email: string, token: string) {
       );
     }
     throw new Error(
-      error.message.includes("is not allowed to send: Free accounts are for test purposes only")
-        ? "Email sending is temporarily restricted. Please try using GitHub login instead."
-        : "Failed to send magic link email. Please try again later or use GitHub login."
+      "Email sending is currently restricted. Please try using GitHub login instead."
     );
   }
 }
@@ -155,9 +153,8 @@ export function setupAuth(app: Express) {
       res.status(200).json({ message: "Magic link sent" });
     } catch (error: any) {
       console.error('[Auth] Error in magic link flow:', error);
-      res.status(503).json({ 
-        message: error.message || "Failed to send magic link email. Please try using GitHub login as an alternative.",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      res.status(400).json({ 
+        message: error.message || "Failed to send magic link email. Please try using GitHub login as an alternative."
       });
     }
   });
