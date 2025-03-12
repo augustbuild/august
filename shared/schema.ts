@@ -7,8 +7,6 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").unique(),  // Made optional for backward compatibility
   avatarUrl: text("avatar_url"),
-  githubId: text("github_id").unique(),
-  githubAccessToken: text("github_access_token"),
   magicLinkToken: text("magic_link_token"),
   magicLinkExpiry: timestamp("magic_link_expiry"),
 });
@@ -84,15 +82,6 @@ export const insertVoteSchema = createInsertSchema(votes).pick({
 
 export const magicLinkSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-});
-
-export const resetPasswordSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
-
-export const updatePasswordSchema = z.object({
-  token: z.string(),
-  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

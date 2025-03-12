@@ -1,5 +1,4 @@
 import passport from "passport";
-import { Strategy as GitHubStrategy } from "passport-github2";
 import { Express } from "express";
 import session from "express-session";
 import { storage } from "./storage";
@@ -84,11 +83,11 @@ async function sendMagicLink(email: string, token: string) {
     }
     if (error.responseCode === 421) {
       throw new Error(
-        "This email address is not authorized in the Mailgun sandbox. Please add it to your authorized recipients in Mailgun settings, or use GitHub login as an alternative."
+        "This email address is not authorized in the Mailgun sandbox. Please add it to your authorized recipients in Mailgun settings."
       );
     }
     throw new Error(
-      "Email sending is currently restricted. Please try using GitHub login instead."
+      "Email sending is currently restricted."
     );
   }
 }
@@ -167,7 +166,7 @@ export function setupAuth(app: Express) {
     } catch (error: any) {
       console.error('[Auth] Error in magic link flow:', error);
       res.status(400).json({ 
-        message: error.message || "Failed to send magic link email. Please try using GitHub login as an alternative."
+        message: error.message || "Failed to send magic link email."
       });
     }
   });
@@ -205,70 +204,6 @@ export function setupAuth(app: Express) {
       res.redirect('/?error=verification-failed');
     }
   });
-
-  // GitHub Strategy
-  passport.use(
-    new GitHubStrategy(
-      {
-        clientID: process.env.GITHUB_CLIENT_ID!,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-        callbackURL: "/api/auth/github/callback",
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          // First try to find user by GitHub ID
-          let user = await storage.getUserByGithubId(profile.id);
-
-          if (!user) {
-            // If no user found by GitHub ID, try to find by email
-            const email = profile.emails?.[0]?.value;
-            if (email) {
-              user = await storage.getUserByEmail(email);
-            }
-
-            if (user) {
-              // If user exists but hasn't linked GitHub, update their GitHub info
-              user = await storage.updateUser(user.id, {
-                githubId: profile.id,
-                githubAccessToken: accessToken,
-                avatarUrl: profile.photos?.[0]?.value,
-              });
-            } else {
-              // Create new user if no existing user found
-              user = await storage.createUser({
-                username: profile.username!,
-                email: profile.emails?.[0]?.value,
-                githubId: profile.id,
-                githubAccessToken: accessToken,
-                avatarUrl: profile.photos?.[0]?.value,
-              });
-            }
-          } else {
-            // Update existing GitHub user's token and avatar
-            user = await storage.updateUser(user.id, {
-              githubAccessToken: accessToken,
-              avatarUrl: profile.photos?.[0]?.value,
-            });
-          }
-
-          return done(null, user);
-        } catch (error) {
-          return done(error as Error);
-        }
-      }
-    )
-  );
-
-  // GitHub OAuth routes
-  app.get("/api/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
-
-  app.get(
-    "/api/auth/github/callback",
-    passport.authenticate("github", { failureRedirect: "/login" }),
-    (req, res) => {
-      res.redirect("/");
-    }
-  );
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {

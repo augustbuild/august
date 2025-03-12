@@ -1,12 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { magicLinkSchema } from "@shared/schema";
-import { useAuth } from "@/hooks/use-auth";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { SiGithub } from "react-icons/si";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -61,13 +59,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
         </div>
 
         <div className="flex flex-col space-y-4">
-          <a href="/api/auth/github" className="w-full">
-            <Button className="w-full flex items-center justify-center gap-2">
-              <SiGithub className="w-5 h-5" />
-              Continue with GitHub
-            </Button>
-          </a>
-
+          
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
