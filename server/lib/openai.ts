@@ -29,7 +29,8 @@ async function fetchProductPage(url: string): Promise<string> {
 
     console.log("[OpenAI] Extracted relevant content:", relevantContent.substring(0, 300) + "...");
 
-    return relevantContent;
+    // Truncate to ~4000 characters to avoid hitting token limit
+    return relevantContent.slice(0, 4000);
   } catch (error) {
     console.error("[OpenAI] Error fetching product page:", error);
     return "";
@@ -65,10 +66,13 @@ export async function generateProductDescription(
 Use the following context from the product page:
 ${pageContent}
 
-Provide a concise description that highlights what makes this product special and unique.`;
+Respond ONLY with a JSON object in this format:
+{
+  "description": "Generated product description here"
+}`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo", // Switch to free-tier model
       messages: [
         {
           role: "system",
@@ -82,12 +86,23 @@ Provide a concise description that highlights what makes this product special an
       temperature: 0.7
     });
 
-    const result = response.choices[0]?.message?.content?.trim();
-    if (!result) throw new Error("Empty response from OpenAI");
+    console.log("[OpenAI] Full API response:", JSON.stringify(response, null, 2));
 
-    console.log("[OpenAI] Generated description:", result);
+    // Handle both JSON and plain text responses
+    const content = response.choices[0]?.message?.content || "";
+    let result;
 
-    return result;
+    try {
+      result = JSON.parse(content);
+    } catch {
+      result = { description: content };
+    }
+
+    if (!result.description) throw new Error("Empty response from OpenAI");
+
+    console.log("[OpenAI] Generated description:", result.description);
+
+    return result.description;
   } catch (error: any) {
     console.error("[OpenAI] Error generating description:", error.message);
     return "Description generation failed due to an internal error.";
