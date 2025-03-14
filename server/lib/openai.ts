@@ -1,6 +1,18 @@
 import OpenAI from "openai";
+import fetch from "node-fetch";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+async function fetchProductPage(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    return text;
+  } catch (error) {
+    console.error("[OpenAI] Error fetching product page:", error);
+    return "";
+  }
+}
 
 export async function generateProductDescription(
   title: string,
@@ -13,7 +25,9 @@ export async function generateProductDescription(
   try {
     console.log("[OpenAI] Generating description for:", { title, companyName });
 
-    const prompt = `Using the product link (${link}), product name "${title}", and company name "${companyName}", generate an accurate, concise description of what makes this product extraordinary`;
+    const pageContent = await fetchProductPage(link);
+
+    const prompt = `Using the product link (${link}), product name "${title}", and company name "${companyName}", generate an accurate, concise description of what makes this product extraordinary. Here's additional context from the product page:\n\n${pageContent}`;
 
     if (!process.env.OPENAI_API_KEY) {
       console.error("[OpenAI] API key not found");
