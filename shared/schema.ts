@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   magicLinkExpiry: timestamp("magic_link_expiry"),
 });
 
+// Rest of the schema remains unchanged
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),

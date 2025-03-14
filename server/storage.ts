@@ -15,13 +15,10 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByGithubId(githubId: string): Promise<User | undefined>;
   getUserByMagicLinkToken(token: string): Promise<User | undefined>;
   createUser(user: { 
     username: string;
     email?: string;
-    githubId?: string;
-    githubAccessToken?: string;
     avatarUrl?: string;
   }): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User>;
@@ -74,14 +71,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByGithubId(githubId: string): Promise<User | undefined> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.githubId, githubId));
-    return user;
-  }
-
   async getUserByMagicLinkToken(token: string): Promise<User | undefined> {
     const [user] = await db
       .select()
@@ -93,8 +82,6 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: { 
     username: string;
     email?: string;
-    githubId?: string;
-    githubAccessToken?: string;
     avatarUrl?: string;
   }): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
@@ -109,7 +96,6 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
-
 
   async getProducts(): Promise<Product[]> {
     return await db.select().from(products);
