@@ -138,7 +138,6 @@ export default function ProductCard({
   };
 
   const productSlug = generateSlug(product.title, product.companyName);
-  const isCreator = user?.id === product.userId;
   const hasUpvoted = vote?.value === 1;
 
   return (
@@ -201,7 +200,7 @@ export default function ProductCard({
 
         <div className="flex items-center gap-2 mt-3">
           <Button
-            variant="outline"
+            variant={hasUpvoted ? "default" : "outline"}
             size="sm"
             onClick={handleVote}
             disabled={voteMutation.isPending}
