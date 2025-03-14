@@ -16,25 +16,41 @@ function generateToken(): string {
   return randomBytes(32).toString('hex');
 }
 
+// Configure SMTP settings based on port
+const port = parseInt(process.env.SMTP_PORT || "587");
 const smtpConfig = {
   host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
+  port: port,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
-  }
+  },
+  secure: port === 465, // Use secure only for port 465 (SSL)
+  ...(port === 587 && {
+    requireTLS: true, // Require STARTTLS for port 587
+  })
 };
 
-console.log('[Auth] Setting up SMTP with host:', process.env.SMTP_HOST);
-console.log('[Auth] SMTP port:', process.env.SMTP_PORT);
-console.log('[Auth] SMTP user:', process.env.SMTP_USER);
+console.log('[Auth] SMTP Configuration:', {
+  host: smtpConfig.host,
+  port: smtpConfig.port,
+  secure: smtpConfig.secure,
+  requireTLS: smtpConfig.requireTLS,
+  auth: { user: smtpConfig.auth.user }
+});
 
 const transporter = createTransport(smtpConfig);
 
-// Verify SMTP connection
+// Verify SMTP connection with detailed logging
 transporter.verify((error) => {
   if (error) {
-    console.error('[Auth] SMTP connection error:', error);
+    console.error('[Auth] SMTP connection error:', {
+      errorName: error.name,
+      errorCode: error.code,
+      errorMessage: error.message,
+      errorCommand: (error as any).command,
+      errorResponse: (error as any).response,
+    });
   } else {
     console.log('[Auth] SMTP connection successful');
   }
@@ -49,12 +65,8 @@ async function sendMagicLink(email: string, token: string) {
 
     const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
-    // Use the custom domain for sending emails
-    const fromEmail = process.env.SMTP_USER;
-    const fromName = "August";
-
     const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
+      from: `"August" <${process.env.SMTP_USER}>`,
       to: email,
       subject: "Sign in to August",
       text: `Click this link to sign in: ${magicLink}`,
@@ -66,18 +78,22 @@ async function sendMagicLink(email: string, token: string) {
       `,
     };
 
-    console.log('[Auth] Attempting to send email with options:', { 
-      from: mailOptions.from,
-      to: mailOptions.to,
-      subject: mailOptions.subject
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[Auth] Magic link email sent:', {
+      messageId: info.messageId,
+      envelope: info.envelope
+    });
+  } catch (error: any) {
+    console.error('[Auth] Email error:', {
+      name: error.name,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      message: error.message
     });
 
-    await transporter.sendMail(mailOptions);
-    console.log('[Auth] Magic link email sent successfully to:', email);
-  } catch (error: any) {
-    console.error('[Auth] Error sending magic link email:', error);
     throw new Error(
-      "We're having trouble sending emails right now. Please try again in a few minutes."
+      "Unable to send login email. Please try again in a few minutes."
     );
   }
 }
@@ -154,9 +170,9 @@ export function setupAuth(app: Express) {
 
       res.status(200).json({ message: "Magic link sent" });
     } catch (error: any) {
-      console.error('[Auth] Error in magic link flow:', error);
+      console.error('[Auth] Magic link flow error:', error);
       res.status(500).json({ 
-        message: error.message || "We're having trouble sending emails right now. Please try again in a few minutes."
+        message: error.message || "Unable to send login email. Please try again in a few minutes."
       });
     }
   });
