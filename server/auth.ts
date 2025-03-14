@@ -34,10 +34,9 @@ async function sendMagicLinkEmail(email: string, token: string) {
   try {
     console.log('[Mailgun] Attempting to send email to:', email);
 
-    // Mailgun API requires Basic auth with 'api:YOUR-API-KEY'
     const auth = Buffer.from(`api:${process.env.MAILGUN_API_KEY}`).toString('base64');
     const formData = new URLSearchParams({
-      from: `mailgun@${process.env.MAILGUN_DOMAIN}`, // Simplified sender format
+      from: `mailgun@${process.env.MAILGUN_DOMAIN}`,
       to: email,
       subject: 'Sign in to August',
       text: `Click this link to sign in: ${magicLink}`,
@@ -69,30 +68,50 @@ async function sendMagicLinkEmail(email: string, token: string) {
 
     return data;
   } catch (error: any) {
-    console.error('[Mailgun] Send failed:', {
-      error: error.message,
-      status: error.status,
-      details: error.details
-    });
+    console.error('[Mailgun] Send failed:', error);
     throw new Error('Failed to send login email');
   }
 }
 
 export function setupAuth(app: Express) {
-  app.use(session({
+  // Configure secure session handling
+  app.set('trust proxy', 1);
+
+  const sessionConfig: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore
-  }));
+    store: storage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true
+    },
+    name: 'august.sid' // Custom session name
+  };
 
+  app.use(session(sessionConfig));
   app.use(passport.initialize());
   app.use(passport.session());
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log('[Auth] Serializing user:', user.id);
+    done(null, user.id);
+  });
+
   passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
+    try {
+      const user = await storage.getUser(id);
+      if (!user) {
+        return done(new Error('User not found'));
+      }
+      console.log('[Auth] Deserialized user:', id);
+      done(null, user);
+    } catch (error) {
+      console.error('[Auth] Deserialize error:', error);
+      done(error);
+    }
   });
 
   app.post("/api/auth/magic-link", async (req, res) => {
@@ -140,37 +159,75 @@ export function setupAuth(app: Express) {
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') {
+      console.error('[Auth] Invalid token format');
       return res.redirect('/?error=invalid-token');
     }
 
     try {
       const user = await storage.getUserByMagicLinkToken(token);
-      if (!user || !user.magicLinkExpiry || new Date() > new Date(user.magicLinkExpiry)) {
+
+      if (!user) {
+        console.error('[Auth] User not found for token');
+        return res.redirect('/?error=invalid-token');
+      }
+
+      if (!user.magicLinkExpiry || new Date() > new Date(user.magicLinkExpiry)) {
+        console.error('[Auth] Token expired');
+        await storage.updateUser(user.id, {
+          magicLinkToken: null,
+          magicLinkExpiry: null
+        });
         return res.redirect('/?error=expired-token');
       }
 
+      // Clear the token first to prevent reuse
       await storage.updateUser(user.id, {
         magicLinkToken: null,
-        magicLinkExpiry: null,
+        magicLinkExpiry: null
       });
 
-      req.login(user, (err) => {
-        if (err) return res.redirect('/?error=login-failed');
-        res.redirect('/');
+      // Handle login with proper error handling
+      await new Promise<void>((resolve, reject) => {
+        req.login(user, (err) => {
+          if (err) {
+            console.error('[Auth] Login failed:', err);
+            reject(err);
+          } else {
+            console.log('[Auth] User logged in successfully:', user.id);
+            resolve();
+          }
+        });
       });
+
+      // After successful login, redirect to home
+      res.redirect('/');
     } catch (error) {
-      res.redirect('/?error=verification-failed');
+      console.error('[Auth] Verification error:', error);
+      res.redirect('/?error=login-failed');
     }
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) {
+      console.log('[Auth] Unauthenticated user request');
+      return res.sendStatus(401);
+    }
+    console.log('[Auth] Returning user data for:', req.user.id);
     res.json(req.user);
   });
 
   app.post("/api/logout", (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    const userId = req.user.id;
     req.logout((err) => {
-      if (err) return next(err);
+      if (err) {
+        console.error('[Auth] Logout error:', err);
+        return next(err);
+      }
+      console.log('[Auth] User logged out:', userId);
       res.sendStatus(200);
     });
   });
