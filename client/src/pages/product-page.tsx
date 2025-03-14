@@ -113,6 +113,14 @@ export default function ProductPage() {
             </a>
           </div>
 
+          {/* Description section */}
+          <div>
+            <h2 className="text-lg font-semibold mb-2">About this product</h2>
+            <p className="text-muted-foreground whitespace-pre-wrap">
+              {product.description || "Loading product description..."}
+            </p>
+          </div>
+
           {/* Tags Section */}
           <div className="flex flex-wrap gap-2">
             {product.material && product.material.length > 0 && (
@@ -155,13 +163,6 @@ export default function ProductPage() {
                 </Badge>
               </Link>
             </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold mb-2">About this product</h2>
-            <p className="text-muted-foreground whitespace-pre-wrap">
-              {product.description}
-            </p>
           </div>
         </div>
       </div>
