@@ -76,12 +76,18 @@ async function sendMagicLink(email: string, token: string) {
     console.log('[Auth] Magic link email sent successfully to:', email);
   } catch (error: any) {
     console.error('[Auth] Error sending magic link email:', error);
-    if (error.code === 'EAUTH') {
-      console.error('[Auth] Authentication failed. Please check SMTP credentials.');
-    } else if (error.code === 'ECONNECTION') {
-      console.error('[Auth] Connection failed. Please check SMTP host and port.');
-    }
-    throw new Error("Failed to send magic link email. Please try again later.");
+    // Log the full error details for debugging
+    console.error('[Auth] Detailed error:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+
+    throw new Error(
+      "We're having trouble sending emails right now. Please try again in a few minutes."
+    );
   }
 }
 
@@ -158,8 +164,8 @@ export function setupAuth(app: Express) {
       res.status(200).json({ message: "Magic link sent" });
     } catch (error: any) {
       console.error('[Auth] Error in magic link flow:', error);
-      res.status(400).json({ 
-        message: error.message || "Failed to send magic link email. Please try again later."
+      res.status(500).json({ 
+        message: error.message || "We're having trouble sending emails right now. Please try again in a few minutes."
       });
     }
   });
