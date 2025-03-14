@@ -52,9 +52,9 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-instrument italic">Welcome to August</h1>
+          <h1 className="text-2xl font-instrument italic">August</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Join our community to discover and share extraordinary products
+            Discover and share extraordinary products
           </p>
         </div>
 
