@@ -205,7 +205,7 @@ export default function ProductCard({
 
         <div className="flex items-center gap-2 mt-3">
           <Button
-            variant={showGoldUpvote ? "outline" : "outline"}
+            variant="outline"
             size="sm"
             onClick={handleVote}
             disabled={voteMutation.isPending}
