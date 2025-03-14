@@ -16,34 +16,22 @@ function generateToken(): string {
   return randomBytes(32).toString('hex');
 }
 
-// Configure SMTP settings for production mail server
-const port = parseInt(process.env.SMTP_PORT || "587");
+// Configure production mail server settings
 const smtpConfig = {
   host: process.env.SMTP_HOST,
-  port: port,
+  port: parseInt(process.env.SMTP_PORT || "587"),
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  requireTLS: true, // Always use STARTTLS for production mail server
+  secure: false, // For port 587, we want to use STARTTLS
+  requireTLS: true, // Ensure TLS is used
+  tls: {
+    ciphers: 'SSLv3' // Use strong ciphers
+  }
 };
 
-console.log('[Auth] SMTP Configuration:', {
-  host: smtpConfig.host,
-  port: smtpConfig.port,
-  auth: { user: smtpConfig.auth.user }
-});
-
 const transporter = createTransport(smtpConfig);
-
-// Verify SMTP connection
-transporter.verify((error) => {
-  if (error) {
-    console.error('[Auth] SMTP connection error:', error);
-  } else {
-    console.log('[Auth] SMTP connection successful');
-  }
-});
 
 async function sendMagicLink(email: string, token: string) {
   try {
@@ -54,10 +42,10 @@ async function sendMagicLink(email: string, token: string) {
 
     const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
-    const mailOptions = {
-      from: `"August" <${process.env.SMTP_USER}>`,
+    const msg = {
       to: email,
-      subject: "Sign in to August",
+      from: 'noreply@mail.august.build', // Using your custom Mailgun domain
+      subject: 'Sign in to August',
       text: `Click this link to sign in: ${magicLink}`,
       html: `
         <p>Click the button below to sign in to August:</p>
@@ -67,10 +55,10 @@ async function sendMagicLink(email: string, token: string) {
       `,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    await transporter.sendMail(msg);
     console.log('[Auth] Magic link email sent:', {
-      messageId: info.messageId,
-      envelope: info.envelope
+      to: email,
+      from: msg.from
     });
   } catch (error: any) {
     console.error('[Auth] Email sending failed:', error);
@@ -105,7 +93,6 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  // Magic link endpoints
   app.post("/api/auth/magic-link", async (req, res) => {
     const { email } = req.body;
 
