@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
 import Stripe from "stripe";
+import { generateProductDescription } from "./lib/openai";
 
 // Initialize Stripe with comprehensive error handling
 let stripe: Stripe | null = null;
@@ -86,16 +87,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error("User ID not found in session");
       }
 
-      // Prepare product data with user ID
+      // Generate description using OpenAI
+      console.log('[Products] Generating description...');
+      const description = await generateProductDescription(
+        validated.data.title,
+        validated.data.companyName,
+        validated.data.link,
+        validated.data.material,
+        validated.data.collection,
+        validated.data.country
+      );
+
+      // Prepare product data with user ID and generated description
       const productData = {
         ...validated.data,
         userId: req.user.id,
+        description: description,
         featured: stripe ? validated.data.featured : false
       };
 
       console.log('[Products] Creating product with data:', {
         ...productData,
-        userId: req.user.id // Log userId explicitly
+        userId: req.user.id
       });
 
       const product = await storage.createProduct(productData);
