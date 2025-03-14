@@ -6,10 +6,17 @@ import { User as SelectUser } from "@shared/schema";
 import { randomBytes } from "crypto";
 import fetch from "node-fetch";
 
-// Startup validation
+// Validate Mailgun configuration
 if (!process.env.MAILGUN_DOMAIN || !process.env.MAILGUN_API_KEY) {
   throw new Error("Missing required Mailgun configuration");
 }
+
+// Log configuration status (without exposing secrets)
+console.log('Server configuration:', {
+  mailgunDomain: process.env.MAILGUN_DOMAIN,
+  hasMailgunKey: Boolean(process.env.MAILGUN_API_KEY),
+  environment: process.env.NODE_ENV || 'development'
+});
 
 declare global {
   namespace Express {
@@ -24,52 +31,50 @@ async function sendMagicLinkEmail(email: string, token: string) {
 
   const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
-  // Basic message validation
-  if (!email || !token) {
-    throw new Error("Invalid email or token");
-  }
-
   try {
-    console.log('Sending magic link email to:', email);
+    console.log('[Mailgun] Attempting to send email to:', email);
+
+    // Mailgun API requires Basic auth with 'api:YOUR-API-KEY'
+    const auth = Buffer.from(`api:${process.env.MAILGUN_API_KEY}`).toString('base64');
+    const formData = new URLSearchParams({
+      from: `mailgun@${process.env.MAILGUN_DOMAIN}`, // Simplified sender format
+      to: email,
+      subject: 'Sign in to August',
+      text: `Click this link to sign in: ${magicLink}`,
+      html: `<p>Click here to sign in: <a href="${magicLink}">Sign In</a></p>`
+    });
 
     const response = await fetch(
       `https://api.mailgun.net/v3/${process.env.MAILGUN_DOMAIN}/messages`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.MAILGUN_API_KEY}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: JSON.stringify({
-          from: `August <mailgun@${process.env.MAILGUN_DOMAIN}>`,
-          to: email,
-          subject: 'Sign in to August',
-          text: `Click this link to sign in: ${magicLink}`
-        })
+        body: formData
       }
     );
 
-    const responseText = await response.text();
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch {
-      data = responseText;
-    }
-
-    console.log('Mailgun API Response:', {
-      status: response.status,
-      data: data
-    });
+    const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      throw new Error(`Failed to send email: ${data.message || responseText}`);
+      throw new Error(data?.message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
+    console.log('[Mailgun] Email sent successfully:', {
+      to: email,
+      messageId: data?.id
+    });
+
     return data;
-  } catch (error) {
-    console.error('Mailgun API error:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('[Mailgun] Send failed:', {
+      error: error.message,
+      status: error.status,
+      details: error.details
+    });
+    throw new Error('Failed to send login email');
   }
 }
 
@@ -126,18 +131,19 @@ export function setupAuth(app: Express) {
       await sendMagicLinkEmail(email, token);
       res.json({ message: "Magic link sent" });
     } catch (error: any) {
-      console.error('Failed to send magic link:', error);
-      res.status(500).json({ message: error.message });
+      console.error('[Auth] Magic link error:', error);
+      res.status(500).json({ message: "Failed to send login email" });
     }
   });
 
   app.get("/api/auth/verify-magic-link", async (req, res) => {
-    try {
-      const { token } = req.query;
-      if (!token || typeof token !== 'string') {
-        return res.redirect('/?error=invalid-token');
-      }
+    const { token } = req.query;
 
+    if (!token || typeof token !== 'string') {
+      return res.redirect('/?error=invalid-token');
+    }
+
+    try {
       const user = await storage.getUserByMagicLinkToken(token);
       if (!user || !user.magicLinkExpiry || new Date() > new Date(user.magicLinkExpiry)) {
         return res.redirect('/?error=expired-token');
