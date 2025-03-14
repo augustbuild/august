@@ -22,9 +22,6 @@ const smtpConfig = {
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false // Temporarily disable SSL verification for debugging
   }
 };
 
@@ -38,14 +35,6 @@ const transporter = createTransport(smtpConfig);
 transporter.verify((error) => {
   if (error) {
     console.error('[Auth] SMTP connection error:', error);
-    console.error('[Auth] Full error details:', {
-      name: error.name,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      stack: error.stack
-    });
   } else {
     console.log('[Auth] SMTP connection successful');
   }
@@ -60,7 +49,7 @@ async function sendMagicLink(email: string, token: string) {
 
     const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
-    // Get domain from SMTP_USER for the display name
+    // Use the custom domain for sending emails
     const fromEmail = process.env.SMTP_USER;
     const fromName = "August";
 
@@ -80,28 +69,15 @@ async function sendMagicLink(email: string, token: string) {
     console.log('[Auth] Attempting to send email with options:', { 
       from: mailOptions.from,
       to: mailOptions.to,
-      subject: mailOptions.subject,
-      smtpHost: process.env.SMTP_HOST,
-      smtpPort: process.env.SMTP_PORT
+      subject: mailOptions.subject
     });
 
     await transporter.sendMail(mailOptions);
     console.log('[Auth] Magic link email sent successfully to:', email);
   } catch (error: any) {
     console.error('[Auth] Error sending magic link email:', error);
-    // Log the full error details for debugging
-    console.error('[Auth] Detailed error:', {
-      name: error.name,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      stack: error.stack,
-      message: error.message
-    });
-
     throw new Error(
-      error.response || "We're having trouble sending emails right now. Please try again in a few minutes."
+      "We're having trouble sending emails right now. Please try again in a few minutes."
     );
   }
 }
