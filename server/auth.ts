@@ -30,9 +30,9 @@ const mailgun = createTransport({
 // Verify the connection
 mailgun.verify(function(error, success) {
   if (error) {
-    console.error('Mailgun connection error:', error);
+    console.error('[Mailgun] Connection error:', error);
   } else {
-    console.log("Mailgun server is ready to send emails");
+    console.log("[Mailgun] Server is ready to send emails");
   }
 });
 
@@ -44,8 +44,10 @@ async function sendMagicLink(email: string, token: string) {
   const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
   try {
-    await mailgun.sendMail({
-      from: `August <${process.env.SMTP_USER}>`,
+    console.log('[Mailgun] Attempting to send email to:', email);
+
+    const info = await mailgun.sendMail({
+      from: process.env.SMTP_USER,
       to: email,
       subject: 'Sign in to August',
       html: `
@@ -55,10 +57,17 @@ async function sendMagicLink(email: string, token: string) {
         </a>
       `
     });
-    console.log('Magic link email sent successfully to:', email);
-  } catch (error) {
-    console.error('Failed to send magic link email:', error);
-    throw error;
+
+    console.log('[Mailgun] Email sent successfully:', info.messageId);
+  } catch (error: any) {
+    console.error('[Mailgun] Send error:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      responseCode: error.responseCode,
+      response: error.response
+    });
+    throw new Error(error.message || "Failed to send login email");
   }
 }
 
@@ -115,8 +124,10 @@ export function setupAuth(app: Express) {
       await sendMagicLink(email, token);
       res.json({ message: "Magic link sent" });
     } catch (error: any) {
-      console.error('Magic link error:', error);
-      res.status(500).json({ message: "Failed to send login email" });
+      console.error('[Auth] Magic link error:', error);
+      res.status(500).json({ 
+        message: error.message || "Failed to send login email"
+      });
     }
   });
 
