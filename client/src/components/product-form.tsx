@@ -14,7 +14,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import StripeCheckout from "./stripe-checkout";
@@ -202,8 +202,8 @@ export default function ProductForm({
   const [countrySearch, setCountrySearch] = useState("");
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
-  const [wantsFeatured, setWantsFeatured] = useState(initialValues?.featured || false); // Preserve featured status
-
+  const [wantsFeatured, setWantsFeatured] = useState(initialValues?.featured || false);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
@@ -221,6 +221,57 @@ export default function ProductForm({
       }),
     },
   });
+
+  const generateDescriptionMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest(
+        "POST",
+        "/api/generate-description",
+        data
+      );
+      return res.json();
+    },
+    onSuccess: (data) => {
+      form.setValue("description", data.description);
+      toast({
+        title: "Description Generated",
+        description: "AI has generated a description based on the product details.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to generate description. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleGenerateDescription = async () => {
+    const formData = form.getValues();
+    if (!formData.title || !formData.companyName || !formData.link || !formData.collection || !formData.country) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields before generating a description.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+    try {
+      await generateDescriptionMutation.mutateAsync({
+        title: formData.title,
+        companyName: formData.companyName,
+        link: formData.link,
+        materials: formData.material || [],
+        collection: formData.collection,
+        country: formData.country,
+      });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
@@ -346,23 +397,33 @@ export default function ProductForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    placeholder="What makes this product extraordinary?"
-                    className="min-h-[100px] focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Description
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateDescription}
+                disabled={isGeneratingDescription || generateDescriptionMutation.isPending}
+              >
+                {isGeneratingDescription || generateDescriptionMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Generating...</>
+                ) : (
+                  "Generate Description"
+                )}
+              </Button>
+            </div>
+            <Textarea
+              {...form.register("description")}
+              placeholder="Click 'Generate Description' to create an AI-generated description"
+              className="min-h-[100px] focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+              readOnly
+            />
+            <FormMessage>{form.formState.errors.description?.message}</FormMessage>
+          </div>
           <FormField
             control={form.control}
             name="link"
