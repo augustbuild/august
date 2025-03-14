@@ -203,11 +203,14 @@ export default function ProductCard({
 
         <div className="flex items-center gap-2 mt-3">
           <Button
-            variant={hasUpvoted ? "default" : "outline"}
+            variant={hasUpvoted ? "outline" : "outline"}
             size="sm"
             onClick={handleVote}
             disabled={voteMutation.isPending}
-            className="h-7 px-2 flex items-center gap-1"
+            className={cn(
+              "h-7 px-2 flex items-center gap-1",
+              hasUpvoted && "bg-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white"
+            )}
           >
             <ArrowUp className="h-4 w-4" />
             <span className="text-sm font-medium">{product.score}</span>
