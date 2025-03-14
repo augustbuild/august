@@ -146,7 +146,7 @@ export default function ProductCard({
   return (
     <div className="flex gap-3">
       <div className="flex-shrink-0 relative w-24 h-24 rounded-md overflow-hidden">
-        <div className="absolute inset-0 bg-secondary/10" /> {/* Consistent background */}
+        <div className="absolute inset-0 bg-secondary/10" />
         <img
           src={product.imageUrl}
           alt={product.title}
@@ -200,12 +200,6 @@ export default function ProductCard({
             </DropdownMenu>
           )}
         </div>
-
-        {isFullView && (
-          <p className="text-muted-foreground whitespace-pre-wrap mt-2">
-            {product.description}
-          </p>
-        )}
 
         <div className="flex items-center gap-2 mt-3">
           <Button

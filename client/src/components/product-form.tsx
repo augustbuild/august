@@ -165,10 +165,10 @@ export const collections = [
   "Gloves"
 ].sort();
 
+// Update the Product interface to remove description
 interface Product {
   id: number;
   title: string;
-  description: string;
   link: string;
   imageUrl: string;
   companyName: string;
