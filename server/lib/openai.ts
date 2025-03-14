@@ -5,6 +5,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function fetchProductPage(url: string): Promise<string> {
   try {
+    console.log("[OpenAI] Fetching product page:", url);
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -34,6 +35,11 @@ export async function generateProductDescription(
     console.log("[OpenAI] Generating description for:", { title, companyName });
 
     const pageContent = await fetchProductPage(link);
+    if (!pageContent) {
+      console.error("[OpenAI] Failed to fetch page content for:", link);
+      return "Product description unavailable.";
+    }
+    console.log("[OpenAI] Successfully fetched page content, length:", pageContent.length);
 
     const prompt = `Using the product link (${link}), product name "${title}", and company name "${companyName}", generate an accurate, concise description of what makes this product extraordinary. Here's additional context from the product page:\n\n${pageContent}`;
 
