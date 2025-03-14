@@ -88,15 +88,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate description using OpenAI
-      console.log('[Products] Generating description...');
-      const description = await generateProductDescription(
-        validated.data.title,
-        validated.data.companyName,
-        validated.data.link,
-        validated.data.material,
-        validated.data.collection,
-        validated.data.country
-      );
+      console.log('[Products] Generating description for:', validated.data.title);
+      let description;
+      try {
+        description = await generateProductDescription(
+          validated.data.title,
+          validated.data.companyName,
+          validated.data.link,
+          validated.data.material,
+          validated.data.collection,
+          validated.data.country
+        );
+      } catch (error: any) {
+        console.error('[Products] Description generation error:', error);
+        return res.status(422).json({
+          error: "Failed to generate product description",
+          details: error.message,
+          code: "DESCRIPTION_GENERATION_FAILED"
+        });
+      }
 
       // Prepare product data with user ID and generated description
       const productData = {
@@ -106,10 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         featured: stripe ? validated.data.featured : false
       };
 
-      console.log('[Products] Creating product with data:', {
-        ...productData,
-        userId: req.user.id
-      });
+      console.log('[Products] Creating product with data:', productData);
 
       const product = await storage.createProduct(productData);
 
@@ -128,7 +135,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('[Products] Creation error:', error);
       res.status(500).json({ 
         error: "Failed to create product",
-        details: error.message 
+        details: error.message,
+        code: "PRODUCT_CREATION_FAILED"
       });
     }
   });

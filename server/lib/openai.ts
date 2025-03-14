@@ -1,8 +1,11 @@
 import OpenAI from "openai";
 import fetch from "node-fetch";
-import * as cheerio from "cheerio"; // For extracting relevant content
+import * as cheerio from "cheerio";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY 
+});
 
 async function fetchProductPage(url: string): Promise<string> {
   try {
@@ -14,26 +17,32 @@ async function fetchProductPage(url: string): Promise<string> {
         'Accept-Language': 'en-US,en;q=0.5',
         'Connection': 'keep-alive',
         'Upgrade-Insecure-Requests': '1'
-      }
+      },
+      timeout: 10000 // 10 second timeout
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch product page: ${response.statusText}`);
+      throw new Error(`Failed to fetch product page: ${response.status} ${response.statusText}`);
     }
 
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Extract relevant content (product details, headings, etc.)
-    const relevantContent = $('h1, h2, h3, p, li').slice(0, 20).text(); // Limit to avoid token overload
+    // Enhanced content extraction
+    const title = $('h1').first().text();
+    const description = $('meta[name="description"]').attr('content') || '';
+    const productInfo = $('div, p').filter((_, el) => {
+      const text = $(el).text();
+      return text.length > 50 && !text.includes('cookie') && !text.includes('privacy');
+    }).slice(0, 5).text();
 
-    console.log("[OpenAI] Extracted relevant content:", relevantContent.substring(0, 300) + "...");
+    const relevantContent = `${title}\n${description}\n${productInfo}`.trim();
 
-    // Truncate to ~4000 characters to avoid hitting token limit
-    return relevantContent.slice(0, 4000);
-  } catch (error) {
-    console.error("[OpenAI] Error fetching product page:", error);
-    return "";
+    console.log("[OpenAI] Successfully extracted content:", relevantContent.substring(0, 200) + "...");
+    return relevantContent.slice(0, 4000); // Limit tokens
+  } catch (error: any) {
+    console.error("[OpenAI] Error fetching product page:", error.message);
+    return ""; // Return empty string on error
   }
 }
 
@@ -45,16 +54,18 @@ export async function generateProductDescription(
   collection: string,
   country: string
 ): Promise<string> {
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("[OpenAI] Missing API key");
+    throw new Error("OpenAI API key is not configured");
+  }
+
   try {
-    console.log("[OpenAI] Generating description for:", { title, companyName });
+    console.log("[OpenAI] Generating description for:", { title, companyName, link });
 
     const pageContent = await fetchProductPage(link);
     if (!pageContent) {
-      console.error("[OpenAI] Failed to fetch page content for:", link);
-      return "Product description unavailable.";
+      console.warn("[OpenAI] No content fetched from product page, proceeding with provided details only");
     }
-
-    console.log("[OpenAI] Successfully fetched and processed page content, length:", pageContent.length);
 
     const prompt = `Generate a product description based on the following details:
 - Product Name: "${title}"
@@ -63,48 +74,56 @@ export async function generateProductDescription(
 - Collection: "${collection}"
 - Country: "${country}"
 
-Use the following context from the product page:
-${pageContent}
+Additional context from product page:
+${pageContent || 'No additional context available'}
 
-Respond ONLY with a JSON object in this format:
-{
-  "description": "Generated product description here"
-}`;
+Respond with a JSON object that has a "description" field containing a professional, engaging product description (2-3 paragraphs).
+Focus on the unique value proposition, materials used, and how it fits into the collection.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Switch to free-tier model
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: "You are a professional product reviewer known for creating concise, accurate product descriptions."
+          content: "You are a professional product copywriter known for creating compelling, accurate product descriptions that highlight unique features and benefits."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.7
+      temperature: 0.7,
+      response_format: { type: "json_object" }
     });
 
-    console.log("[OpenAI] Full API response:", JSON.stringify(response, null, 2));
+    console.log("[OpenAI] Received response:", response.choices[0]?.message?.content);
 
-    // Handle both JSON and plain text responses
-    const content = response.choices[0]?.message?.content || "";
-    let result;
-
-    try {
-      result = JSON.parse(content);
-    } catch {
-      result = { description: content };
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("Empty response from OpenAI");
     }
 
-    if (!result.description) throw new Error("Empty response from OpenAI");
+    try {
+      const result = JSON.parse(content);
+      if (!result.description) {
+        throw new Error("Missing description in response");
+      }
+      return result.description;
+    } catch (parseError: any) {
+      console.error("[OpenAI] Failed to parse response:", parseError.message);
+      throw new Error("Invalid response format from OpenAI");
+    }
 
-    console.log("[OpenAI] Generated description:", result.description);
-
-    return result.description;
   } catch (error: any) {
-    console.error("[OpenAI] Error generating description:", error.message);
-    return "Description generation failed due to an internal error.";
+    console.error("[OpenAI] Error generating description:", error);
+
+    // Provide more specific error messages
+    if (error.message.includes("API key")) {
+      throw new Error("OpenAI API key is invalid or missing");
+    } else if (error.message.includes("rate limit")) {
+      throw new Error("OpenAI API rate limit exceeded. Please try again later.");
+    } else {
+      throw new Error(`Failed to generate description: ${error.message}`);
+    }
   }
 }
