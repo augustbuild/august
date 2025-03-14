@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -14,7 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import StripeCheckout from "./stripe-checkout";
@@ -175,7 +174,7 @@ interface Product {
   country: string;
   material: string[];
   collection: string;
-  featured?: boolean; // Added featured property
+  featured?: boolean;
 }
 
 const getCountryFlag = (country: string) => {
@@ -203,14 +202,13 @@ export default function ProductForm({
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [wantsFeatured, setWantsFeatured] = useState(initialValues?.featured || false);
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
     defaultValues: {
       ...(initialValues || {
         title: "",
-        description: "",
+        description: "", 
         link: "",
         imageUrl: "",
         companyName: "",
@@ -222,59 +220,27 @@ export default function ProductForm({
     },
   });
 
-  const generateDescriptionMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest(
-        "POST",
-        "/api/generate-description",
-        data
-      );
-      return res.json();
-    },
-    onSuccess: (data) => {
-      form.setValue("description", data.description);
-      toast({
-        title: "Description Generated",
-        description: "AI has generated a description based on the product details.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: "Failed to generate description. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleGenerateDescription = async () => {
-    const formData = form.getValues();
-    if (!formData.title || !formData.companyName || !formData.link || !formData.collection || !formData.country) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields before generating a description.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGeneratingDescription(true);
-    try {
-      await generateDescriptionMutation.mutateAsync({
-        title: formData.title,
-        companyName: formData.companyName,
-        link: formData.link,
-        materials: formData.material || [],
-        collection: formData.collection,
-        country: formData.country,
-      });
-    } finally {
-      setIsGeneratingDescription(false);
-    }
-  };
-
   const mutation = useMutation({
     mutationFn: async (data: any) => {
+      // First generate the description
+      if (!isEditing) {
+        const descriptionRes = await apiRequest(
+          "POST",
+          "/api/generate-description",
+          {
+            title: data.title,
+            companyName: data.companyName,
+            link: data.link,
+            materials: data.material || [],
+            collection: data.collection,
+            country: data.country,
+          }
+        );
+        const descriptionData = await descriptionRes.json();
+        data.description = descriptionData.description;
+      }
+
+      // Then submit the product with the generated description
       const res = await apiRequest(
         isEditing ? "PATCH" : "POST",
         isEditing ? `/api/products/${initialValues?.id}` : "/api/products",
@@ -326,7 +292,6 @@ export default function ProductForm({
   );
 
   const handleSubmit = async (data: any) => {
-    // If Stripe is not configured, show a message and submit without featured flag
     if (wantsFeatured) {
       try {
         const res = await apiRequest("POST", "/api/create-payment-intent");
@@ -397,33 +362,6 @@ export default function ProductForm({
               </FormItem>
             )}
           />
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Description
-              </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleGenerateDescription}
-                disabled={isGeneratingDescription || generateDescriptionMutation.isPending}
-              >
-                {isGeneratingDescription || generateDescriptionMutation.isPending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Generating...</>
-                ) : (
-                  "Generate Description"
-                )}
-              </Button>
-            </div>
-            <Textarea
-              {...form.register("description")}
-              placeholder="Click 'Generate Description' to create an AI-generated description"
-              className="min-h-[100px] focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-              readOnly
-            />
-            <FormMessage>{form.formState.errors.description?.message}</FormMessage>
-          </div>
           <FormField
             control={form.control}
             name="link"
@@ -570,7 +508,7 @@ export default function ProductForm({
                                     : "opacity-0"
                                 )}
                               />
-                              {getCountryFlag(country)} {country}
+                              {country}
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -661,8 +599,8 @@ export default function ProductForm({
                     id="featured"
                     checked={form.getValues("featured")}
                     onCheckedChange={(checked) => {
-                      form.setValue("featured", checked);
-                      setWantsFeatured(checked);
+                      form.setValue("featured", checked as boolean);
+                      setWantsFeatured(checked as boolean);
                     }}
                   />
                   <label

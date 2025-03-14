@@ -33,8 +33,8 @@ Format your response as a JSON object with a single "description" field.`;
       response_format: { type: "json_object" }
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
-    return result.description;
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    return result.description || "Description generation failed.";
   } catch (error) {
     console.error("[OpenAI] Error generating description:", error);
     throw new Error("Failed to generate product description");
