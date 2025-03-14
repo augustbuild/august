@@ -81,14 +81,7 @@ async function sendMagicLink(email: string, token: string) {
     } else if (error.code === 'ECONNECTION') {
       console.error('[Auth] Connection failed. Please check SMTP host and port.');
     }
-    if (error.responseCode === 421) {
-      throw new Error(
-        "This email address is not authorized in the Mailgun sandbox. Please add it to your authorized recipients in Mailgun settings."
-      );
-    }
-    throw new Error(
-      "Email sending is currently restricted."
-    );
+    throw new Error("Failed to send magic link email. Please try again later.");
   }
 }
 
@@ -166,7 +159,7 @@ export function setupAuth(app: Express) {
     } catch (error: any) {
       console.error('[Auth] Error in magic link flow:', error);
       res.status(400).json({ 
-        message: error.message || "Failed to send magic link email."
+        message: error.message || "Failed to send magic link email. Please try again later."
       });
     }
   });
