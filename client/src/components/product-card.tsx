@@ -94,7 +94,6 @@ export default function ProductCard({
     }
 
     try {
-      // If it's the user's own product and it's not featured yet, show feature dialog
       if (product.userId === user.id && !product.featured) {
         const res = await apiRequest("POST", "/api/create-payment-intent");
         if (res.status === 503) {
@@ -119,7 +118,6 @@ export default function ProductCard({
         return;
       }
 
-      // If it's the user's own product and it's already featured, show a message
       if (product.userId === user.id && product.featured) {
         toast({
           title: "Already Featured",
@@ -128,7 +126,6 @@ export default function ProductCard({
         return;
       }
 
-      // For other users' products, handle normal voting
       const newValue = vote?.value === 1 ? 0 : 1;
       voteMutation.mutate(newValue);
     } catch (error: any) {
@@ -143,7 +140,6 @@ export default function ProductCard({
   const productSlug = generateSlug(product.title, product.companyName);
   const isCreator = user?.id === product.userId;
   const hasUpvoted = vote?.value === 1;
-  const showGoldUpvote = (hasUpvoted || isCreator);
 
   return (
     <div className="flex gap-3">
@@ -211,7 +207,7 @@ export default function ProductCard({
             disabled={voteMutation.isPending}
             className={cn(
               "h-7 px-2 flex items-center gap-1",
-              (hasUpvoted || isCreator) && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
+              hasUpvoted && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
             )}
           >
             <ArrowUp className="h-4 w-4" />
