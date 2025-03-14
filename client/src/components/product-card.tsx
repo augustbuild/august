@@ -141,7 +141,9 @@ export default function ProductCard({
   };
 
   const productSlug = generateSlug(product.title, product.companyName);
+  const isCreator = user?.id === product.userId;
   const hasUpvoted = vote?.value === 1;
+  const showGoldUpvote = hasUpvoted || isCreator;
 
   return (
     <div className="flex gap-3">
@@ -203,13 +205,13 @@ export default function ProductCard({
 
         <div className="flex items-center gap-2 mt-3">
           <Button
-            variant={hasUpvoted ? "outline" : "outline"}
+            variant={showGoldUpvote ? "outline" : "outline"}
             size="sm"
             onClick={handleVote}
             disabled={voteMutation.isPending}
             className={cn(
               "h-7 px-2 flex items-center gap-1",
-              hasUpvoted && "bg-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white"
+              showGoldUpvote && "bg-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white"
             )}
           >
             <ArrowUp className="h-4 w-4" />
