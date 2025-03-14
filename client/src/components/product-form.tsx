@@ -17,6 +17,7 @@ import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import StripeCheckout from "./stripe-checkout";
+import AuthModal from "./auth-modal";
 
 // Materials list sorted alphabetically
 export const materials = [
@@ -202,6 +203,7 @@ export default function ProductForm({
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [wantsFeatured, setWantsFeatured] = useState(initialValues?.featured || false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
@@ -221,6 +223,11 @@ export default function ProductForm({
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
+      if (!user) {
+        setShowAuthModal(true);
+        throw new Error("Please log in to submit a product");
+      }
+
       try {
         console.log("Starting product submission with data:", data);
         const productData = { ...data };
@@ -263,11 +270,13 @@ export default function ProductForm({
     },
     onError: (error: Error) => {
       console.error("Mutation error:", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error.message !== "Please log in to submit a product") {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -293,6 +302,11 @@ export default function ProductForm({
 
   const onSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
+
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
 
     if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
       console.error("Form validation errors:", form.formState.errors);
@@ -341,337 +355,351 @@ export default function ProductForm({
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">{isEditing ? "Edit Product" : "Submit a Product"}</h2>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Enter product name"
-                    className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="companyName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Company</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Enter company name"
-                    className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="link"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Link</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="url"
-                    placeholder="https://example.com"
-                    className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="imageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Image</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="collection"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Collection</FormLabel>
-                <FormControl>
-                  <Popover open={collectionOpen} onOpenChange={setCollectionOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={collectionOpen}
-                        className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+      {!user ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">Please log in to submit a product</p>
+          <Button onClick={() => setShowAuthModal(true)}>
+            Log In
+          </Button>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter product name"
+                      className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter company name"
+                      className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="url"
+                      placeholder="https://example.com"
+                      className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="collection"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Collection</FormLabel>
+                  <FormControl>
+                    <Popover open={collectionOpen} onOpenChange={setCollectionOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={collectionOpen}
+                          className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                        >
+                          {field.value ? (
+                            field.value
+                          ) : (
+                            <span className="text-muted-foreground">Select collection</span>
+                          )}
+                          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search collections..."
+                            value={collectionSearch}
+                            onValueChange={setCollectionSearch}
+                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                          />
+                          <CommandEmpty>No collections found.</CommandEmpty>
+                          <CommandGroup className="max-h-64 overflow-auto">
+                            {filteredCollections.map((collection) => (
+                              <CommandItem
+                                key={collection}
+                                onSelect={() => {
+                                  form.setValue("collection", collection);
+                                  setCollectionOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value === collection
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {collection}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={countryOpen}
+                          className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                        >
+                          {field.value ? (
+                            `${field.value}`
+                          ) : (
+                            <span className="text-muted-foreground">Select country</span>
+                          )}
+                          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search countries..."
+                            value={countrySearch}
+                            onValueChange={setCountrySearch}
+                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                          />
+                          <CommandEmpty>No countries found.</CommandEmpty>
+                          <CommandGroup className="max-h-64 overflow-auto">
+                            {filteredCountries.map((country) => (
+                              <CommandItem
+                                key={country}
+                                onSelect={() => {
+                                  form.setValue("country", country);
+                                  setCountryOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value === country
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {country}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="material"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Materials</FormLabel>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {(field.value || []).map((material: string) => (
+                      <Badge
+                        key={material}
+                        variant="secondary"
+                        className="flex items-center gap-1"
                       >
-                        {field.value ? (
-                          field.value
-                        ) : (
-                          <span className="text-muted-foreground">Select collection</span>
-                        )}
-                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput
-                          placeholder="Search collections..."
-                          value={collectionSearch}
-                          onValueChange={setCollectionSearch}
-                          className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                        {material}
+                        <X
+                          className="h-3 w-3 cursor-pointer hover:text-destructive"
+                          onClick={() => {
+                            handleMaterialSelect(material);
+                          }}
                         />
-                        <CommandEmpty>No collections found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-auto">
-                          {filteredCollections.map((collection) => (
-                            <CommandItem
-                              key={collection}
-                              onSelect={() => {
-                                form.setValue("collection", collection);
-                                setCollectionOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  field.value === collection
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {collection}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country</FormLabel>
-                <FormControl>
-                  <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={countryOpen}
-                        className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                      >
-                        {field.value ? (
-                          `${field.value}`
-                        ) : (
-                          <span className="text-muted-foreground">Select country</span>
-                        )}
-                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput
-                          placeholder="Search countries..."
-                          value={countrySearch}
-                          onValueChange={setCountrySearch}
-                          className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                        />
-                        <CommandEmpty>No countries found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-auto">
-                          {filteredCountries.map((country) => (
-                            <CommandItem
-                              key={country}
-                              onSelect={() => {
-                                form.setValue("country", country);
-                                setCountryOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  field.value === country
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {country}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="material"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Materials</FormLabel>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {(field.value || []).map((material: string) => (
-                    <Badge
-                      key={material}
-                      variant="secondary"
-                      className="flex items-center gap-1"
+                      </Badge>
+                    ))}
+                  </div>
+                  <FormControl>
+                    <Popover open={materialsOpen} onOpenChange={setMaterialsOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={materialsOpen}
+                          className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                        >
+                          <span className="text-muted-foreground">Select materials</span>
+                          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search materials..."
+                            value={materialSearch}
+                            onValueChange={setMaterialSearch}
+                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                          />
+                          <CommandEmpty>No materials found.</CommandEmpty>
+                          <CommandGroup className="max-h-64 overflow-auto">
+                            {filteredMaterials.map((material) => (
+                              <CommandItem
+                                key={material}
+                                onSelect={() => handleMaterialSelect(material)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    (field.value || []).includes(material)
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {material}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="sticky bottom-0 pt-4 bg-background">
+              {isEditing ? (
+                <>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox
+                      id="featured"
+                      checked={form.getValues("featured")}
+                      onCheckedChange={(checked) => {
+                        form.setValue("featured", checked as boolean);
+                        setWantsFeatured(checked as boolean);
+                      }}
+                    />
+                    <label
+                      htmlFor="featured"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      {material}
-                      <X
-                        className="h-3 w-3 cursor-pointer hover:text-destructive"
-                        onClick={() => {
-                          handleMaterialSelect(material);
-                        }}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-                <FormControl>
-                  <Popover open={materialsOpen} onOpenChange={setMaterialsOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={materialsOpen}
-                        className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                      >
-                        <span className="text-muted-foreground">Select materials</span>
-                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput
-                          placeholder="Search materials..."
-                          value={materialSearch}
-                          onValueChange={setMaterialSearch}
-                          className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                        />
-                        <CommandEmpty>No materials found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-auto">
-                          {filteredMaterials.map((material) => (
-                            <CommandItem
-                              key={material}
-                              onSelect={() => handleMaterialSelect(material)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  (field.value || []).includes(material)
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {material}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="sticky bottom-0 pt-4 bg-background">
-            {isEditing ? (
-              <>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Checkbox
-                    id="featured"
-                    checked={form.getValues("featured")}
-                    onCheckedChange={(checked) => {
-                      form.setValue("featured", checked as boolean);
-                      setWantsFeatured(checked as boolean);
-                    }}
-                  />
-                  <label
-                    htmlFor="featured"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      Featured product ($100/month)
+                    </label>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={mutation.isPending}
                   >
-                    Featured product ($100/month)
-                  </label>
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={mutation.isPending}
-                >
-                  {mutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Checkbox
-                    id="featured"
-                    checked={wantsFeatured}
-                    onCheckedChange={(checked) => setWantsFeatured(checked as boolean)}
-                  />
-                  <label
-                    htmlFor="featured"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    {mutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox
+                      id="featured"
+                      checked={wantsFeatured}
+                      onCheckedChange={(checked) => setWantsFeatured(checked as boolean)}
+                    />
+                    <label
+                      htmlFor="featured"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Feature this product on the homepage ($100/month)
+                    </label>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={mutation.isPending}
                   >
-                    Feature this product on the homepage ($100/month)
-                  </label>
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={mutation.isPending}
-                >
-                  {mutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Product"
-                  )}
-                </Button>
-              </>
-            )}
-          </div>
-        </form>
-      </Form>
+                    {mutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Product"
+                    )}
+                  </Button>
+                </>
+              )}
+            </div>
+          </form>
+        </Form>
+      )}
+
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+      />
 
       <StripeCheckout
         open={showStripeCheckout}
