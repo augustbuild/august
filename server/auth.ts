@@ -24,27 +24,35 @@ const smtpConfig = {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  secure: false, // For port 587, we want to use STARTTLS
-  requireTLS: true, // Ensure TLS is used
-  tls: {
-    ciphers: 'SSLv3' // Use strong ciphers
-  }
+  secure: false, // For port 587, use STARTTLS
 };
+
+console.log('[Auth] Initializing mail transport with config:', {
+  host: smtpConfig.host,
+  port: smtpConfig.port,
+  auth: { user: smtpConfig.auth.user }
+});
 
 const transporter = createTransport(smtpConfig);
 
+// Verify mail configuration on startup
+transporter.verify()
+  .then(() => console.log('[Auth] Mail transport verified successfully'))
+  .catch(error => {
+    console.error('[Auth] Mail transport verification failed:', error);
+  });
+
 async function sendMagicLink(email: string, token: string) {
   try {
-    // Determine the base URL based on environment
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://august.build'
+      ? 'https://www.august.build'
       : `https://${process.env.REPL_SLUG}.replit.dev`;
 
     const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
     const msg = {
       to: email,
-      from: 'noreply@mail.august.build', // Using your custom Mailgun domain
+      from: process.env.SMTP_USER,
       subject: 'Sign in to August',
       text: `Click this link to sign in: ${magicLink}`,
       html: `
@@ -55,13 +63,13 @@ async function sendMagicLink(email: string, token: string) {
       `,
     };
 
-    await transporter.sendMail(msg);
-    console.log('[Auth] Magic link email sent:', {
-      to: email,
-      from: msg.from
-    });
+    console.log('[Auth] Attempting to send magic link to:', email);
+
+    const info = await transporter.sendMail(msg);
+    console.log('[Auth] Magic link sent successfully');
+
   } catch (error: any) {
-    console.error('[Auth] Email sending failed:', error);
+    console.error('[Auth] Failed to send magic link:', error);
     throw new Error("Unable to send login email. Please try again in a few minutes.");
   }
 }
@@ -178,15 +186,15 @@ export function setupAuth(app: Express) {
     }
   });
 
+  app.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json(req.user);
+  });
+
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
-  });
-
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
   });
 }
