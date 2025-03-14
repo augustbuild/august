@@ -16,7 +16,7 @@ function generateToken(): string {
   return randomBytes(32).toString('hex');
 }
 
-// Configure SMTP settings based on port
+// Configure SMTP settings for production mail server
 const port = parseInt(process.env.SMTP_PORT || "587");
 const smtpConfig = {
   host: process.env.SMTP_HOST,
@@ -25,32 +25,21 @@ const smtpConfig = {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  secure: port === 465, // Use secure only for port 465 (SSL)
-  ...(port === 587 && {
-    requireTLS: true, // Require STARTTLS for port 587
-  })
+  requireTLS: true, // Always use STARTTLS for production mail server
 };
 
 console.log('[Auth] SMTP Configuration:', {
   host: smtpConfig.host,
   port: smtpConfig.port,
-  secure: smtpConfig.secure,
-  requireTLS: smtpConfig.requireTLS,
   auth: { user: smtpConfig.auth.user }
 });
 
 const transporter = createTransport(smtpConfig);
 
-// Verify SMTP connection with detailed logging
+// Verify SMTP connection
 transporter.verify((error) => {
   if (error) {
-    console.error('[Auth] SMTP connection error:', {
-      errorName: error.name,
-      errorCode: error.code,
-      errorMessage: error.message,
-      errorCommand: (error as any).command,
-      errorResponse: (error as any).response,
-    });
+    console.error('[Auth] SMTP connection error:', error);
   } else {
     console.log('[Auth] SMTP connection successful');
   }
@@ -84,17 +73,8 @@ async function sendMagicLink(email: string, token: string) {
       envelope: info.envelope
     });
   } catch (error: any) {
-    console.error('[Auth] Email error:', {
-      name: error.name,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      message: error.message
-    });
-
-    throw new Error(
-      "Unable to send login email. Please try again in a few minutes."
-    );
+    console.error('[Auth] Email sending failed:', error);
+    throw new Error("Unable to send login email. Please try again in a few minutes.");
   }
 }
 
