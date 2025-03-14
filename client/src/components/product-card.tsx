@@ -87,15 +87,35 @@ export default function ProductCard({
     },
   });
 
-  const handleVote = async () => {
+  const handleUpvote = async () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
 
+    // Don't allow self-voting
+    if (product.userId === user.id) {
+      return;
+    }
+
     try {
-      // Handle feature product case
-      if (product.userId === user.id && !product.featured) {
+      const newValue = vote?.value === 1 ? 0 : 1;
+      await voteMutation.mutateAsync(newValue);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update vote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFeatureProduct = async () => {
+    if (!user) return;
+    if (product.userId !== user.id) return;
+
+    try {
+      if (!product.featured) {
         const res = await apiRequest("POST", "/api/create-payment-intent");
         if (res.status === 503) {
           toast({
@@ -116,21 +136,12 @@ export default function ProductCard({
         }
         setStripeClientSecret(data.clientSecret);
         setShowStripeCheckout(true);
-        return;
-      }
-
-      // Already featured product case
-      if (product.userId === user.id && product.featured) {
+      } else {
         toast({
           title: "Already Featured",
           description: "This product is already featured.",
         });
-        return;
       }
-
-      // Handle normal upvote case
-      const newValue = vote?.value === 1 ? 0 : 1;
-      voteMutation.mutate(newValue);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -202,19 +213,32 @@ export default function ProductCard({
         </div>
 
         <div className="flex items-center gap-2 mt-3">
-          <Button
-            variant={hasUpvoted ? "default" : "outline"}
-            size="sm"
-            onClick={handleVote}
-            disabled={voteMutation.isPending}
-            className={cn(
-              "h-7 px-2 flex items-center gap-1",
-              hasUpvoted && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
-            )}
-          >
-            <ArrowUp className="h-4 w-4" />
-            <span className="text-sm font-medium">{product.score}</span>
-          </Button>
+          {/* Separate buttons for upvote and feature */}
+          {product.userId === user?.id ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleFeatureProduct}
+              className="h-7 px-2 flex items-center gap-1"
+            >
+              <ArrowUp className="h-4 w-4" />
+              <span className="text-sm font-medium">{product.score}</span>
+            </Button>
+          ) : (
+            <Button
+              variant={hasUpvoted ? "default" : "outline"}
+              size="sm"
+              onClick={handleUpvote}
+              disabled={voteMutation.isPending}
+              className={cn(
+                "h-7 px-2 flex items-center gap-1",
+                hasUpvoted && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
+              )}
+            >
+              <ArrowUp className="h-4 w-4" />
+              <span className="text-sm font-medium">{product.score}</span>
+            </Button>
+          )}
 
           <Link href={`/products/${productSlug}`}>
             <Button
