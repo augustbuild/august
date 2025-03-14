@@ -222,39 +222,29 @@ export default function ProductForm({
   const mutation = useMutation({
     mutationFn: async (data: any) => {
       try {
-        // First generate the description
-        if (!isEditing) {
-          const descriptionRes = await apiRequest(
-            "POST",
-            "/api/generate-description",
-            {
-              title: data.title,
-              companyName: data.companyName,
-              link: data.link,
-              materials: data.material || [],
-              collection: data.collection,
-              country: data.country,
-            }
-          );
-          if (!descriptionRes.ok) {
-            throw new Error("Failed to generate description");
-          }
-          const descriptionData = await descriptionRes.json();
-          data.description = descriptionData.description;
-        }
+        console.log("Starting product submission with data:", data);
+        const productData = { ...data };
 
-        // Then submit the product with the generated description
+        // Remove description field if it exists
+        delete productData.description;
+
+        // Then submit the product (description will be generated server-side)
+        console.log("Submitting product...");
         const res = await apiRequest(
           isEditing ? "PATCH" : "POST",
           isEditing ? `/api/products/${initialValues?.id}` : "/api/products",
-          data
+          productData
         );
+
         if (!res.ok) {
-          throw new Error("Failed to submit product");
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to submit product");
         }
+
         return res.json();
       } catch (error: any) {
-        throw new Error(error.message || "Failed to submit product");
+        console.error("Product submission error:", error);
+        throw error;
       }
     },
     onSuccess: () => {
@@ -272,6 +262,7 @@ export default function ProductForm({
       onSuccess?.();
     },
     onError: (error: Error) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -300,7 +291,14 @@ export default function ProductForm({
     country.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-  const handleSubmit = async (data: any) => {
+  const onSubmit = async (data: any) => {
+    console.log("Form submitted with data:", data);
+
+    if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
+      console.error("Form validation errors:", form.formState.errors);
+      return;
+    }
+
     if (wantsFeatured) {
       try {
         const res = await apiRequest("POST", "/api/create-payment-intent");
@@ -313,8 +311,16 @@ export default function ProductForm({
           mutation.mutate({ ...data, featured: false });
           return;
         }
-        const { clientSecret } = await res.json();
-        setStripeClientSecret(clientSecret);
+        const paymentData = await res.json();
+        if (paymentData.error) {
+          toast({
+            title: "Error",
+            description: paymentData.error,
+            variant: "destructive",
+          });
+          return;
+        }
+        setStripeClientSecret(paymentData.clientSecret);
         setShowStripeCheckout(true);
         return;
       } catch (error) {
@@ -336,7 +342,7 @@ export default function ProductForm({
     <div>
       <h2 className="text-2xl font-semibold mb-6">{isEditing ? "Edit Product" : "Submit a Product"}</h2>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pb-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
           <FormField
             control={form.control}
             name="title"
@@ -619,7 +625,10 @@ export default function ProductForm({
                     Featured product ($100/month)
                   </label>
                 </div>
-                <Button type="submit" disabled={mutation.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={mutation.isPending}
+                >
                   {mutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -645,7 +654,10 @@ export default function ProductForm({
                     Feature this product on the homepage ($100/month)
                   </label>
                 </div>
-                <Button type="submit" disabled={mutation.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={mutation.isPending}
+                >
                   {mutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -5,17 +5,16 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  email: text("email").unique(),  // Made optional for backward compatibility
+  email: text("email").unique(),  
   avatarUrl: text("avatar_url"),
   magicLinkToken: text("magic_link_token"),
   magicLinkExpiry: timestamp("magic_link_expiry"),
 });
 
-// Rest of the schema remains unchanged
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
-  description: text("description").notNull(),
+  description: text("description"),
   link: text("link").notNull(),
   imageUrl: text("image_url").notNull(),
   companyName: text("company_name").notNull(),
@@ -32,7 +31,7 @@ export const votes = pgTable("votes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   productId: integer("product_id").notNull(),
-  value: integer("value").notNull(), // 1 or -1
+  value: integer("value").notNull(), 
 });
 
 export const comments = pgTable("comments", {
@@ -52,7 +51,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertProductSchema = createInsertSchema(products).pick({
   title: true,
-  description: true,
   link: true,
   imageUrl: true,
   companyName: true,
@@ -61,13 +59,13 @@ export const insertProductSchema = createInsertSchema(products).pick({
   collection: true,
 }).extend({
   title: z.string().min(1, "Product name is required"),
-  description: z.string().min(1, "Description is required"),
   link: z.string().url("Must be a valid URL"),
   imageUrl: z.string().url("Must be a valid URL"),
   companyName: z.string().min(1, "Company name is required"),
   country: z.string().min(1, "Country is required"),
   material: z.array(z.string()).min(1, "At least one material is required"),
   collection: z.string().min(1, "Collection is required"),
+  featured: z.boolean().optional(),
 });
 
 export const insertCommentSchema = createInsertSchema(comments).pick({
