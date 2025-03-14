@@ -94,6 +94,7 @@ export default function ProductCard({
     }
 
     try {
+      // Handle feature product case
       if (product.userId === user.id && !product.featured) {
         const res = await apiRequest("POST", "/api/create-payment-intent");
         if (res.status === 503) {
@@ -118,6 +119,7 @@ export default function ProductCard({
         return;
       }
 
+      // Already featured product case
       if (product.userId === user.id && product.featured) {
         toast({
           title: "Already Featured",
@@ -126,6 +128,7 @@ export default function ProductCard({
         return;
       }
 
+      // Handle normal upvote case
       const newValue = vote?.value === 1 ? 0 : 1;
       voteMutation.mutate(newValue);
     } catch (error: any) {
