@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import fetch from "node-fetch";
+import * as cheerio from "cheerio"; // For extracting relevant content
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -15,9 +16,20 @@ async function fetchProductPage(url: string): Promise<string> {
         'Upgrade-Insecure-Requests': '1'
       }
     });
-    const text = await response.text();
-    console.log("[OpenAI] Received page content:", text.substring(0, 100) + "..."); //Log a snippet for debugging
-    return text;
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch product page: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Extract relevant content (product details, headings, etc.)
+    const relevantContent = $('h1, h2, h3, p, li').slice(0, 20).text(); // Limit to avoid token overload
+
+    console.log("[OpenAI] Extracted relevant content:", relevantContent.substring(0, 300) + "...");
+
+    return relevantContent;
   } catch (error) {
     console.error("[OpenAI] Error fetching product page:", error);
     return "";
@@ -40,31 +52,44 @@ export async function generateProductDescription(
       console.error("[OpenAI] Failed to fetch page content for:", link);
       return "Product description unavailable.";
     }
-    console.log("[OpenAI] Successfully fetched page content, length:", pageContent.length);
+
+    console.log("[OpenAI] Successfully fetched and processed page content, length:", pageContent.length);
+
+    const prompt = `Generate a product description based on the following details:
+- Product Name: "${title}"
+- Company: "${companyName}"
+- Materials: ${materials.join(', ')}
+- Collection: "${collection}"
+- Country: "${country}"
+
+Use the following context from the product page:
+${pageContent}
+
+Provide a concise description that highlights what makes this product special and unique.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "You are a concise product reviewer who specializes in identifying what makes products truly special and unique."
+          content: "You are a professional product reviewer known for creating concise, accurate product descriptions."
         },
-        { 
-          role: "user", 
-          content: `Using the product link (${link}), product name "${title}", and company name "${companyName}", generate an accurate, concise description of what makes this product extraordinary.  Here's additional context from the product page:\n\n${pageContent}`
+        {
+          role: "user",
+          content: prompt
         }
       ],
-      temperature: 0.7,
-      response_format: { type: "json_object" }
+      temperature: 0.7
     });
 
-    console.log("[OpenAI] Received response:", response.choices[0].message.content);
+    const result = response.choices[0]?.message?.content?.trim();
+    if (!result) throw new Error("Empty response from OpenAI");
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result.description || "Description generation failed.";
+    console.log("[OpenAI] Generated description:", result);
+
+    return result;
   } catch (error: any) {
-    console.error("[OpenAI] Error generating description:", error);
-    // Return a default message instead of throwing
-    return "A high-quality product crafted with attention to detail and premium materials.";
+    console.error("[OpenAI] Error generating description:", error.message);
+    return "Description generation failed due to an internal error.";
   }
 }
