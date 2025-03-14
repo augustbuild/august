@@ -12,12 +12,12 @@ declare global {
   }
 }
 
-// Generate a random token for magic links
+// Simple token generation for magic links
 function generateToken(): string {
   return randomBytes(32).toString('hex');
 }
 
-// Simplest possible Mailgun configuration
+// Initialize Mailgun transporter
 const mailgun = createTransport({
   host: "smtp.mailgun.org",
   port: 587,
@@ -27,16 +27,7 @@ const mailgun = createTransport({
   }
 });
 
-// Verify the connection
-mailgun.verify(function(error, success) {
-  if (error) {
-    console.error('[Mailgun] Connection error:', error);
-  } else {
-    console.log("[Mailgun] Server is ready to send emails");
-  }
-});
-
-async function sendMagicLink(email: string, token: string) {
+async function sendEmail(email: string, token: string) {
   const baseUrl = process.env.NODE_ENV === 'production' 
     ? 'https://www.august.build'
     : `https://${process.env.REPL_SLUG}.replit.dev`;
@@ -44,30 +35,17 @@ async function sendMagicLink(email: string, token: string) {
   const magicLink = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
 
   try {
-    console.log('[Mailgun] Attempting to send email to:', email);
-
+    console.log('[Mailgun] Sending email to:', email);
     const info = await mailgun.sendMail({
-      from: process.env.SMTP_USER,
+      from: 'noreply@mail.august.build',
       to: email,
       subject: 'Sign in to August',
-      html: `
-        <p>Click the button below to sign in to August:</p>
-        <a href="${magicLink}" style="display:inline-block;padding:12px 20px;background:#000;color:#fff;text-decoration:none;border-radius:5px;">
-          Sign In
-        </a>
-      `
+      html: `<p>Click this link to sign in: ${magicLink}</p>`
     });
-
-    console.log('[Mailgun] Email sent successfully:', info.messageId);
+    console.log('[Mailgun] Message sent:', info.messageId);
   } catch (error: any) {
-    console.error('[Mailgun] Send error:', {
-      message: error.message,
-      code: error.code,
-      command: error.command,
-      responseCode: error.responseCode,
-      response: error.response
-    });
-    throw new Error(error.message || "Failed to send login email");
+    console.error('[Mailgun] Send error:', error);
+    throw new Error("Failed to send login email");
   }
 }
 
@@ -121,26 +99,22 @@ export function setupAuth(app: Express) {
         magicLinkExpiry: expiry,
       });
 
-      await sendMagicLink(email, token);
+      await sendEmail(email, token);
       res.json({ message: "Magic link sent" });
     } catch (error: any) {
-      console.error('[Auth] Magic link error:', error);
-      res.status(500).json({ 
-        message: error.message || "Failed to send login email"
-      });
+      console.error('[Auth] Error:', error);
+      res.status(500).json({ message: error.message });
     }
   });
 
   app.get("/api/auth/verify-magic-link", async (req, res) => {
-    const { token } = req.query;
-
-    if (!token || typeof token !== 'string') {
-      return res.redirect('/?error=invalid-token');
-    }
-
     try {
-      const user = await storage.getUserByMagicLinkToken(token);
+      const { token } = req.query;
+      if (!token || typeof token !== 'string') {
+        return res.redirect('/?error=invalid-token');
+      }
 
+      const user = await storage.getUserByMagicLinkToken(token);
       if (!user || !user.magicLinkExpiry || new Date() > new Date(user.magicLinkExpiry)) {
         return res.redirect('/?error=expired-token');
       }
@@ -151,9 +125,7 @@ export function setupAuth(app: Express) {
       });
 
       req.login(user, (err) => {
-        if (err) {
-          return res.redirect('/?error=login-failed');
-        }
+        if (err) return res.redirect('/?error=login-failed');
         res.redirect('/');
       });
     } catch (error) {
