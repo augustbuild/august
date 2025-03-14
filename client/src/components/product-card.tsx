@@ -211,7 +211,7 @@ export default function ProductCard({
             disabled={voteMutation.isPending}
             className={cn(
               "h-7 px-2 flex items-center gap-1",
-              showGoldUpvote && "bg-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white"
+              (hasUpvoted || isCreator) && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
             )}
           >
             <ArrowUp className="h-4 w-4" />
