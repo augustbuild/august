@@ -13,7 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import StripeCheckout from "./stripe-checkout";
@@ -208,7 +208,6 @@ export default function ProductForm({
     defaultValues: {
       ...(initialValues || {
         title: "",
-        description: "", 
         link: "",
         imageUrl: "",
         companyName: "",
@@ -222,31 +221,41 @@ export default function ProductForm({
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      // First generate the description
-      if (!isEditing) {
-        const descriptionRes = await apiRequest(
-          "POST",
-          "/api/generate-description",
-          {
-            title: data.title,
-            companyName: data.companyName,
-            link: data.link,
-            materials: data.material || [],
-            collection: data.collection,
-            country: data.country,
+      try {
+        // First generate the description
+        if (!isEditing) {
+          const descriptionRes = await apiRequest(
+            "POST",
+            "/api/generate-description",
+            {
+              title: data.title,
+              companyName: data.companyName,
+              link: data.link,
+              materials: data.material || [],
+              collection: data.collection,
+              country: data.country,
+            }
+          );
+          if (!descriptionRes.ok) {
+            throw new Error("Failed to generate description");
           }
-        );
-        const descriptionData = await descriptionRes.json();
-        data.description = descriptionData.description;
-      }
+          const descriptionData = await descriptionRes.json();
+          data.description = descriptionData.description;
+        }
 
-      // Then submit the product with the generated description
-      const res = await apiRequest(
-        isEditing ? "PATCH" : "POST",
-        isEditing ? `/api/products/${initialValues?.id}` : "/api/products",
-        data
-      );
-      return res.json();
+        // Then submit the product with the generated description
+        const res = await apiRequest(
+          isEditing ? "PATCH" : "POST",
+          isEditing ? `/api/products/${initialValues?.id}` : "/api/products",
+          data
+        );
+        if (!res.ok) {
+          throw new Error("Failed to submit product");
+        }
+        return res.json();
+      } catch (error: any) {
+        throw new Error(error.message || "Failed to submit product");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -611,7 +620,14 @@ export default function ProductForm({
                   </label>
                 </div>
                 <Button type="submit" disabled={mutation.isPending}>
-                  Save Changes
+                  {mutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </Button>
               </>
             ) : (
@@ -630,7 +646,14 @@ export default function ProductForm({
                   </label>
                 </div>
                 <Button type="submit" disabled={mutation.isPending}>
-                  Submit Product
+                  {mutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Product"
+                  )}
                 </Button>
               </>
             )}
