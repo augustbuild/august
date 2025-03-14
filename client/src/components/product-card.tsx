@@ -44,7 +44,7 @@ export default function ProductCard({
 
   const { data: vote } = useQuery<Vote>({
     queryKey: ["/api/votes", product.id],
-    enabled: !!user,
+    enabled: !!user && !!product.id,
   });
 
   const { data: comments } = useQuery<Comment[]>({
@@ -143,7 +143,7 @@ export default function ProductCard({
   const productSlug = generateSlug(product.title, product.companyName);
   const isCreator = user?.id === product.userId;
   const hasUpvoted = vote?.value === 1;
-  const showGoldUpvote = hasUpvoted || isCreator;
+  const showGoldUpvote = (hasUpvoted || isCreator);
 
   return (
     <div className="flex gap-3">
