@@ -13,18 +13,29 @@ export async function generateProductDescription(
   try {
     console.log("[OpenAI] Generating description for:", { title, companyName });
 
-    const prompt = `Generate a concise, accurate description for this product with the following information:
-Product: ${title}
-Company: ${companyName}
-Materials: ${materials.join(", ")}
-Collection: ${collection}
-Country: ${country}
-Product Link: ${link}
+    const prompt = `Generate a detailed, engaging product description using the following information:
 
-Please provide a concise 2-3 sentence description that highlights:
-1. What the product is and its main purpose
-2. Key materials and craftsmanship
-3. Any notable features or quality aspects
+Product Details:
+- Name: ${title}
+- Manufacturer: ${companyName}
+- Category: ${collection}
+- Materials Used: ${materials.join(", ")}
+- Country of Origin: ${country}
+- Product Link: ${link}
+
+Please write a compelling 3-4 sentence description that includes:
+1. A strong opening statement about what makes this product unique or special
+2. Specific details about the materials used and their benefits
+3. Key features and practical applications
+4. If relevant, mention the craftsmanship or manufacturing process
+5. The product's place in its category (${collection})
+
+Important:
+- Be specific and avoid generic statements
+- Highlight the quality of materials and craftsmanship
+- Include actual details from the provided information
+- Keep the tone professional but engaging
+- Focus on tangible benefits and features
 
 Format your response as a JSON object with a single "description" field.`;
 
@@ -35,7 +46,14 @@ Format your response as a JSON object with a single "description" field.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional product copywriter who specializes in creating detailed, engaging product descriptions that highlight unique features and quality materials."
+        },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
       response_format: { type: "json_object" }
     });
 
