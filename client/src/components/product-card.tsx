@@ -152,7 +152,7 @@ export default function ProductCard({
   };
 
   const productSlug = generateSlug(product.title, product.companyName);
-  const hasUpvoted = vote?.userId === user?.id; //Corrected logic for hasUpvoted
+  const hasUpvoted = vote?.value === 1;
 
   return (
     <div className="flex gap-3">
@@ -229,10 +229,10 @@ export default function ProductCard({
               variant={hasUpvoted ? "default" : "outline"}
               size="sm"
               onClick={handleUpvote}
-              disabled={voteMutation.isPending}
+              disabled={voteMutation.isPending || !user}
               className={cn(
                 "h-7 px-2 flex items-center gap-1",
-                hasUpvoted && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
+                hasUpvoted && user && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
               )}
             >
               <ArrowUp className="h-4 w-4" />
