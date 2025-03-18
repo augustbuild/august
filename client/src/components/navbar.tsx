@@ -29,19 +29,19 @@ const Navbar: React.FC = () => {
                     <Link href="/materials">
                       <div className="flex items-center gap-2 rounded-md p-2 hover:bg-accent cursor-pointer">
                         <Package className="h-4 w-4" />
-                        <span>By Material</span>
+                        <span>Materials</span>
                       </div>
                     </Link>
                     <Link href="/collections">
                       <div className="flex items-center gap-2 rounded-md p-2 hover:bg-accent cursor-pointer">
                         <FolderOpen className="h-4 w-4" />
-                        <span>By Collection</span>
+                        <span>Collections</span>
                       </div>
                     </Link>
                     <Link href="/countries">
                       <div className="flex items-center gap-2 rounded-md p-2 hover:bg-accent cursor-pointer">
                         <Globe className="h-4 w-4" />
-                        <span>By Country</span>
+                        <span>Countries</span>
                       </div>
                     </Link>
                   </div>
