@@ -17,11 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CategoryHighlights from "@/components/category-highlights";
 
 type SortOption = "newest" | "top";
 
 export default function HomePage() {
-  const [sortBy, setSortBy] = useState<SortOption>("top"); // Changed default to "top"
+  const [sortBy, setSortBy] = useState<SortOption>("top");
   const [showProductForm, setShowProductForm] = useState(false);
 
   const { data: products, isLoading } = useQuery<Product[]>({
@@ -74,6 +75,11 @@ export default function HomePage() {
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* Category Navigation */}
+      <div className="mb-8">
+        <CategoryHighlights />
       </div>
 
       {isLoading ? (
