@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2, Package, Globe, FolderOpen } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { type Product, type Vote, type Comment } from "@shared/schema";
+import { type Product } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn, generateSlug, getCountryFlag } from "@/lib/utils";
@@ -42,12 +42,12 @@ export default function ProductCard({
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
 
-  const { data: vote } = useQuery<Vote>({
+  const { data: vote } = useQuery({
     queryKey: ["/api/votes", product.id],
     enabled: !!user && !!product.id,
   });
 
-  const { data: comments } = useQuery<Comment[]>({
+  const { data: comments } = useQuery({
     queryKey: [`/api/products/${product.id}/comments`],
     enabled: true,
   });
@@ -152,7 +152,7 @@ export default function ProductCard({
   };
 
   const productSlug = generateSlug(product.title, product.companyName);
-  const hasUpvoted = vote?.value === 1;
+  const hasUpvoted = vote?.userId === user?.id; //Corrected logic for hasUpvoted
 
   return (
     <div className="flex gap-3">
