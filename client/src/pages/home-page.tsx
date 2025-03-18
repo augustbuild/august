@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import CategoryHighlights from "@/components/category-highlights";
 
 type SortOption = "newest" | "top";
 
@@ -75,11 +74,6 @@ export default function HomePage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {/* Category Navigation */}
-      <div className="mb-8">
-        <CategoryHighlights />
       </div>
 
       {isLoading ? (
