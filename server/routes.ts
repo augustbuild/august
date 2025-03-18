@@ -14,7 +14,7 @@ try {
   } else {
     console.log('[Stripe] Initializing with secret key');
     stripe = new Stripe(secretKey, { 
-      apiVersion: '2023-10-16' 
+      apiVersion: '2025-02-24.acacia'
     });
   }
 } catch (error) {
@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const productData = {
         ...validated.data,
         userId: req.user.id,
-        featured: stripe ? validated.data.featured : false
+        featured: validated.data.featured ?? false // Ensure featured is always boolean
       };
 
       console.log('[Products] Creating product with data:', productData);
@@ -137,10 +137,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!validated.success) return res.status(400).json(validated.error);
 
     try {
-      const comment = await storage.createComment({
+      const commentData = {
         ...validated.data,
-        userId: req.user!.id
-      });
+        userId: req.user!.id,
+        parentId: validated.data.parentId || null // Ensure parentId is never undefined
+      };
+
+      const comment = await storage.createComment(commentData);
       res.status(201).json(comment);
     } catch (error: any) {
       console.error('[Comments] Creation error:', error);
@@ -229,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const updatedProduct = await storage.updateProduct(product.id, {
       ...validated.data,
-      featured: stripe ? validated.data.featured : false // Disable featured if Stripe is not available
+      featured: validated.data.featured ?? false // Ensure featured is always boolean
     });
     res.json(updatedProduct);
   });

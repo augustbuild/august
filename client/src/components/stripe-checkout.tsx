@@ -1,5 +1,5 @@
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+import { loadStripe, Stripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -7,11 +7,12 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Initialize Stripe with comprehensive error handling and logging
-let stripePromise;
+let stripePromise: Promise<Stripe | null>;
 try {
   const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
   if (!publicKey) {
     console.warn('[Stripe] Public key missing - payment features will be disabled');
+    stripePromise = Promise.resolve(null);
   } else {
     console.log('[Stripe] Initializing with public key');
     stripePromise = loadStripe(publicKey).catch(error => {
@@ -21,6 +22,7 @@ try {
   }
 } catch (error) {
   console.error('[Stripe] Initialization error:', error);
+  stripePromise = Promise.resolve(null);
 }
 
 function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
