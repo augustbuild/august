@@ -4,8 +4,8 @@ import { ArrowUp, MessageSquare, ShoppingBag, MoreVertical, Pencil, Trash2, Pack
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { type Product } from "@shared/schema";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation, useQuery, QueryFunction } from "@tanstack/react-query";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { cn, generateSlug, getCountryFlag } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import {
@@ -44,15 +44,23 @@ export default function ProductCard({
   const [hasUpvoted, setHasUpvoted] = useState(false);
   
   // Get vote data from the API
-  const { data: vote, isLoading: isVoteLoading } = useQuery<{ id: number; value: number }>({
+  const { data: vote } = useQuery<{ id: number; value: number } | null>({
     queryKey: ["/api/votes", product.id],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user && !!product.id,
+    staleTime: 0, // Never mark as stale to ensure fresh data on reload
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Refetch when component mounts
   });
   
   // Initialize upvote state from API data when component mounts or vote changes
   useEffect(() => {
-    if (vote && 'value' in vote) {
-      setHasUpvoted(vote.value === 1);
+    // If vote exists and has value of 1, user has upvoted
+    if (vote && vote.value === 1) {
+      setHasUpvoted(true);
+    } else if (vote === null || (vote && vote.value === 0)) {
+      // If vote is null or has value of 0, user has not upvoted
+      setHasUpvoted(false);
     }
   }, [vote]);
 
