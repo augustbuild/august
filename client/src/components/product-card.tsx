@@ -42,12 +42,12 @@ export default function ProductCard({
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
 
-  const { data: vote } = useQuery({
+  const { data: vote } = useQuery<{ id: number; value: number }>({
     queryKey: ["/api/votes", product.id],
     enabled: !!user && !!product.id,
   });
 
-  const { data: comments } = useQuery({
+  const { data: comments } = useQuery<any[]>({
     queryKey: [`/api/products/${product.id}/comments`],
     enabled: true,
   });
@@ -232,7 +232,7 @@ export default function ProductCard({
               disabled={voteMutation.isPending || !user}
               className={cn(
                 "h-7 px-2 flex items-center gap-1",
-                hasUpvoted && user && "bg-[#855c0f] border-[#855c0f] text-white hover:bg-[#855c0f] hover:text-white hover:border-[#855c0f]"
+                hasUpvoted && user && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
               )}
             >
               <ArrowUp className="h-4 w-4" />

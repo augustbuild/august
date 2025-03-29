@@ -11,7 +11,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import { getCountryFlag } from "@/lib/utils";
+import { cn, getCountryFlag } from "@/lib/utils";
 
 export default function ProductPage() {
   const [_, params] = useRoute<{ slug: string }>("/products/:slug");
@@ -95,7 +95,10 @@ export default function ProductPage() {
                 voteMutation.mutate(newValue);
               }}
               disabled={voteMutation.isPending}
-              className="h-9 px-4 flex items-center gap-2"
+              className={cn(
+                "h-9 px-4 flex items-center gap-2",
+                hasUpvoted && user && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
+              )}
             >
               <ArrowUp className="h-4 w-4" />
               <span className="font-medium">{product.score}</span>
