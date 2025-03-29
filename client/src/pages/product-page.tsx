@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Globe, Building2, Package, FolderOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import { useState, useEffect } from "react";
 export default function ProductPage() {
   const [_, params] = useRoute<{ slug: string }>("/products/:slug");
   const { user } = useAuth();
+  const { toast } = useToast();
   const [hasUpvoted, setHasUpvoted] = useState(false);
 
   const { data: products } = useQuery<Product[]>({
@@ -33,63 +35,115 @@ export default function ProductPage() {
   });
   
   // Get vote data from the API
-  const { data: vote } = useQuery<{ id: number; value: number } | null>({
+  const { data: vote, isSuccess } = useQuery<{ id: number; value: number } | null>({
     queryKey: ["/api/votes", product?.id],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user && !!product?.id,
     staleTime: 0, // Never mark as stale to ensure fresh data on reload
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchOnMount: true, // Refetch when component mounts
+    refetchOnReconnect: true, // Refetch on network reconnect
+    gcTime: 0, // Don't cache in garbage collection
   });
+  
+  // Debug vote data
+  useEffect(() => {
+    console.log(`[ProductPage] User authenticated:`, !!user);
+    console.log(`[ProductPage] Product ID ${product?.id} - Vote data:`, vote);
+  }, [vote, user, product?.id]);
   
   // Initialize upvote state from API data when component mounts or vote changes
   useEffect(() => {
-    // If vote exists and has value of 1, user has upvoted
-    if (vote && vote.value === 1) {
-      setHasUpvoted(true);
-    } else if (vote === null || (vote && vote.value === 0)) {
-      // If vote is null or has value of 0, user has not upvoted
-      setHasUpvoted(false);
+    // Only update state if we have a successful response from the API
+    if (isSuccess && product) {
+      // If vote exists and has value of 1, user has upvoted
+      if (vote && vote.value === 1) {
+        console.log(`[ProductPage] Setting hasUpvoted to TRUE for product ${product.id}`);
+        setHasUpvoted(true);
+      } else {
+        // If vote is null or has value of 0, user has not upvoted
+        console.log(`[ProductPage] Setting hasUpvoted to FALSE for product ${product.id}`);
+        setHasUpvoted(false);
+      }
     }
-  }, [vote]);
+  }, [vote, product, isSuccess]);
 
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
-      const res = await apiRequest("POST", "/api/votes", {
-        productId: product?.id || 0,
-        value,
-      });
-      return res.json();
+      try {
+        const res = await apiRequest("POST", "/api/votes", {
+          productId: product?.id || 0,
+          value,
+        });
+        return res.json();
+      } catch (error) {
+        // Log the error for debugging purposes
+        console.error("[ProductPage VoteMutation] Error:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("[ProductPage VoteMutation] Success:", data);
       if (product?.id) {
+        // Invalidate relevant queries to refresh data
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
         queryClient.invalidateQueries({ queryKey: ["/api/votes", product.id] });
       }
+    },
+    onError: (error) => {
+      console.error("[ProductPage VoteMutation] Error handler:", error);
+      toast({
+        title: "Vote failed",
+        description: error instanceof Error ? error.message : "Failed to update vote",
+        variant: "destructive",
+      });
     },
   });
   
   const handleUpvote = async () => {
     if (!user || !product) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to vote on products",
+        variant: "default"
+      });
       return;
     }
 
     // Don't allow self-voting
     if (product.userId === user.id) {
+      toast({
+        title: "Cannot vote on your own product",
+        description: "You can't upvote products you've created",
+        variant: "default"
+      });
       return;
     }
 
     // Toggle the upvoted state immediately for visual feedback
     setHasUpvoted(!hasUpvoted);
+    const newVoteValue = !hasUpvoted ? 1 : 0;
     
     try {
       // Send the API request in the background
-      const newValue = !hasUpvoted ? 1 : 0;
-      await voteMutation.mutateAsync(newValue);
+      await voteMutation.mutateAsync(newVoteValue);
+      
+      // Show success message
+      toast({
+        title: newVoteValue === 1 ? "Product upvoted" : "Upvote removed",
+        description: newVoteValue === 1 ? "Thank you for your vote!" : "Your upvote has been removed",
+        variant: "default"
+      });
     } catch (error: any) {
       // Revert visual state if the API request fails
       setHasUpvoted(hasUpvoted);
-      console.error('Failed to update vote', error);
+      console.error('[ProductPage] Failed to update vote:', error);
+      
+      toast({
+        title: "Vote failed",
+        description: error.message || "Failed to update vote",
+        variant: "destructive"
+      });
     }
   };
 
