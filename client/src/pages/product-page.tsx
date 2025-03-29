@@ -40,7 +40,7 @@ export default function ProductPage() {
   
   // Initialize upvote state from API data when component mounts or vote changes
   useEffect(() => {
-    if (vote) {
+    if (vote && 'value' in vote) {
       setHasUpvoted(vote.value === 1);
     }
   }, [vote]);

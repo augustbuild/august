@@ -44,14 +44,14 @@ export default function ProductCard({
   const [hasUpvoted, setHasUpvoted] = useState(false);
   
   // Get vote data from the API
-  const { data: vote } = useQuery<{ id: number; value: number }>({
+  const { data: vote, isLoading: isVoteLoading } = useQuery<{ id: number; value: number }>({
     queryKey: ["/api/votes", product.id],
     enabled: !!user && !!product.id,
   });
   
   // Initialize upvote state from API data when component mounts or vote changes
   useEffect(() => {
-    if (vote) {
+    if (vote && 'value' in vote) {
       setHasUpvoted(vote.value === 1);
     }
   }, [vote]);
