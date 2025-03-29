@@ -232,10 +232,10 @@ export default function ProductCard({
               disabled={voteMutation.isPending || !user}
               className={cn(
                 "h-7 px-2 flex items-center gap-1",
-                hasUpvoted && user && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
+                hasUpvoted && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
               )}
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className={cn("h-4 w-4", hasUpvoted && "text-black")} />
               <span className="text-sm font-medium">{product.score}</span>
             </Button>
           )}
