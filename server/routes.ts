@@ -62,8 +62,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:id", async (req, res) => {
     const user = await storage.getUser(parseInt(req.params.id));
     if (!user) return res.sendStatus(404);
-    const { password, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+    // Send the user data without sensitive fields
+    res.json(user);
   });
 
   // Products
@@ -156,22 +156,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Votes
   app.get("/api/votes/:productId", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const vote = await storage.getVote(req.user!.id, parseInt(req.params.productId));
-    res.json(vote);
+    // Check if user is authenticated
+    if (!req.isAuthenticated()) {
+      console.log('[Votes] Unauthenticated request for product votes, returning empty');
+      // Return null for unauthenticated users instead of 401
+      return res.json(null);
+    }
+    
+    try {
+      // Parse the product ID from the URL parameters
+      const productId = parseInt(req.params.productId);
+      if (isNaN(productId)) {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+      
+      // Get the vote for the authenticated user and product
+      const vote = await storage.getVote(req.user!.id, productId);
+      console.log(`[Votes] Retrieved vote for user ${req.user!.id}, product ${productId}:`, vote || 'No vote found');
+      
+      // Return the vote data (or null if no vote found)
+      return res.json(vote || null);
+    } catch (error) {
+      console.error('[Votes] Error retrieving vote:', error);
+      return res.status(500).json({ error: 'Failed to retrieve vote data' });
+    }
   });
 
   app.post("/api/votes", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) {
+      console.error('[Votes] Unauthenticated vote attempt');
+      return res.status(401).json({ message: "Authentication required to vote" });
+    }
 
+    console.log(`[Votes] Processing vote request from user ${req.user!.id}:`, req.body);
+    
     const validated = insertVoteSchema.safeParse(req.body);
-    if (!validated.success) return res.status(400).json(validated.error);
+    if (!validated.success) {
+      console.error('[Votes] Invalid vote data:', validated.error);
+      return res.status(400).json(validated.error);
+    }
 
     try {
       // Check if the user is the product creator
       const product = await storage.getProduct(validated.data.productId);
-      if (!product) return res.status(404).json({ message: "Product not found" });
+      if (!product) {
+        console.error(`[Votes] Product not found: ${validated.data.productId}`);
+        return res.status(404).json({ message: "Product not found" });
+      }
       if (product.userId === req.user!.id) {
+        console.log(`[Votes] User ${req.user!.id} attempted to vote on their own product ${product.id}`);
         return res.status(403).json({ message: "Cannot vote on your own product" });
       }
 
@@ -179,8 +212,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let vote;
 
       if (existingVote) {
+        console.log(`[Votes] Updating existing vote ${existingVote.id} from ${existingVote.value} to ${validated.data.value}`);
         vote = await storage.updateVote(existingVote.id, validated.data.value);
       } else {
+        console.log(`[Votes] Creating new vote for user ${req.user!.id} on product ${validated.data.productId}`);
         vote = await storage.createVote({
           ...validated.data,
           userId: req.user!.id
@@ -192,12 +227,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const votes = (await storage.getProducts())
           .find(p => p.id === validated.data.productId)?.score ?? 0;
 
+        const newScore = votes + (existingVote ? validated.data.value - existingVote.value : validated.data.value);
+        console.log(`[Votes] Updating product ${product.id} score from ${votes} to ${newScore}`);
+        
         await storage.updateProductScore(
           validated.data.productId,
-          votes + (existingVote ? validated.data.value - existingVote.value : validated.data.value)
+          newScore
         );
       }
 
+      console.log(`[Votes] Successfully processed vote:`, vote);
       res.json(vote);
     } catch (error: any) {
       console.error('[Votes] Operation error:', error);

@@ -47,7 +47,7 @@ export default function ProductCard({
   const { data: vote, isError, error, isSuccess } = useQuery<{ id: number; value: number } | null>({
     queryKey: ["/api/votes", product.id],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !!user && !!product.id,
+    enabled: !!product.id,  // Enable for all users with product ID
     staleTime: 0, // Never mark as stale to ensure fresh data on reload
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchOnMount: true, // Refetch when component mounts
