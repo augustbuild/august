@@ -12,10 +12,15 @@ import { useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { cn, getCountryFlag } from "@/lib/utils";
+import { useState, useEffect } from "react";
+
+// Reference to the global map in product-card.tsx
+declare const upvotedProducts: Map<number, boolean>;
 
 export default function ProductPage() {
   const [_, params] = useRoute<{ slug: string }>("/products/:slug");
   const { user } = useAuth();
+  const [hasUpvoted, setHasUpvoted] = useState(false);
 
   const { data: products } = useQuery<Product[]>({
     queryKey: ["/api/products"],
@@ -30,10 +35,32 @@ export default function ProductPage() {
     return titleSlug === params?.slug;
   });
 
-  const { data: vote } = useQuery<{ id: number; value: number }>({
-    queryKey: ["/api/votes", product?.id],
-    enabled: !!user && !!product?.id,
-  });
+  // Initialize from localStorage or global map on component mount
+  useEffect(() => {
+    if (!product) return;
+    
+    // First check global map
+    if (typeof upvotedProducts !== 'undefined' && upvotedProducts.has(product.id)) {
+      setHasUpvoted(upvotedProducts.get(product.id) || false);
+      return;
+    }
+    
+    // Then check localStorage
+    try {
+      const upvotedItems = localStorage.getItem('upvotedProducts');
+      if (upvotedItems) {
+        const upvotedIds = JSON.parse(upvotedItems);
+        const isUpvoted = upvotedIds.includes(product.id);
+        setHasUpvoted(isUpvoted);
+        // Update the global map if it exists
+        if (typeof upvotedProducts !== 'undefined') {
+          upvotedProducts.set(product.id, isUpvoted);
+        }
+      }
+    } catch (e) {
+      console.error('Error reading from localStorage', e);
+    }
+  }, [product]);
 
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
@@ -46,10 +73,63 @@ export default function ProductPage() {
     onSuccess: () => {
       if (product?.id) {
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/votes", product.id] });
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] }); // Also refresh products to update score
       }
     },
   });
+  
+  const handleUpvote = async () => {
+    if (!user || !product) {
+      return;
+    }
+
+    // Don't allow self-voting
+    if (product.userId === user.id) {
+      return;
+    }
+
+    try {
+      // Toggle upvoted state immediately for visual feedback
+      const newUpvoteState = !hasUpvoted;
+      setHasUpvoted(newUpvoteState);
+      
+      // Update global map if it exists
+      if (typeof upvotedProducts !== 'undefined') {
+        upvotedProducts.set(product.id, newUpvoteState);
+      }
+      
+      // Update localStorage
+      try {
+        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
+        const upvotedIds = JSON.parse(upvotedItems);
+        
+        let newUpvotedIds;
+        if (newUpvoteState) {
+          // Add this product ID if it doesn't exist
+          if (!upvotedIds.includes(product.id)) {
+            newUpvotedIds = [...upvotedIds, product.id];
+          } else {
+            newUpvotedIds = upvotedIds;
+          }
+        } else {
+          // Remove this product ID
+          newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
+        }
+        
+        localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
+      } catch (e) {
+        console.error('Error updating localStorage', e);
+      }
+      
+      // Send the API request
+      const newValue = newUpvoteState ? 1 : 0;
+      await voteMutation.mutateAsync(newValue);
+    } catch (error: any) {
+      // Revert the visual state if the API request fails
+      setHasUpvoted(!hasUpvoted);
+      console.error('Failed to update vote', error);
+    }
+  };
 
   if (!products) {
     return (
@@ -62,8 +142,6 @@ export default function ProductPage() {
   if (!product) {
     return <div>Product not found</div>;
   }
-
-  const hasUpvoted = vote?.value === 1;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -90,11 +168,8 @@ export default function ProductPage() {
             <Button
               variant={hasUpvoted ? "default" : "outline"}
               size="sm"
-              onClick={() => {
-                const newValue = vote?.value === 1 ? 0 : 1;
-                voteMutation.mutate(newValue);
-              }}
-              disabled={voteMutation.isPending}
+              onClick={handleUpvote}
+              disabled={voteMutation.isPending || !user}
               className={cn(
                 "h-9 px-4 flex items-center gap-2",
                 hasUpvoted && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
@@ -118,7 +193,7 @@ export default function ProductPage() {
 
           {/* Tags Section */}
           <div className="flex flex-wrap gap-2">
-            {product.material && product.material.length > 0 && (
+            {product.material && Array.isArray(product.material) && product.material.length > 0 && (
               <div className="flex flex-wrap gap-1 items-center">
                 <Package className="h-4 w-4 text-muted-foreground" />
                 {product.material.map((material) => (

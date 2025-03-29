@@ -7,7 +7,7 @@ import { type Product } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn, generateSlug, getCountryFlag } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,6 +25,9 @@ import { useToast } from "@/hooks/use-toast";
 import AuthModal from "./auth-modal";
 import StripeCheckout from "./stripe-checkout";
 
+// Create a global map to store upvoted product IDs
+const upvotedProducts = new Map<number, boolean>();
+
 export default function ProductCard({
   product,
   isFullView = false,
@@ -41,11 +44,30 @@ export default function ProductCard({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
+  const [hasUpvoted, setHasUpvoted] = useState(false);
 
-  const { data: vote } = useQuery<{ id: number; value: number }>({
-    queryKey: ["/api/votes", product.id],
-    enabled: !!user && !!product.id,
-  });
+  // Initialize from localStorage or global map on component mount
+  useEffect(() => {
+    // First check global map
+    if (upvotedProducts.has(product.id)) {
+      setHasUpvoted(upvotedProducts.get(product.id) || false);
+      return;
+    }
+    
+    // Then check localStorage
+    try {
+      const upvotedItems = localStorage.getItem('upvotedProducts');
+      if (upvotedItems) {
+        const upvotedIds = JSON.parse(upvotedItems);
+        const isUpvoted = upvotedIds.includes(product.id);
+        setHasUpvoted(isUpvoted);
+        // Update the global map
+        upvotedProducts.set(product.id, isUpvoted);
+      }
+    } catch (e) {
+      console.error('Error reading from localStorage', e);
+    }
+  }, [product.id]);
 
   const { data: comments } = useQuery<any[]>({
     queryKey: [`/api/products/${product.id}/comments`],
@@ -99,9 +121,43 @@ export default function ProductCard({
     }
 
     try {
-      const newValue = vote?.value === 1 ? 0 : 1;
+      // Toggle upvoted state immediately for visual feedback
+      const newUpvoteState = !hasUpvoted;
+      setHasUpvoted(newUpvoteState);
+      
+      // Update global map
+      upvotedProducts.set(product.id, newUpvoteState);
+      
+      // Update localStorage
+      try {
+        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
+        const upvotedIds = JSON.parse(upvotedItems);
+        
+        let newUpvotedIds;
+        if (newUpvoteState) {
+          // Add this product ID if it doesn't exist
+          if (!upvotedIds.includes(product.id)) {
+            newUpvotedIds = [...upvotedIds, product.id];
+          } else {
+            newUpvotedIds = upvotedIds;
+          }
+        } else {
+          // Remove this product ID
+          newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
+        }
+        
+        localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
+      } catch (e) {
+        console.error('Error updating localStorage', e);
+      }
+      
+      // Send the API request
+      const newValue = newUpvoteState ? 1 : 0;
       await voteMutation.mutateAsync(newValue);
     } catch (error: any) {
+      // Revert the visual state if the API request fails
+      setHasUpvoted(!hasUpvoted);
+      
       toast({
         title: "Error",
         description: error.message || "Failed to update vote",
@@ -152,7 +208,6 @@ export default function ProductCard({
   };
 
   const productSlug = generateSlug(product.title, product.companyName);
-  const hasUpvoted = vote?.value === 1;
 
   return (
     <div className="flex gap-3">
@@ -262,7 +317,7 @@ export default function ProductCard({
         </div>
 
         <div className="flex flex-wrap gap-2 mt-3">
-          {product.material && product.material.length > 0 && (
+          {product.material && Array.isArray(product.material) && product.material.length > 0 && (
             <div className="flex flex-wrap gap-1 items-center">
               <Package className="h-4 w-4 text-muted-foreground" />
               {product.material.map((material) => (

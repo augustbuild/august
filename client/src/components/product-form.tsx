@@ -173,7 +173,7 @@ interface Product {
   imageUrl: string;
   companyName: string;
   country: string;
-  material: string[];
+  material: string[] | null;
   collection: string;
   featured?: boolean;
 }
