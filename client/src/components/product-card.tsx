@@ -46,15 +46,45 @@ export default function ProductCard({
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [hasUpvoted, setHasUpvoted] = useState(false);
 
-  // Initialize from localStorage or global map on component mount
+  // Get vote data from the API
+  const { data: vote } = useQuery<{ id: number; value: number }>({
+    queryKey: ["/api/votes", product.id],
+    enabled: !!user && !!product.id,
+  });
+
+  // Initialize from API data, localStorage, or global map on component mount
   useEffect(() => {
-    // First check global map
+    // First prioritize data from the API if user is logged in
+    if (vote) {
+      const isUpvoted = vote.value === 1;
+      setHasUpvoted(isUpvoted);
+      // Update the global map
+      upvotedProducts.set(product.id, isUpvoted);
+      // Also update localStorage for offline persistence
+      try {
+        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
+        const upvotedIds = JSON.parse(upvotedItems);
+        
+        if (isUpvoted && !upvotedIds.includes(product.id)) {
+          upvotedIds.push(product.id);
+          localStorage.setItem('upvotedProducts', JSON.stringify(upvotedIds));
+        } else if (!isUpvoted && upvotedIds.includes(product.id)) {
+          const newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
+          localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
+        }
+      } catch (e) {
+        console.error('Error updating localStorage', e);
+      }
+      return;
+    }
+    
+    // Otherwise check global map
     if (upvotedProducts.has(product.id)) {
       setHasUpvoted(upvotedProducts.get(product.id) || false);
       return;
     }
     
-    // Then check localStorage
+    // Finally check localStorage
     try {
       const upvotedItems = localStorage.getItem('upvotedProducts');
       if (upvotedItems) {
@@ -67,7 +97,7 @@ export default function ProductCard({
     } catch (e) {
       console.error('Error reading from localStorage', e);
     }
-  }, [product.id]);
+  }, [product.id, vote, user]);
 
   const { data: comments } = useQuery<any[]>({
     queryKey: [`/api/products/${product.id}/comments`],

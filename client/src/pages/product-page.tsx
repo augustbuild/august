@@ -35,17 +35,49 @@ export default function ProductPage() {
     return titleSlug === params?.slug;
   });
 
-  // Initialize from localStorage or global map on component mount
+  // Get vote data from the API
+  const { data: vote } = useQuery<{ id: number; value: number }>({
+    queryKey: ["/api/votes", product?.id],
+    enabled: !!user && !!product?.id,
+  });
+
+  // Initialize from API data, localStorage, or global map on component mount
   useEffect(() => {
     if (!product) return;
     
-    // First check global map
+    // First prioritize data from the API if user is logged in
+    if (vote) {
+      const isUpvoted = vote.value === 1;
+      setHasUpvoted(isUpvoted);
+      // Update the global map
+      if (typeof upvotedProducts !== 'undefined') {
+        upvotedProducts.set(product.id, isUpvoted);
+      }
+      // Also update localStorage for offline persistence
+      try {
+        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
+        const upvotedIds = JSON.parse(upvotedItems);
+        
+        if (isUpvoted && !upvotedIds.includes(product.id)) {
+          upvotedIds.push(product.id);
+          localStorage.setItem('upvotedProducts', JSON.stringify(upvotedIds));
+        } else if (!isUpvoted && upvotedIds.includes(product.id)) {
+          const newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
+          localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
+        }
+      } catch (e) {
+        console.error('Error updating localStorage', e);
+      }
+      return;
+    }
+    
+    // Otherwise check global map
     if (typeof upvotedProducts !== 'undefined' && upvotedProducts.has(product.id)) {
       setHasUpvoted(upvotedProducts.get(product.id) || false);
       return;
     }
     
-    // Then check localStorage
+    // Finally check localStorage
     try {
       const upvotedItems = localStorage.getItem('upvotedProducts');
       if (upvotedItems) {
@@ -60,7 +92,7 @@ export default function ProductPage() {
     } catch (e) {
       console.error('Error reading from localStorage', e);
     }
-  }, [product]);
+  }, [product, vote, user]);
 
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
@@ -73,7 +105,7 @@ export default function ProductPage() {
     onSuccess: () => {
       if (product?.id) {
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/products"] }); // Also refresh products to update score
+        queryClient.invalidateQueries({ queryKey: ["/api/votes", product.id] });
       }
     },
   });
