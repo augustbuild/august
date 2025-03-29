@@ -25,9 +25,6 @@ import { useToast } from "@/hooks/use-toast";
 import AuthModal from "./auth-modal";
 import StripeCheckout from "./stripe-checkout";
 
-// Create a global map to store upvoted product IDs
-const upvotedProducts = new Map<number, boolean>();
-
 export default function ProductCard({
   product,
   isFullView = false,
@@ -45,59 +42,19 @@ export default function ProductCard({
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [hasUpvoted, setHasUpvoted] = useState(false);
-
+  
   // Get vote data from the API
   const { data: vote } = useQuery<{ id: number; value: number }>({
     queryKey: ["/api/votes", product.id],
     enabled: !!user && !!product.id,
   });
-
-  // Initialize from API data, localStorage, or global map on component mount
+  
+  // Initialize upvote state from API data when component mounts or vote changes
   useEffect(() => {
-    // First prioritize data from the API if user is logged in
     if (vote) {
-      const isUpvoted = vote.value === 1;
-      setHasUpvoted(isUpvoted);
-      // Update the global map
-      upvotedProducts.set(product.id, isUpvoted);
-      // Also update localStorage for offline persistence
-      try {
-        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
-        const upvotedIds = JSON.parse(upvotedItems);
-        
-        if (isUpvoted && !upvotedIds.includes(product.id)) {
-          upvotedIds.push(product.id);
-          localStorage.setItem('upvotedProducts', JSON.stringify(upvotedIds));
-        } else if (!isUpvoted && upvotedIds.includes(product.id)) {
-          const newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
-          localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
-        }
-      } catch (e) {
-        console.error('Error updating localStorage', e);
-      }
-      return;
+      setHasUpvoted(vote.value === 1);
     }
-    
-    // Otherwise check global map
-    if (upvotedProducts.has(product.id)) {
-      setHasUpvoted(upvotedProducts.get(product.id) || false);
-      return;
-    }
-    
-    // Finally check localStorage
-    try {
-      const upvotedItems = localStorage.getItem('upvotedProducts');
-      if (upvotedItems) {
-        const upvotedIds = JSON.parse(upvotedItems);
-        const isUpvoted = upvotedIds.includes(product.id);
-        setHasUpvoted(isUpvoted);
-        // Update the global map
-        upvotedProducts.set(product.id, isUpvoted);
-      }
-    } catch (e) {
-      console.error('Error reading from localStorage', e);
-    }
-  }, [product.id, vote, user]);
+  }, [vote]);
 
   const { data: comments } = useQuery<any[]>({
     queryKey: [`/api/products/${product.id}/comments`],
@@ -150,43 +107,16 @@ export default function ProductCard({
       return;
     }
 
+    // Toggle the upvoted state immediately for visual feedback
+    setHasUpvoted(!hasUpvoted);
+    
     try {
-      // Toggle upvoted state immediately for visual feedback
-      const newUpvoteState = !hasUpvoted;
-      setHasUpvoted(newUpvoteState);
-      
-      // Update global map
-      upvotedProducts.set(product.id, newUpvoteState);
-      
-      // Update localStorage
-      try {
-        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
-        const upvotedIds = JSON.parse(upvotedItems);
-        
-        let newUpvotedIds;
-        if (newUpvoteState) {
-          // Add this product ID if it doesn't exist
-          if (!upvotedIds.includes(product.id)) {
-            newUpvotedIds = [...upvotedIds, product.id];
-          } else {
-            newUpvotedIds = upvotedIds;
-          }
-        } else {
-          // Remove this product ID
-          newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
-        }
-        
-        localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
-      } catch (e) {
-        console.error('Error updating localStorage', e);
-      }
-      
-      // Send the API request
-      const newValue = newUpvoteState ? 1 : 0;
+      // Send the API request in the background
+      const newValue = !hasUpvoted ? 1 : 0;
       await voteMutation.mutateAsync(newValue);
     } catch (error: any) {
-      // Revert the visual state if the API request fails
-      setHasUpvoted(!hasUpvoted);
+      // Revert visual state if the API request fails
+      setHasUpvoted(hasUpvoted);
       
       toast({
         title: "Error",

@@ -14,9 +14,6 @@ import { Link } from "wouter";
 import { cn, getCountryFlag } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
-// Reference to the global map in product-card.tsx
-declare const upvotedProducts: Map<number, boolean>;
-
 export default function ProductPage() {
   const [_, params] = useRoute<{ slug: string }>("/products/:slug");
   const { user } = useAuth();
@@ -34,65 +31,19 @@ export default function ProductPage() {
       .replace(/-+/g, '-');
     return titleSlug === params?.slug;
   });
-
+  
   // Get vote data from the API
   const { data: vote } = useQuery<{ id: number; value: number }>({
     queryKey: ["/api/votes", product?.id],
     enabled: !!user && !!product?.id,
   });
-
-  // Initialize from API data, localStorage, or global map on component mount
+  
+  // Initialize upvote state from API data when component mounts or vote changes
   useEffect(() => {
-    if (!product) return;
-    
-    // First prioritize data from the API if user is logged in
     if (vote) {
-      const isUpvoted = vote.value === 1;
-      setHasUpvoted(isUpvoted);
-      // Update the global map
-      if (typeof upvotedProducts !== 'undefined') {
-        upvotedProducts.set(product.id, isUpvoted);
-      }
-      // Also update localStorage for offline persistence
-      try {
-        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
-        const upvotedIds = JSON.parse(upvotedItems);
-        
-        if (isUpvoted && !upvotedIds.includes(product.id)) {
-          upvotedIds.push(product.id);
-          localStorage.setItem('upvotedProducts', JSON.stringify(upvotedIds));
-        } else if (!isUpvoted && upvotedIds.includes(product.id)) {
-          const newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
-          localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
-        }
-      } catch (e) {
-        console.error('Error updating localStorage', e);
-      }
-      return;
+      setHasUpvoted(vote.value === 1);
     }
-    
-    // Otherwise check global map
-    if (typeof upvotedProducts !== 'undefined' && upvotedProducts.has(product.id)) {
-      setHasUpvoted(upvotedProducts.get(product.id) || false);
-      return;
-    }
-    
-    // Finally check localStorage
-    try {
-      const upvotedItems = localStorage.getItem('upvotedProducts');
-      if (upvotedItems) {
-        const upvotedIds = JSON.parse(upvotedItems);
-        const isUpvoted = upvotedIds.includes(product.id);
-        setHasUpvoted(isUpvoted);
-        // Update the global map if it exists
-        if (typeof upvotedProducts !== 'undefined') {
-          upvotedProducts.set(product.id, isUpvoted);
-        }
-      }
-    } catch (e) {
-      console.error('Error reading from localStorage', e);
-    }
-  }, [product, vote, user]);
+  }, [vote]);
 
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
@@ -120,45 +71,16 @@ export default function ProductPage() {
       return;
     }
 
+    // Toggle the upvoted state immediately for visual feedback
+    setHasUpvoted(!hasUpvoted);
+    
     try {
-      // Toggle upvoted state immediately for visual feedback
-      const newUpvoteState = !hasUpvoted;
-      setHasUpvoted(newUpvoteState);
-      
-      // Update global map if it exists
-      if (typeof upvotedProducts !== 'undefined') {
-        upvotedProducts.set(product.id, newUpvoteState);
-      }
-      
-      // Update localStorage
-      try {
-        const upvotedItems = localStorage.getItem('upvotedProducts') || '[]';
-        const upvotedIds = JSON.parse(upvotedItems);
-        
-        let newUpvotedIds;
-        if (newUpvoteState) {
-          // Add this product ID if it doesn't exist
-          if (!upvotedIds.includes(product.id)) {
-            newUpvotedIds = [...upvotedIds, product.id];
-          } else {
-            newUpvotedIds = upvotedIds;
-          }
-        } else {
-          // Remove this product ID
-          newUpvotedIds = upvotedIds.filter((id: number) => id !== product.id);
-        }
-        
-        localStorage.setItem('upvotedProducts', JSON.stringify(newUpvotedIds));
-      } catch (e) {
-        console.error('Error updating localStorage', e);
-      }
-      
-      // Send the API request
-      const newValue = newUpvoteState ? 1 : 0;
+      // Send the API request in the background
+      const newValue = !hasUpvoted ? 1 : 0;
       await voteMutation.mutateAsync(newValue);
     } catch (error: any) {
-      // Revert the visual state if the API request fails
-      setHasUpvoted(!hasUpvoted);
+      // Revert visual state if the API request fails
+      setHasUpvoted(hasUpvoted);
       console.error('Failed to update vote', error);
     }
   };
