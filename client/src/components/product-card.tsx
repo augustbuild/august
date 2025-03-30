@@ -64,38 +64,20 @@ export default function ProductCard({
     }
   }, [vote, user, product.id, isError, error]);
   
-  // Initialize upvote state from API data and localStorage when component mounts or vote changes
+  // Initialize upvote state from API data when component mounts or vote changes
   useEffect(() => {
-    // Check if this product was upvoted in localStorage
-    const localUpvotes = localStorage.getItem('product_upvotes');
-    const upvotedProducts = localUpvotes ? JSON.parse(localUpvotes) : [];
-    const isUpvotedLocally = upvotedProducts.includes(product.id);
-    
-    // First, check if we have API vote data (for authenticated users)
-    if (isSuccess) {
-      if (vote && vote.value === 1) {
+    // For authenticated users, we rely on the API vote data
+    if (isSuccess && vote) {
+      if (vote.value === 1) {
         console.log(`[ProductCard] Setting hasUpvoted to TRUE based on API vote for product ${product.id}`);
         setHasUpvoted(true);
-        
-        // Also store in localStorage for persistence
-        if (!isUpvotedLocally) {
-          localStorage.setItem('product_upvotes', JSON.stringify([...upvotedProducts, product.id]));
-        }
-      } else if (isUpvotedLocally) {
-        // If not upvoted in API but upvoted in localStorage, maintain the localStorage state
-        console.log(`[ProductCard] Setting hasUpvoted to TRUE based on localStorage for product ${product.id}`);
-        setHasUpvoted(true);
       } else {
-        // Neither API nor localStorage shows an upvote
         console.log(`[ProductCard] Setting hasUpvoted to FALSE for product ${product.id}`);
         setHasUpvoted(false);
       }
     } else {
-      // If no API data, fall back to localStorage
-      if (isUpvotedLocally) {
-        console.log(`[ProductCard] Setting hasUpvoted to TRUE based on localStorage for product ${product.id}`);
-        setHasUpvoted(true);
-      }
+      // If no vote found or user is not authenticated, ensure upvote is not shown
+      setHasUpvoted(false);
     }
   }, [vote, product.id, isSuccess]);
 
@@ -176,26 +158,8 @@ export default function ProductCard({
     setHasUpvoted(newUpvotedState);
     const newVoteValue = newUpvotedState ? 1 : 0;
     
-    // Update localStorage to persist the upvote state
-    const localUpvotes = localStorage.getItem('product_upvotes');
-    const upvotedProducts = localUpvotes ? JSON.parse(localUpvotes) : [];
-    
-    if (newUpvotedState) {
-      // Add to upvoted products if not already there
-      if (!upvotedProducts.includes(product.id)) {
-        const updatedUpvotes = [...upvotedProducts, product.id];
-        localStorage.setItem('product_upvotes', JSON.stringify(updatedUpvotes));
-        console.log(`[ProductCard] Added product ${product.id} to localStorage upvotes`);
-      }
-    } else {
-      // Remove from upvoted products
-      const updatedUpvotes = upvotedProducts.filter((id: number) => id !== product.id);
-      localStorage.setItem('product_upvotes', JSON.stringify(updatedUpvotes));
-      console.log(`[ProductCard] Removed product ${product.id} from localStorage upvotes`);
-    }
-    
     try {
-      // Send the API request in the background for authenticated users
+      // Send the API request to persist the vote
       await voteMutation.mutateAsync(newVoteValue);
       
       // Show success message
@@ -213,14 +177,14 @@ export default function ProductCard({
         });
       }
     } catch (error: any) {
-      // Revert visual state if the API request fails, but keep localStorage change
-      // as we'll use that as primary source of truth
+      // Revert visual state if the API request fails
+      setHasUpvoted(!newUpvotedState);
       console.error('[ProductCard] Failed to update vote on server:', error);
       
       toast({
-        title: "Vote update on server failed",
-        description: "Your vote preference was saved locally",
-        variant: "default"
+        title: "Vote update failed",
+        description: error.message || "Failed to update vote",
+        variant: "destructive"
       });
     }
   };

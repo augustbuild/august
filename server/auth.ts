@@ -55,15 +55,15 @@ async function sendMagicLinkEmail(email: string, token: string) {
       }
     );
 
-    const data = await response.json().catch(() => null);
+    const data = await response.json().catch(() => ({ message: "Failed to parse response" }));
 
     if (!response.ok) {
-      throw new Error(data?.message || `HTTP ${response.status}: ${response.statusText}`);
+      throw new Error((data as { message?: string }).message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
     console.log('[Mailgun] Email sent successfully:', {
       to: email,
-      messageId: data?.id
+      messageId: (data as { id?: string }).id || 'unknown'
     });
 
     return data;
@@ -78,15 +78,16 @@ export function setupAuth(app: Express) {
   app.set('trust proxy', 1);
 
   const sessionConfig: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
-    resave: false,
-    saveUninitialized: false,
+    secret: process.env.SESSION_SECRET || 'development-secret-key',
+    resave: true, // Changed to true to ensure session is saved on each request
+    saveUninitialized: true, // Changed to true to ensure new sessions are saved
     store: storage.sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      httpOnly: true
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for better persistence
+      httpOnly: true,
+      path: '/'
     },
     name: 'august.sid' // Custom session name
   };

@@ -155,10 +155,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Votes
+  app.get("/api/votes", async (req, res) => {
+    // For bulk requests with no specified product ID
+    // Return empty array for unauthenticated users
+    if (!req.isAuthenticated()) {
+      console.log('[Votes] Unauthenticated request for all votes, returning empty array');
+      return res.json([]);
+    }
+    
+    try {
+      // This would need a storage method to get all votes for a user
+      // For now, we'll return an empty array
+      return res.json([]);
+    } catch (error) {
+      console.error('[Votes] Error retrieving all votes:', error);
+      return res.status(500).json({ error: 'Failed to retrieve vote data' });
+    }
+  });
+
   app.get("/api/votes/:productId", async (req, res) => {
     // Check if user is authenticated
     if (!req.isAuthenticated()) {
-      console.log('[Votes] Unauthenticated request for product votes, returning empty');
+      console.log('[Votes] Unauthenticated request for product votes, returning null');
       // Return null for unauthenticated users instead of 401
       return res.json(null);
     }
