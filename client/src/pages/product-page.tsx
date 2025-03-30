@@ -34,16 +34,28 @@ export default function ProductPage() {
     return titleSlug === params?.slug;
   });
   
-  // Get vote data from the API
+  // Get all user votes
+  const { data: allUserVotes, isSuccess: allVotesSuccess } = useQuery<Array<{ id: number; productId: number; value: number }>>({
+    queryKey: ["/api/votes"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user, // Only fetch for authenticated users
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    gcTime: 0
+  });
+  
+  // Individual vote data as fallback
   const { data: vote, isSuccess } = useQuery<{ id: number; value: number } | null>({
     queryKey: ["/api/votes", product?.id],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !!product?.id,  // Enable for all users with product ID
-    staleTime: 0, // Never mark as stale to ensure fresh data on reload
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchOnMount: true, // Refetch when component mounts
-    refetchOnReconnect: true, // Refetch on network reconnect
-    gcTime: 0, // Don't cache in garbage collection
+    enabled: !!product?.id && !allVotesSuccess, // Only fetch if bulk votes aren't available
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true, 
+    refetchOnReconnect: true,
+    gcTime: 0
   });
   
   // Debug vote data
@@ -52,14 +64,26 @@ export default function ProductPage() {
     console.log(`[ProductPage] Product ID ${product?.id} - Vote data:`, vote);
   }, [vote, user, product?.id]);
   
-  // Initialize upvote state from API data when component mounts or vote changes
+  // Initialize upvote state from API data when component mounts or vote data changes
   useEffect(() => {
     if (!product) return;
     
-    // For authenticated users, we rely on the API vote data
+    // First check if we have bulk user votes available
+    if (allVotesSuccess && allUserVotes && allUserVotes.length > 0) {
+      // Find the vote for this specific product
+      const userVoteForProduct = allUserVotes.find(v => v.productId === product.id);
+      
+      if (userVoteForProduct && userVoteForProduct.value === 1) {
+        console.log(`[ProductPage] Setting hasUpvoted to TRUE based on bulk vote data for product ${product.id}`);
+        setHasUpvoted(true);
+        return;
+      }
+    }
+    
+    // Fall back to individual vote data if bulk data doesn't have this product's vote
     if (isSuccess && vote) {
       if (vote.value === 1) {
-        console.log(`[ProductPage] Setting hasUpvoted to TRUE based on API vote for product ${product.id}`);
+        console.log(`[ProductPage] Setting hasUpvoted to TRUE based on individual API vote for product ${product.id}`);
         setHasUpvoted(true);
       } else {
         console.log(`[ProductPage] Setting hasUpvoted to FALSE for product ${product.id}`);
@@ -69,7 +93,7 @@ export default function ProductPage() {
       // If no vote found or user is not authenticated, ensure upvote is not shown
       setHasUpvoted(false);
     }
-  }, [vote, product, isSuccess]);
+  }, [vote, allUserVotes, product, isSuccess, allVotesSuccess]);
 
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
@@ -90,6 +114,7 @@ export default function ProductPage() {
       if (product?.id) {
         // Invalidate relevant queries to refresh data
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/votes"] }); // Invalidate bulk votes
         queryClient.invalidateQueries({ queryKey: ["/api/votes", product.id] });
       }
     },

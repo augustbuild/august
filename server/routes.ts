@@ -164,9 +164,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // This would need a storage method to get all votes for a user
-      // For now, we'll return an empty array
-      return res.json([]);
+      // Get all votes for the currently logged in user
+      const userVotes = await storage.getUserVotes(req.user!.id);
+      console.log(`[Votes] Retrieved ${userVotes.length} votes for user ${req.user!.id}`);
+      return res.json(userVotes);
     } catch (error) {
       console.error('[Votes] Error retrieving all votes:', error);
       return res.status(500).json({ error: 'Failed to retrieve vote data' });

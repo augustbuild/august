@@ -42,6 +42,7 @@ export interface IStorage {
 
   // Vote operations
   getVote(userId: number, productId: number): Promise<Vote | undefined>;
+  getUserVotes(userId: number): Promise<Vote[]>; // Get all votes for a user
   createVote(vote: Omit<Vote, "id">): Promise<Vote>;
   updateVote(id: number, value: number): Promise<Vote>;
 }
@@ -212,6 +213,13 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return vote;
+  }
+
+  async getUserVotes(userId: number): Promise<Vote[]> {
+    return await db
+      .select()
+      .from(votes)
+      .where(eq(votes.userId, userId));
   }
 
   async createVote(vote: Omit<Vote, "id">): Promise<Vote> {
