@@ -15,9 +15,9 @@ export default function Footer() {
       <div className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="font-semibold text-lg mb-4">August Build</h3>
+            <h3 className="font-semibold text-lg mb-4">August</h3>
             <p className="text-muted-foreground">
-              Discover innovative products for creators and designers.
+              Celebrating extraordinary products and the people who build them
             </p>
           </div>
           
@@ -103,7 +103,7 @@ export default function Footer() {
         </div>
         
         <div className="mt-8 pt-8 border-t text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} August Build. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} August. All rights reserved.</p>
         </div>
       </div>
     </footer>
