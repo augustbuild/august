@@ -20,151 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import StripeCheckout from "./stripe-checkout";
 import AuthModal from "./auth-modal";
 
-// Materials list sorted alphabetically
-export const materials = [
-  "ABS",
-  "Aluminum",
-  "Ash",
-  "Badger Hair",
-  "Bamboo",
-  "Beef Tallow",
-  "Beech",
-  "Beeswax",
-  "Boar Bristles",
-  "Brass",
-  "Carbon Fiber",
-  "Carbon Steel",
-  "Cashmere",
-  "Cast Iron",
-  "Cedar",
-  "Ceramic",
-  "Cherry",
-  "Coconut Oil",
-  "Copper",
-  "Cork",
-  "Cotton",
-  "Damascus Steel",
-  "Dyneema",
-  "Elastane",
-  "Feathers",
-  "Felt",
-  "Fiberglass",
-  "Glass",
-  "Goose Down",
-  "Horse Hair",
-  "Leather",
-  "Linen",
-  "Maple",
-  "Marble",
-  "MDPE",
-  "Merino Wool",
-  "Nylon",
-  "Oak",
-  "Olive Wood",
-  "Pine",
-  "Plant Fibers",
-  "Plant Foam",
-  "Polycarbonate",
-  "Polyester",
-  "Polyethylene",
-  "Polypropylene",
-  "PVC",
-  "Resin",
-  "Rubber",
-  "Shearling",
-  "Silicone",
-  "Stainless Steel",
-  "Steel",
-  "Stone",
-  "Suede",
-  "Titanium",
-  "Twill",
-  "Walnut",
-  "Waxed Canvas",
-  "Wood",
-  "Wool",
-  "Zinc"
-].sort();
-
-// Countries list
-export const countries = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina",
-  "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic",
-  "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti",
-  "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia",
-  "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau",
-  "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast",
-  "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "North Korea", "South Korea", "Kuwait", "Kyrgyzstan", "Laos", "Latvia",
-  "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Macedonia", "Madagascar", "Malawi", "Malaysia",
-  "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia",
-  "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
-  "Nigeria", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland",
-  "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa",
-  "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia",
-  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Swaziland", "Sweden",
-  "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey",
-  "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
-  "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-];
-
-// Collections list
-export const collections = [
-  "Pans",
-  "Bags",
-  "Appliances",
-  "Razors",
-  "Footwear",
-  "Tableware",
-  "Tools",
-  "Shirts",
-  "Pens & Pencils",
-  "Wallets",
-  "Food Containers",
-  "Kitchen Accessories",
-  "Music",
-  "Camping Gear",
-  "Luggage",
-  "Brushes",
-  "Pots",
-  "Bottles",
-  "Hats",
-  "Desk Accessories",
-  "Jackets",
-  "Chairs & Stools",
-  "Towels & Blankets",
-  "Purifiers",
-  "Glasses",
-  "Furniture",
-  "Knives",
-  "Oral Care",
-  "Keycases",
-  "Belts",
-  "Fitness Gear",
-  "Cameras & Binoculars",
-  "Games",
-  "Cutting Boards",
-  "Kettles",
-  "Dishes",
-  "Lighting",
-  "Water Equipment",
-  "Pants",
-  "Bed & Bedding",
-  "Home Accessories",
-  "Computer Accessories",
-  "Socks",
-  "Umbrellas",
-  "Toys",
-  "Blenders",
-  "Watches",
-  "Bowls",
-  "Soaps",
-  "Yoga Mats",
-  "Underwear",
-  "Tubs",
-  "Coops",
-  "Gloves"
-].sort();
+import { materials, countries, collections } from "@/lib/category-data";
 
 // Update the Product interface to remove description
 interface Product {
@@ -199,6 +55,12 @@ export default function ProductForm({
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [wantsFeatured, setWantsFeatured] = useState(initialValues?.featured || false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [materialOpen, setMaterialOpen] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [materialSearch, setMaterialSearch] = useState("");
+  const [countrySearch, setCountrySearch] = useState("");
+  const [collectionSearch, setCollectionSearch] = useState("");
 
   const form = useForm({
     resolver: zodResolver(insertProductSchema),
@@ -215,6 +77,18 @@ export default function ProductForm({
       }),
     },
   });
+
+  const filteredMaterials = materials.filter((material) =>
+    material.toLowerCase().includes(materialSearch.toLowerCase())
+  );
+
+  const filteredCountries = countries.filter((country) =>
+    country.toLowerCase().includes(countrySearch.toLowerCase())
+  );
+
+  const filteredCollections = collections.filter((collection) =>
+    collection.toLowerCase().includes(collectionSearch.toLowerCase())
+  );
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {

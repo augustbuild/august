@@ -5,7 +5,7 @@ import { Loader2, ArrowLeft, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import CategoryNavigation from "@/components/category-navigation";
-import { materials, countries, collections } from "@/components/product-form";
+import { materials, countries, collections } from "@/lib/category-data";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 

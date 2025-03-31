@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { useLocation } from "wouter";
-import { materials, countries, collections } from "@/components/product-form";
+import { materials, countries, collections } from "@/lib/category-data";
 import CategoryNavigation from "@/components/category-navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";

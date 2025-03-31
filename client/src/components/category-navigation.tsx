@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { materials, countries, collections } from "./product-form";
+import { materials, countries, collections } from "@/lib/category-data";
 import { getCountryFlag } from "@/lib/utils";
 
 interface CategoryNavigationProps {

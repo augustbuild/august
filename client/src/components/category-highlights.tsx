@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
-import { materials, countries, collections } from "./product-form";
+import { materials, countries, collections } from "@/lib/category-data";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Package, Globe, FolderOpen } from "lucide-react";
