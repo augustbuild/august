@@ -4,4 +4,7 @@ export interface YoutubeVideo {
   description: string;
   thumbnail: string;
   publishedAt: string;
+  duration: string;
+  durationSeconds: number;
+  isShort: boolean;
 }

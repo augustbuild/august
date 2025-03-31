@@ -353,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get playlist items
-      const response = await axios.get('https://www.googleapis.com/youtube/v3/playlistItems', {
+      const playlistResponse = await axios.get('https://www.googleapis.com/youtube/v3/playlistItems', {
         params: {
           part: 'snippet',
           maxResults: 50, // Max allowed by the API
@@ -362,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      if (!response.data.items || response.data.items.length === 0) {
+      if (!playlistResponse.data.items || playlistResponse.data.items.length === 0) {
         console.warn('[YouTube] Playlist returned no items');
         return res.status(404).json({
           error: "No videos found",
@@ -371,16 +371,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log(`[YouTube] Retrieved ${response.data.items.length} videos from playlist`);
+      // Get video IDs from the playlist items
+      const videoIds = playlistResponse.data.items.map((item: any) => 
+        item.snippet.resourceId.videoId
+      ).join(',');
+
+      // Get video details including duration
+      const videosResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+        params: {
+          part: 'contentDetails,snippet',
+          id: videoIds,
+          key: YOUTUBE_API_KEY
+        }
+      });
+
+      if (!videosResponse.data.items || videosResponse.data.items.length === 0) {
+        console.warn('[YouTube] Video details request returned no items');
+        return res.status(404).json({
+          error: "No video details found",
+          details: "Could not retrieve video details from YouTube API",
+          code: "NO_VIDEO_DETAILS"
+        });
+      }
+
+      console.log(`[YouTube] Retrieved details for ${videosResponse.data.items.length} videos`);
+      
+      // Function to parse ISO 8601 duration to seconds
+      const parseDuration = (duration: string): number => {
+        const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+        const hours = (match && match[1]) ? parseInt(match[1].slice(0, -1)) : 0;
+        const minutes = (match && match[2]) ? parseInt(match[2].slice(0, -1)) : 0;
+        const seconds = (match && match[3]) ? parseInt(match[3].slice(0, -1)) : 0;
+        return hours * 3600 + minutes * 60 + seconds;
+      };
       
       // Transform the data to our required format
-      const videos = response.data.items.map((item: any) => ({
-        id: item.snippet.resourceId.videoId,
-        title: item.snippet.title,
-        description: item.snippet.description, 
-        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-        publishedAt: item.snippet.publishedAt
-      }));
+      const videos = videosResponse.data.items.map((item: any) => {
+        const durationSeconds = parseDuration(item.contentDetails.duration);
+        return {
+          id: item.id,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+          publishedAt: item.snippet.publishedAt,
+          duration: item.contentDetails.duration,
+          durationSeconds,
+          isShort: durationSeconds < 180 // Less than 3 minutes is considered a short
+        };
+      });
       
       res.json(videos);
     } catch (error: any) {
