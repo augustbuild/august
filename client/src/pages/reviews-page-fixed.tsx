@@ -153,7 +153,6 @@ export default function ReviewsPage() {
             {formatDuration(video.durationSeconds)}
           </Badge>
         </div>
-        <span className="text-xs text-muted-foreground">Short</span>
       </div>
     </div>
   );
@@ -199,7 +198,6 @@ export default function ReviewsPage() {
             {formatDuration(video.durationSeconds)}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground line-clamp-2">{video.description}</p>
       </div>
     </div>
   );
