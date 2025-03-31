@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { insertProductSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -467,27 +468,29 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No collections found.</CommandEmpty>
-                          <CommandGroup className="max-h-64 overflow-auto">
-                            {filteredCollections.map((collection) => (
-                              <CommandItem
-                                key={collection}
-                                onSelect={() => {
-                                  form.setValue("collection", collection);
-                                  setCollectionOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    field.value === collection
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {collection}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          <ScrollArea className="max-h-64">
+                            <CommandGroup>
+                              {filteredCollections.map((collection) => (
+                                <CommandItem
+                                  key={collection}
+                                  onSelect={() => {
+                                    form.setValue("collection", collection);
+                                    setCollectionOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === collection
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {collection}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </ScrollArea>
                         </Command>
                       </PopoverContent>
                     </Popover>
@@ -528,27 +531,29 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No countries found.</CommandEmpty>
-                          <CommandGroup className="max-h-64 overflow-auto">
-                            {filteredCountries.map((country) => (
-                              <CommandItem
-                                key={country}
-                                onSelect={() => {
-                                  form.setValue("country", country);
-                                  setCountryOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    field.value === country
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {country}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          <ScrollArea className="max-h-64">
+                            <CommandGroup>
+                              {filteredCountries.map((country) => (
+                                <CommandItem
+                                  key={country}
+                                  onSelect={() => {
+                                    form.setValue("country", country);
+                                    setCountryOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === country
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {country}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </ScrollArea>
                         </Command>
                       </PopoverContent>
                     </Popover>
@@ -602,24 +607,26 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No materials found.</CommandEmpty>
-                          <CommandGroup className="max-h-64 overflow-auto">
-                            {filteredMaterials.map((material) => (
-                              <CommandItem
-                                key={material}
-                                onSelect={() => handleMaterialSelect(material)}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    (field.value || []).includes(material)
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {material}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          <ScrollArea className="max-h-64">
+                            <CommandGroup>
+                              {filteredMaterials.map((material) => (
+                                <CommandItem
+                                  key={material}
+                                  onSelect={() => handleMaterialSelect(material)}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      (field.value || []).includes(material)
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {material}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </ScrollArea>
                         </Command>
                       </PopoverContent>
                     </Popover>
