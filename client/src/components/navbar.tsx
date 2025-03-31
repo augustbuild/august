@@ -49,16 +49,11 @@ const Navbar: React.FC = () => {
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Reviews</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="w-[200px] p-2">
-                    <Link href="/reviews">
-                      <div className="flex items-center rounded-md p-2 hover:bg-accent cursor-pointer">
-                        <span>All Reviews</span>
-                      </div>
-                    </Link>
+                <Link href="/reviews">
+                  <div className="h-10 px-4 py-2 flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                    Reviews
                   </div>
-                </NavigationMenuContent>
+                </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
