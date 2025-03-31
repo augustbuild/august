@@ -344,7 +344,7 @@ export default function ReviewsPage() {
             {shortVideosCount > 0 && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">Short Videos</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                   {videos.filter(video => video.isShort).map(renderShortVideo)}
                 </div>
               </div>
@@ -352,7 +352,7 @@ export default function ReviewsPage() {
             {longVideosCount > 0 && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">Long-Form Reviews</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                   {videos.filter(video => !video.isShort).map(renderLongVideo)}
                 </div>
               </div>
@@ -361,7 +361,7 @@ export default function ReviewsPage() {
 
           <TabsContent value="short" className="mt-4">
             {shortVideosCount > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                 {filteredVideos.map(renderShortVideo)}
               </div>
             ) : (
@@ -373,7 +373,7 @@ export default function ReviewsPage() {
 
           <TabsContent value="long" className="mt-4">
             {longVideosCount > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {filteredVideos.map(renderLongVideo)}
               </div>
             ) : (
