@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, RefreshCw, Clock, Timer } from 'lucide-react';
+import { ExternalLink, RefreshCw, Clock, Timer, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import SocialLinks from '@/components/social-links';
 
@@ -130,13 +130,19 @@ export default function ReviewsPage() {
       </div>
       <div className="p-3">
         <h3 className="font-semibold text-sm line-clamp-1 mb-1">{video.title}</h3>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
           <Badge variant="outline" className="text-xs px-2 bg-accent/40">
             <Timer className="h-3 w-3 mr-1" />
             {formatDuration(video.durationSeconds)}
           </Badge>
-          <span className="text-xs text-muted-foreground">Short</span>
+          {video.viewCount && (
+            <Badge variant="outline" className="text-xs px-2 bg-accent/40">
+              <Eye className="h-3 w-3 mr-1" />
+              {video.viewCount}
+            </Badge>
+          )}
         </div>
+        <span className="text-xs text-muted-foreground">Short</span>
       </div>
     </div>
   );
@@ -170,13 +176,19 @@ export default function ReviewsPage() {
       </div>
       <div className="p-4">
         <h3 className="font-semibold text-lg line-clamp-2 mb-2">{video.title}</h3>
-        <div className="flex justify-between items-center">
-          <p className="text-sm text-muted-foreground line-clamp-1">{video.description}</p>
-          <Badge variant="outline" className="ml-2 text-xs whitespace-nowrap">
+        <div className="flex flex-wrap gap-2 mb-2">
+          <Badge variant="outline" className="text-xs whitespace-nowrap">
             <Clock className="h-3 w-3 mr-1" />
             {formatDuration(video.durationSeconds)}
           </Badge>
+          {video.viewCount && (
+            <Badge variant="outline" className="text-xs whitespace-nowrap">
+              <Eye className="h-3 w-3 mr-1" />
+              {video.viewCount}
+            </Badge>
+          )}
         </div>
+        <p className="text-sm text-muted-foreground line-clamp-2">{video.description}</p>
       </div>
     </div>
   );

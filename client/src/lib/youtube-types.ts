@@ -7,4 +7,5 @@ export interface YoutubeVideo {
   duration: string;
   durationSeconds: number;
   isShort: boolean;
+  viewCount?: string; // Optional for backward compatibility
 }

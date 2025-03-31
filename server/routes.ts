@@ -376,10 +376,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         item.snippet.resourceId.videoId
       ).join(',');
 
-      // Get video details including duration
+      // Get video details including duration and statistics (for view count)
       const videosResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
         params: {
-          part: 'contentDetails,snippet',
+          part: 'contentDetails,snippet,statistics',
           id: videoIds,
           key: YOUTUBE_API_KEY
         }
@@ -408,6 +408,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Transform the data to our required format
       const videos = videosResponse.data.items.map((item: any) => {
         const durationSeconds = parseDuration(item.contentDetails.duration);
+        
+        // Format view count with commas (e.g., 1,234,567)
+        const viewCountRaw = item.statistics?.viewCount || "0";
+        const viewCount = parseInt(viewCountRaw).toLocaleString();
+        
         return {
           id: item.id,
           title: item.snippet.title,
@@ -416,7 +421,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           publishedAt: item.snippet.publishedAt,
           duration: item.contentDetails.duration,
           durationSeconds,
-          isShort: durationSeconds < 180 // Less than 3 minutes is considered a short
+          isShort: durationSeconds < 180, // Less than 3 minutes is considered a short
+          viewCount
         };
       });
       
