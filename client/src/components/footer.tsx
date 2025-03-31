@@ -48,7 +48,6 @@ export default function Footer() {
           </div>
           
           <div>
-            <h3 className="font-semibold text-lg mb-4">Follow Us</h3>
             <div className="flex space-x-4">
               <a 
                 href={SOCIAL_LINKS.YOUTUBE} 
