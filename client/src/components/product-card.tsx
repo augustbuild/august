@@ -284,12 +284,15 @@ export default function ProductCard({
           {/* Separate buttons for upvote and feature */}
           {product.userId === user?.id ? (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               onClick={handleFeatureProduct}
-              className="h-7 px-2 flex items-center gap-1"
+              className={cn(
+                "h-7 px-2 flex items-center gap-1",
+                "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
+              )}
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-4 w-4 text-black" />
               <span className="text-sm font-medium">{product.score}</span>
             </Button>
           ) : (

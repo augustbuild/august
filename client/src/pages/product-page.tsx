@@ -210,19 +210,34 @@ export default function ProductPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant={hasUpvoted ? "default" : "outline"}
-              size="sm"
-              onClick={handleUpvote}
-              disabled={voteMutation.isPending || !user}
-              className={cn(
-                "h-9 px-4 flex items-center gap-2",
-                hasUpvoted && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
-              )}
-            >
-              <ArrowUp className={cn("h-4 w-4", hasUpvoted && "text-black")} />
-              <span className="font-medium">{product.score}</span>
-            </Button>
+            {user && product.userId === user.id ? (
+              <Button
+                variant="default"
+                size="sm"
+                disabled={true}
+                className={cn(
+                  "h-9 px-4 flex items-center gap-2",
+                  "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
+                )}
+              >
+                <ArrowUp className="h-4 w-4 text-black" />
+                <span className="font-medium">{product.score}</span>
+              </Button>
+            ) : (
+              <Button
+                variant={hasUpvoted ? "default" : "outline"}
+                size="sm"
+                onClick={handleUpvote}
+                disabled={voteMutation.isPending || !user}
+                className={cn(
+                  "h-9 px-4 flex items-center gap-2",
+                  hasUpvoted && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
+                )}
+              >
+                <ArrowUp className={cn("h-4 w-4", hasUpvoted && "text-black")} />
+                <span className="font-medium">{product.score}</span>
+              </Button>
+            )}
 
             <a
               href={product.link}
