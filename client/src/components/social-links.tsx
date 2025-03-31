@@ -30,15 +30,16 @@ export default function SocialLinks({ size = 'md', className = '' }: SocialLinks
         target="_blank" 
         rel="noopener noreferrer"
         aria-label="Subscribe on YouTube"
-        className="text-muted-foreground hover:text-[#FF0000] transition"
+        className="text-[#222222] hover:text-[#FF0000] transition"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           viewBox="0 0 24 24" 
           fill="currentColor" 
           className={iconSize}
+          style={{ minWidth: '24px', minHeight: '24px' }}
         >
-          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
         </svg>
       </a>
       <a 
@@ -46,7 +47,7 @@ export default function SocialLinks({ size = 'md', className = '' }: SocialLinks
         target="_blank" 
         rel="noopener noreferrer"
         aria-label="Follow on Instagram"
-        className="text-muted-foreground hover:text-[#E1306C] transition"
+        className="text-[#222222] hover:text-[#E1306C] transition"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -62,7 +63,7 @@ export default function SocialLinks({ size = 'md', className = '' }: SocialLinks
         target="_blank" 
         rel="noopener noreferrer"
         aria-label="Follow on TikTok"
-        className="text-muted-foreground hover:text-black transition"
+        className="text-[#222222] hover:text-black transition"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
