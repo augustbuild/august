@@ -23,9 +23,11 @@ export default function CategoryNavigation({ type, currentValue, items }: Catego
             >
               <Badge
                 variant={isSelected ? "default" : "secondary"}
-                className={`cursor-pointer whitespace-nowrap inline-flex items-center hover:bg-secondary/80 ${
-                  isSelected ? "" : "hover:bg-primary/80"
-                }`}
+                className={`cursor-pointer whitespace-nowrap inline-flex items-center 
+                  ${isSelected 
+                    ? "hover:bg-primary/90 hover:text-primary-foreground" 
+                    : "hover:bg-secondary/80 hover:text-secondary-foreground"
+                  }`}
               >
                 {type === "countries" && getCountryFlag(item.name)}{" "}
                 {item.name}

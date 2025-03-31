@@ -248,7 +248,7 @@ export default function ProductPage() {
                   >
                     <Badge
                       variant="secondary"
-                      className="text-xs cursor-pointer hover:bg-secondary/80"
+                      className="text-xs cursor-pointer hover:bg-secondary/80 hover:text-secondary-foreground"
                     >
                       {material}
                     </Badge>
@@ -261,7 +261,7 @@ export default function ProductPage() {
               <Link href={`/collections/${encodeURIComponent(product.collection)}`}>
                 <Badge
                   variant="secondary"
-                  className="text-xs cursor-pointer hover:bg-secondary/80"
+                  className="text-xs cursor-pointer hover:bg-secondary/80 hover:text-secondary-foreground"
                 >
                   {product.collection}
                 </Badge>
@@ -272,7 +272,7 @@ export default function ProductPage() {
               <Link href={`/countries/${encodeURIComponent(product.country)}`}>
                 <Badge
                   variant="secondary"
-                  className="text-xs cursor-pointer hover:bg-secondary/80"
+                  className="text-xs cursor-pointer hover:bg-secondary/80 hover:text-secondary-foreground"
                 >
                   {getCountryFlag(product.country)} {product.country}
                 </Badge>

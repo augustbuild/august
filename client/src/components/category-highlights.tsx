@@ -93,7 +93,7 @@ export default function CategoryHighlights() {
                 >
                   <Badge
                     variant="secondary"
-                    className="cursor-pointer whitespace-nowrap hover:bg-secondary/80"
+                    className="cursor-pointer whitespace-nowrap hover:bg-secondary/80 hover:text-secondary-foreground"
                   >
                     {section.type === "countries" && getCountryFlag(item.name)}{" "}
                     {item.name} ({item.count})
