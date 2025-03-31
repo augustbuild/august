@@ -468,8 +468,15 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No collections found.</CommandEmpty>
-                          <div className="max-h-[320px] overflow-y-auto">
-                            <CommandGroup>
+                          <div 
+                            className="max-h-[320px] overflow-y-auto" 
+                            style={{ 
+                              WebkitOverflowScrolling: 'touch',
+                              overscrollBehavior: 'contain',
+                              scrollbarWidth: 'auto'
+                            }}
+                          >
+                            <CommandGroup className="h-auto">
                               {filteredCollections.map((collection) => (
                                 <CommandItem
                                   key={collection}
@@ -531,8 +538,15 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No countries found.</CommandEmpty>
-                          <div className="max-h-[320px] overflow-y-auto">
-                            <CommandGroup>
+                          <div 
+                            className="max-h-[320px] overflow-y-auto" 
+                            style={{ 
+                              WebkitOverflowScrolling: 'touch',
+                              overscrollBehavior: 'contain',
+                              scrollbarWidth: 'auto'
+                            }}
+                          >
+                            <CommandGroup className="h-auto">
                               {filteredCountries.map((country) => (
                                 <CommandItem
                                   key={country}
@@ -607,8 +621,15 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No materials found.</CommandEmpty>
-                          <div className="max-h-[320px] overflow-y-auto">
-                            <CommandGroup>
+                          <div 
+                            className="max-h-[320px] overflow-y-auto" 
+                            style={{ 
+                              WebkitOverflowScrolling: 'touch',
+                              overscrollBehavior: 'contain',
+                              scrollbarWidth: 'auto'
+                            }}
+                          >
+                            <CommandGroup className="h-auto">
                               {filteredMaterials.map((material) => (
                                 <CommandItem
                                   key={material}
