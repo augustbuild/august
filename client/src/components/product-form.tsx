@@ -298,20 +298,62 @@ export default function ProductForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Collection</FormLabel>
-                  <FormControl>
-                    <select
-                      value={field.value}
-                      onChange={(e) => form.setValue("collection", e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="" disabled>Select collection</option>
-                      {collections.map((collection) => (
-                        <option key={collection} value={collection}>
-                          {collection}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
+                  <Popover open={collectionOpen} onOpenChange={setCollectionOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={collectionOpen}
+                          className="w-full justify-between"
+                        >
+                          {field.value
+                            ? collections.find(
+                                (collection) => collection === field.value
+                              )
+                            : "Select collection"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search collection..." 
+                          value={collectionSearch}
+                          onValueChange={setCollectionSearch}
+                        />
+                        <CommandEmpty>No collection found.</CommandEmpty>
+                        <CommandGroup>
+                          <ScrollArea className="h-[200px]">
+                            <div>
+                              {filteredCollections.map((collection) => (
+                                <CommandItem
+                                  key={collection}
+                                  value={collection}
+                                  onSelect={() => {
+                                    form.setValue("collection", collection);
+                                    setCollectionOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === collection
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {collection}
+                                </CommandItem>
+                              ))}
+                            </div>
+                            <ScrollBar orientation="vertical" />
+                          </ScrollArea>
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -322,20 +364,62 @@ export default function ProductForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Country</FormLabel>
-                  <FormControl>
-                    <select
-                      value={field.value}
-                      onChange={(e) => form.setValue("country", e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="" disabled>Select country</option>
-                      {countries.map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
+                  <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={countryOpen}
+                          className="w-full justify-between"
+                        >
+                          {field.value
+                            ? countries.find(
+                                (country) => country === field.value
+                              )
+                            : "Select country"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search country..." 
+                          value={countrySearch}
+                          onValueChange={setCountrySearch}
+                        />
+                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandGroup>
+                          <ScrollArea className="h-[200px]">
+                            <div>
+                              {filteredCountries.map((country) => (
+                                <CommandItem
+                                  key={country}
+                                  value={country}
+                                  onSelect={() => {
+                                    form.setValue("country", country);
+                                    setCountryOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === country
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {country}
+                                </CommandItem>
+                              ))}
+                            </div>
+                            <ScrollBar orientation="vertical" />
+                          </ScrollArea>
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -363,26 +447,61 @@ export default function ProductForm({
                       </Badge>
                     ))}
                   </div>
-                  <FormControl>
-                    <select
-                      multiple
-                      value={field.value || []}
-                      onChange={(e) => {
-                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                        form.setValue("material", selectedOptions);
-                      }}
-                      className="w-full px-3 py-2 border rounded-md border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring min-h-[150px]"
-                    >
-                      {materials.map((material) => (
-                        <option key={material} value={material}>
-                          {material}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Hold Ctrl (Windows) or Command (Mac) to select multiple materials
-                    </p>
-                  </FormControl>
+                  <Popover open={materialOpen} onOpenChange={setMaterialOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={materialOpen}
+                          className="w-full justify-between"
+                        >
+                          {field.value && field.value.length > 0
+                            ? `${field.value.length} material${field.value.length > 1 ? 's' : ''} selected`
+                            : "Select materials"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search materials..." 
+                          value={materialSearch}
+                          onValueChange={setMaterialSearch}
+                        />
+                        <CommandEmpty>No material found.</CommandEmpty>
+                        <CommandGroup>
+                          <ScrollArea className="h-[200px]">
+                            <div>
+                              {filteredMaterials.map((material) => (
+                                <CommandItem
+                                  key={material}
+                                  value={material}
+                                  onSelect={() => handleMaterialSelect(material)}
+                                >
+                                  <div className="flex items-center">
+                                    <div
+                                      className={cn(
+                                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                        field.value?.includes(material)
+                                          ? "bg-primary text-primary-foreground"
+                                          : "opacity-50 [&_svg]:invisible"
+                                      )}
+                                    >
+                                      <Check className="h-3 w-3" />
+                                    </div>
+                                    {material}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </div>
+                            <ScrollBar orientation="vertical" />
+                          </ScrollArea>
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
