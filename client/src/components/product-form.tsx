@@ -460,45 +460,54 @@ export default function ProductForm({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput
+                        <div className="flex flex-col w-full">
+                          <input
+                            type="text"
                             placeholder="Search collections..."
                             value={collectionSearch}
-                            onValueChange={setCollectionSearch}
-                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                            onChange={(e) => setCollectionSearch(e.target.value)}
+                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-2 py-1.5 border border-input rounded-md"
                           />
-                          <CommandEmpty>No collections found.</CommandEmpty>
-                          <div 
-                            className="max-h-[320px] overflow-y-auto" 
-                            style={{ 
-                              WebkitOverflowScrolling: 'touch',
-                              overscrollBehavior: 'contain',
-                              scrollbarWidth: 'auto'
-                            }}
-                          >
-                            <CommandGroup className="h-auto">
-                              {filteredCollections.map((collection) => (
-                                <CommandItem
-                                  key={collection}
-                                  onSelect={() => {
-                                    form.setValue("collection", collection);
-                                    setCollectionOpen(false);
-                                  }}
-                                >
-                                  <Check
+                          {filteredCollections.length === 0 ? (
+                            <div className="p-2 text-sm text-center text-muted-foreground">
+                              No collections found.
+                            </div>
+                          ) : (
+                            <div 
+                              className="border border-input rounded-md mt-1 max-h-[300px] overflow-y-auto"
+                              style={{ 
+                                WebkitOverflowScrolling: 'touch',
+                                overscrollBehavior: 'contain',
+                              }}
+                            >
+                              <ul className="py-1">
+                                {filteredCollections.map((collection) => (
+                                  <li 
+                                    key={collection}
                                     className={cn(
-                                      "mr-2 h-4 w-4",
-                                      field.value === collection
-                                        ? "opacity-100"
-                                        : "opacity-0"
+                                      "px-2 py-1.5 text-sm flex items-center cursor-pointer hover:bg-accent hover:text-accent-foreground",
+                                      field.value === collection && "bg-accent text-accent-foreground"
                                     )}
-                                  />
-                                  {collection}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </div>
-                        </Command>
+                                    onClick={() => {
+                                      form.setValue("collection", collection);
+                                      setCollectionOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === collection
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {collection}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </PopoverContent>
                     </Popover>
                   </FormControl>
@@ -530,45 +539,54 @@ export default function ProductForm({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput
+                        <div className="flex flex-col w-full">
+                          <input
+                            type="text"
                             placeholder="Search countries..."
                             value={countrySearch}
-                            onValueChange={setCountrySearch}
-                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                            onChange={(e) => setCountrySearch(e.target.value)}
+                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-2 py-1.5 border border-input rounded-md"
                           />
-                          <CommandEmpty>No countries found.</CommandEmpty>
-                          <div 
-                            className="max-h-[320px] overflow-y-auto" 
-                            style={{ 
-                              WebkitOverflowScrolling: 'touch',
-                              overscrollBehavior: 'contain',
-                              scrollbarWidth: 'auto'
-                            }}
-                          >
-                            <CommandGroup className="h-auto">
-                              {filteredCountries.map((country) => (
-                                <CommandItem
-                                  key={country}
-                                  onSelect={() => {
-                                    form.setValue("country", country);
-                                    setCountryOpen(false);
-                                  }}
-                                >
-                                  <Check
+                          {filteredCountries.length === 0 ? (
+                            <div className="p-2 text-sm text-center text-muted-foreground">
+                              No countries found.
+                            </div>
+                          ) : (
+                            <div 
+                              className="border border-input rounded-md mt-1 max-h-[300px] overflow-y-auto"
+                              style={{ 
+                                WebkitOverflowScrolling: 'touch',
+                                overscrollBehavior: 'contain',
+                              }}
+                            >
+                              <ul className="py-1">
+                                {filteredCountries.map((country) => (
+                                  <li 
+                                    key={country}
                                     className={cn(
-                                      "mr-2 h-4 w-4",
-                                      field.value === country
-                                        ? "opacity-100"
-                                        : "opacity-0"
+                                      "px-2 py-1.5 text-sm flex items-center cursor-pointer hover:bg-accent hover:text-accent-foreground",
+                                      field.value === country && "bg-accent text-accent-foreground"
                                     )}
-                                  />
-                                  {country}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </div>
-                        </Command>
+                                    onClick={() => {
+                                      form.setValue("country", country);
+                                      setCountryOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === country
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {country}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </PopoverContent>
                     </Popover>
                   </FormControl>
@@ -613,42 +631,53 @@ export default function ProductForm({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput
+                        <div className="flex flex-col w-full">
+                          <input
+                            type="text"
                             placeholder="Search materials..."
                             value={materialSearch}
-                            onValueChange={setMaterialSearch}
-                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                            onChange={(e) => setMaterialSearch(e.target.value)}
+                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-2 py-1.5 border border-input rounded-md"
                           />
-                          <CommandEmpty>No materials found.</CommandEmpty>
-                          <div 
-                            className="max-h-[320px] overflow-y-auto" 
-                            style={{ 
-                              WebkitOverflowScrolling: 'touch',
-                              overscrollBehavior: 'contain',
-                              scrollbarWidth: 'auto'
-                            }}
-                          >
-                            <CommandGroup className="h-auto">
-                              {filteredMaterials.map((material) => (
-                                <CommandItem
-                                  key={material}
-                                  onSelect={() => handleMaterialSelect(material)}
-                                >
-                                  <Check
+                          {filteredMaterials.length === 0 ? (
+                            <div className="p-2 text-sm text-center text-muted-foreground">
+                              No materials found.
+                            </div>
+                          ) : (
+                            <div 
+                              className="border border-input rounded-md mt-1 max-h-[300px] overflow-y-auto"
+                              style={{ 
+                                WebkitOverflowScrolling: 'touch',
+                                overscrollBehavior: 'contain',
+                              }}
+                            >
+                              <ul className="py-1">
+                                {filteredMaterials.map((material) => (
+                                  <li 
+                                    key={material}
                                     className={cn(
-                                      "mr-2 h-4 w-4",
-                                      (field.value || []).includes(material)
-                                        ? "opacity-100"
-                                        : "opacity-0"
+                                      "px-2 py-1.5 text-sm flex items-center cursor-pointer hover:bg-accent hover:text-accent-foreground",
+                                      (field.value || []).includes(material) && "bg-accent text-accent-foreground"
                                     )}
-                                  />
-                                  {material}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </div>
-                        </Command>
+                                    onClick={() => {
+                                      handleMaterialSelect(material);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        (field.value || []).includes(material)
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {material}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </PopoverContent>
                     </Popover>
                   </FormControl>
