@@ -203,7 +203,7 @@ export default function ReviewsPage() {
   );
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-3xl font-bold">Product Reviews</h1>
         <div className="mt-4 md:mt-0 flex flex-row items-center space-x-3">
