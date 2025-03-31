@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
 import Stripe from "stripe";
+import axios from "axios";
 
 // Initialize Stripe with comprehensive error handling
 let stripe: Stripe | null = null;
@@ -304,6 +305,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     await storage.deleteProduct(product.id);
     res.sendStatus(204);
+  });
+
+  // YouTube API route
+  app.get("/api/youtube/playlist", async (req, res) => {
+    try {
+      const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+      if (!YOUTUBE_API_KEY) {
+        console.error('[YouTube] API key is missing');
+        return res.status(503).json({
+          error: "YouTube API service unavailable",
+          details: "The YouTube API service is not properly configured",
+          code: "YOUTUBE_API_NOT_CONFIGURED"
+        });
+      }
+
+      // The playlist ID from the given URL
+      const PLAYLIST_ID = 'PLroxG2e6nYKuMsF8nSNieCN0VSr9gB1U9';
+      
+      // Get playlist items
+      const response = await axios.get('https://www.googleapis.com/youtube/v3/playlistItems', {
+        params: {
+          part: 'snippet',
+          maxResults: 50, // Max allowed by the API
+          playlistId: PLAYLIST_ID,
+          key: YOUTUBE_API_KEY
+        }
+      });
+
+      console.log(`[YouTube] Retrieved ${response.data.items.length} videos from playlist`);
+      
+      // Transform the data to our required format
+      const videos = response.data.items.map((item: any) => ({
+        id: item.snippet.resourceId.videoId,
+        title: item.snippet.title,
+        description: item.snippet.description,
+        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+        publishedAt: item.snippet.publishedAt
+      }));
+      
+      res.json(videos);
+    } catch (error: any) {
+      console.error('[YouTube] API Error:', error.response?.data || error.message);
+      res.status(500).json({
+        error: "Failed to fetch YouTube videos",
+        details: error.response?.data?.error?.message || error.message,
+        code: error.response?.data?.error?.code || "YOUTUBE_API_ERROR"
+      });
+    }
   });
 
   const httpServer = createServer(app);

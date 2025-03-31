@@ -7,8 +7,9 @@ import {
   NavigationMenuItem,
   NavigationMenuList,
   NavigationMenuTrigger,
+  NavigationMenuLink,
 } from "@/components/ui/navigation-menu";
-import { Package, Globe, FolderOpen } from "lucide-react";
+import { Package, Globe, FolderOpen, Youtube } from "lucide-react";
 
 const Navbar: React.FC = () => {
   return (
@@ -46,6 +47,14 @@ const Navbar: React.FC = () => {
                     </Link>
                   </div>
                 </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/reviews">
+                  <div className="flex items-center gap-2 rounded-md px-4 py-2 hover:bg-accent cursor-pointer">
+                    <Youtube className="h-4 w-4" />
+                    <span>Reviews</span>
+                  </div>
+                </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
