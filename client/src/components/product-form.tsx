@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { insertProductSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -468,7 +468,7 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No collections found.</CommandEmpty>
-                          <ScrollArea className="max-h-64">
+                          <ScrollArea className="max-h-64 overflow-y-auto">
                             <CommandGroup>
                               {filteredCollections.map((collection) => (
                                 <CommandItem
@@ -490,6 +490,7 @@ export default function ProductForm({
                                 </CommandItem>
                               ))}
                             </CommandGroup>
+                            <ScrollBar />
                           </ScrollArea>
                         </Command>
                       </PopoverContent>
@@ -531,7 +532,7 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No countries found.</CommandEmpty>
-                          <ScrollArea className="max-h-64">
+                          <ScrollArea className="max-h-64 overflow-y-auto">
                             <CommandGroup>
                               {filteredCountries.map((country) => (
                                 <CommandItem
@@ -553,6 +554,7 @@ export default function ProductForm({
                                 </CommandItem>
                               ))}
                             </CommandGroup>
+                            <ScrollBar />
                           </ScrollArea>
                         </Command>
                       </PopoverContent>
@@ -607,7 +609,7 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No materials found.</CommandEmpty>
-                          <ScrollArea className="max-h-64">
+                          <ScrollArea className="max-h-64 overflow-y-auto">
                             <CommandGroup>
                               {filteredMaterials.map((material) => (
                                 <CommandItem
@@ -626,6 +628,7 @@ export default function ProductForm({
                                 </CommandItem>
                               ))}
                             </CommandGroup>
+                            <ScrollBar />
                           </ScrollArea>
                         </Command>
                       </PopoverContent>
