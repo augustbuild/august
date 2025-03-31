@@ -195,12 +195,6 @@ export default function ProductForm({
 }) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [materialsOpen, setMaterialsOpen] = useState(false);
-  const [materialSearch, setMaterialSearch] = useState("");
-  const [collectionOpen, setCollectionOpen] = useState(false);
-  const [collectionSearch, setCollectionSearch] = useState("");
-  const [countryOpen, setCountryOpen] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [wantsFeatured, setWantsFeatured] = useState(initialValues?.featured || false);
@@ -288,18 +282,6 @@ export default function ProductForm({
       : [...currentValue, selectedMaterial];
     form.setValue("material", newValue);
   };
-
-  const filteredMaterials = materials.filter((material) =>
-    material.toLowerCase().includes(materialSearch.toLowerCase())
-  );
-
-  const filteredCollections = collections.filter((collection) =>
-    collection.toLowerCase().includes(collectionSearch.toLowerCase())
-  );
-
-  const filteredCountries = countries.filter((country) =>
-    country.toLowerCase().includes(countrySearch.toLowerCase())
-  );
 
   const onSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
@@ -443,73 +425,18 @@ export default function ProductForm({
                 <FormItem>
                   <FormLabel>Collection</FormLabel>
                   <FormControl>
-                    <Popover open={collectionOpen} onOpenChange={setCollectionOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={collectionOpen}
-                          className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                        >
-                          {field.value ? (
-                            field.value
-                          ) : (
-                            <span className="text-muted-foreground">Select collection</span>
-                          )}
-                          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <div className="flex flex-col w-full">
-                          <input
-                            type="text"
-                            placeholder="Search collections..."
-                            value={collectionSearch}
-                            onChange={(e) => setCollectionSearch(e.target.value)}
-                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-2 py-1.5 border border-input rounded-md"
-                          />
-                          {filteredCollections.length === 0 ? (
-                            <div className="p-2 text-sm text-center text-muted-foreground">
-                              No collections found.
-                            </div>
-                          ) : (
-                            <div 
-                              className="border border-input rounded-md mt-1 max-h-[300px] overflow-y-auto"
-                              style={{ 
-                                WebkitOverflowScrolling: 'touch',
-                                overscrollBehavior: 'contain',
-                              }}
-                            >
-                              <ul className="py-1">
-                                {filteredCollections.map((collection) => (
-                                  <li 
-                                    key={collection}
-                                    className={cn(
-                                      "px-2 py-1.5 text-sm flex items-center cursor-pointer hover:bg-accent hover:text-accent-foreground",
-                                      field.value === collection && "bg-accent text-accent-foreground"
-                                    )}
-                                    onClick={() => {
-                                      form.setValue("collection", collection);
-                                      setCollectionOpen(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        field.value === collection
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {collection}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <select
+                      value={field.value}
+                      onChange={(e) => form.setValue("collection", e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="" disabled>Select collection</option>
+                      {collections.map((collection) => (
+                        <option key={collection} value={collection}>
+                          {collection}
+                        </option>
+                      ))}
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -522,73 +449,18 @@ export default function ProductForm({
                 <FormItem>
                   <FormLabel>Country</FormLabel>
                   <FormControl>
-                    <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={countryOpen}
-                          className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                        >
-                          {field.value ? (
-                            `${field.value}`
-                          ) : (
-                            <span className="text-muted-foreground">Select country</span>
-                          )}
-                          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <div className="flex flex-col w-full">
-                          <input
-                            type="text"
-                            placeholder="Search countries..."
-                            value={countrySearch}
-                            onChange={(e) => setCountrySearch(e.target.value)}
-                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-2 py-1.5 border border-input rounded-md"
-                          />
-                          {filteredCountries.length === 0 ? (
-                            <div className="p-2 text-sm text-center text-muted-foreground">
-                              No countries found.
-                            </div>
-                          ) : (
-                            <div 
-                              className="border border-input rounded-md mt-1 max-h-[300px] overflow-y-auto"
-                              style={{ 
-                                WebkitOverflowScrolling: 'touch',
-                                overscrollBehavior: 'contain',
-                              }}
-                            >
-                              <ul className="py-1">
-                                {filteredCountries.map((country) => (
-                                  <li 
-                                    key={country}
-                                    className={cn(
-                                      "px-2 py-1.5 text-sm flex items-center cursor-pointer hover:bg-accent hover:text-accent-foreground",
-                                      field.value === country && "bg-accent text-accent-foreground"
-                                    )}
-                                    onClick={() => {
-                                      form.setValue("country", country);
-                                      setCountryOpen(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        field.value === country
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {country}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <select
+                      value={field.value}
+                      onChange={(e) => form.setValue("country", e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="" disabled>Select country</option>
+                      {countries.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -618,68 +490,24 @@ export default function ProductForm({
                     ))}
                   </div>
                   <FormControl>
-                    <Popover open={materialsOpen} onOpenChange={setMaterialsOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={materialsOpen}
-                          className="w-full justify-between focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
-                        >
-                          <span className="text-muted-foreground">Select materials</span>
-                          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <div className="flex flex-col w-full">
-                          <input
-                            type="text"
-                            placeholder="Search materials..."
-                            value={materialSearch}
-                            onChange={(e) => setMaterialSearch(e.target.value)}
-                            className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-2 py-1.5 border border-input rounded-md"
-                          />
-                          {filteredMaterials.length === 0 ? (
-                            <div className="p-2 text-sm text-center text-muted-foreground">
-                              No materials found.
-                            </div>
-                          ) : (
-                            <div 
-                              className="border border-input rounded-md mt-1 max-h-[300px] overflow-y-auto"
-                              style={{ 
-                                WebkitOverflowScrolling: 'touch',
-                                overscrollBehavior: 'contain',
-                              }}
-                            >
-                              <ul className="py-1">
-                                {filteredMaterials.map((material) => (
-                                  <li 
-                                    key={material}
-                                    className={cn(
-                                      "px-2 py-1.5 text-sm flex items-center cursor-pointer hover:bg-accent hover:text-accent-foreground",
-                                      (field.value || []).includes(material) && "bg-accent text-accent-foreground"
-                                    )}
-                                    onClick={() => {
-                                      handleMaterialSelect(material);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        (field.value || []).includes(material)
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {material}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <select
+                      multiple
+                      value={field.value || []}
+                      onChange={(e) => {
+                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                        form.setValue("material", selectedOptions);
+                      }}
+                      className="w-full px-3 py-2 border rounded-md border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring min-h-[150px]"
+                    >
+                      {materials.map((material) => (
+                        <option key={material} value={material}>
+                          {material}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Hold Ctrl (Windows) or Command (Mac) to select multiple materials
+                    </p>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
