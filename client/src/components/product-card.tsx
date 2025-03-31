@@ -43,71 +43,35 @@ export default function ProductCard({
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [hasUpvoted, setHasUpvoted] = useState(false);
   
-  // Get all user votes
+  // Get all user votes - optimized with better caching
   const { data: allUserVotes, isSuccess: allVotesSuccess } = useQuery<Array<{ id: number; productId: number; value: number }>>({
     queryKey: ["/api/votes"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user, // Only fetch for authenticated users
-    staleTime: 0,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    gcTime: 0
+    // Using global cache settings instead of aggressive refetching
   });
-  
-  // Get individual vote data from the API (as a fallback)
-  const { data: vote, isError, error, isSuccess } = useQuery<{ id: number; value: number } | null>({
-    queryKey: ["/api/votes", product.id],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !!product.id && !allVotesSuccess, // Only use if bulk votes aren't available
-    staleTime: 0, 
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    gcTime: 0,
-  });
-  
-  // Debugging logs
-  useEffect(() => {
-    console.log(`[ProductCard] User authenticated:`, !!user);
-    console.log(`[ProductCard] Product ID ${product.id} - Vote data:`, vote);
-    if (isError) {
-      console.error(`[ProductCard] Vote query error:`, error);
-    }
-  }, [vote, user, product.id, isError, error]);
   
   // Initialize upvote state from API data when component mounts or vote data changes
   useEffect(() => {
-    // First check if we have bulk user votes available
-    if (allVotesSuccess && allUserVotes && allUserVotes.length > 0) {
+    // Using only bulk votes - more efficient
+    if (allVotesSuccess && allUserVotes) {
       // Find the vote for this specific product
       const userVoteForProduct = allUserVotes.find(v => v.productId === product.id);
       
       if (userVoteForProduct && userVoteForProduct.value === 1) {
-        console.log(`[ProductCard] Setting hasUpvoted to TRUE based on bulk vote data for product ${product.id}`);
         setHasUpvoted(true);
         return;
       }
     }
     
-    // Fall back to individual vote data if bulk data doesn't have this product's vote
-    if (isSuccess && vote) {
-      if (vote.value === 1) {
-        console.log(`[ProductCard] Setting hasUpvoted to TRUE based on individual API vote for product ${product.id}`);
-        setHasUpvoted(true);
-      } else {
-        console.log(`[ProductCard] Setting hasUpvoted to FALSE for product ${product.id}`);
-        setHasUpvoted(false);
-      }
-    } else {
-      // If no vote found or user is not authenticated, ensure upvote is not shown
-      setHasUpvoted(false);
-    }
-  }, [vote, allUserVotes, product.id, isSuccess, allVotesSuccess]);
+    // If no vote found or user is not authenticated, ensure upvote is not shown
+    setHasUpvoted(false);
+  }, [allUserVotes, product.id, allVotesSuccess]);
 
+  // Only fetch comments when needed (not on card list views)
   const { data: comments } = useQuery<any[]>({
     queryKey: [`/api/products/${product.id}/comments`],
-    enabled: true,
+    enabled: isFullView, // Only fetch when viewing the full product
   });
 
   const voteMutation = useMutation({
@@ -266,6 +230,7 @@ export default function ProductCard({
           alt={product.title}
           className="absolute inset-0 w-full h-full object-cover"
           loading="lazy"
+          decoding="async"
         />
       </div>
 

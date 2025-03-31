@@ -8,8 +8,8 @@ import ProductCard from "@/components/product-card";
 import ProductForm from "@/components/product-form";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
-import { Loader2, Plus } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Plus, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -17,13 +17,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SortOption = "newest" | "top";
 
 export default function HomePage() {
   const [sortBy, setSortBy] = useState<SortOption>("top");
   const [showProductForm, setShowProductForm] = useState(false);
-
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const productsPerPage = 10;
+  
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     select: (products) => {
@@ -44,6 +50,53 @@ export default function HomePage() {
       return [...featured.sort(sortFn), ...nonFeatured.sort(sortFn)];
     },
   });
+  
+  // Reset pagination when sort changes
+  useEffect(() => {
+    setPage(1);
+    if (products) {
+      setDisplayedProducts(products.slice(0, productsPerPage));
+      setHasMore(products.length > productsPerPage);
+    }
+  }, [products, sortBy]);
+  
+  const loadMoreProducts = () => {
+    if (!products || loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    
+    // Simulate a slight delay to show loading state
+    setTimeout(() => {
+      const nextPage = page + 1;
+      const start = (nextPage - 1) * productsPerPage;
+      const end = start + productsPerPage;
+      const newProducts = products.slice(0, end);
+      
+      setDisplayedProducts(newProducts);
+      setPage(nextPage);
+      setHasMore(products.length > end);
+      setLoadingMore(false);
+    }, 300);
+  };
+  
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastProductRef = (node: HTMLDivElement | null) => {
+    if (isLoading || loadingMore) return;
+    
+    if (observer.current) {
+      observer.current.disconnect();
+    }
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreProducts();
+      }
+    });
+    
+    if (node) {
+      observer.current.observe(node);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -77,21 +130,66 @@ export default function HomePage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <div className="divide-y divide-border">
-          {products?.map((product) => (
-            <div key={product.id} className="py-4 first:pt-0 last:pb-0">
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                isFullView={false}
-              />
+        <div className="space-y-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-24 w-24 rounded-md" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-8 w-1/2 mt-4" />
+              </div>
             </div>
           ))}
         </div>
+      ) : (
+        <>
+          <div className="divide-y divide-border">
+            {displayedProducts?.map((product, index) => {
+              if (displayedProducts.length === index + 1) {
+                return (
+                  <div 
+                    ref={lastProductRef}
+                    key={product.id} 
+                    className="py-4 first:pt-0 last:pb-0"
+                  >
+                    <ProductCard 
+                      product={product}
+                      isFullView={false}
+                    />
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={product.id} className="py-4 first:pt-0 last:pb-0">
+                    <ProductCard 
+                      product={product}
+                      isFullView={false}
+                    />
+                  </div>
+                );
+              }
+            })}
+          </div>
+          
+          {loadingMore && (
+            <div className="py-4 flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          
+          {!loadingMore && hasMore && (
+            <div className="py-4 flex justify-center">
+              <Button 
+                variant="outline" 
+                onClick={loadMoreProducts}
+                className="flex items-center gap-1"
+              >
+                Load more <ChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
