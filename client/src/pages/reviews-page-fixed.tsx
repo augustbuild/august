@@ -335,7 +335,6 @@ export default function ReviewsPage() {
               </TabsTrigger>
             </TabsList>
             <p className="text-sm text-muted-foreground mt-2">
-              {activeTab === 'all' && 'Viewing all product review videos'}
               {activeTab === 'short' && 'Short videos under 3 minutes'}
               {activeTab === 'long' && 'Longer format product reviews'}
             </p>
