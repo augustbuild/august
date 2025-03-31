@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, RefreshCw, Clock, Timer, PlayCircle } from 'lucide-react';
+import { ExternalLink, RefreshCw, Clock, Timer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type ApiError = {
@@ -116,7 +116,14 @@ export default function ReviewsPage() {
           className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <div className="rounded-full bg-red-600 p-3">
-            <PlayCircle className="h-5 w-5 text-white fill-white" />
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="white" 
+              className="w-5 h-5"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
           </div>
         </a>
       </div>
@@ -149,7 +156,14 @@ export default function ReviewsPage() {
           className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <div className="rounded-full bg-red-600 p-3">
-            <PlayCircle className="h-6 w-6 text-white fill-white" />
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="white" 
+              className="w-6 h-6"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
           </div>
         </a>
       </div>

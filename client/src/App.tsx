@@ -7,7 +7,7 @@ import HomePage from "@/pages/home-page";
 import ProductPage from "@/pages/product-page";
 import FilteredProductsPage from "@/pages/filtered-products-page";
 import CategoryIndexPage from "@/pages/category-index-page";
-import ReviewsPage from "@/pages/reviews-page";
+import ReviewsPage from "@/pages/reviews-page-fixed";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 import Navbar from "./components/navbar";
