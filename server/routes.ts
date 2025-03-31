@@ -347,6 +347,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(videos);
     } catch (error: any) {
       console.error('[YouTube] API Error:', error.response?.data || error.message);
+      
+      // Check for specific API not enabled error
+      if (error.response?.data?.error?.code === 403 && 
+          error.response?.data?.error?.message?.includes('has not been used in project') && 
+          error.response?.data?.error?.message?.includes('or it is disabled')) {
+        
+        // Extract the URL from the error message for easier access
+        const enableApiUrl = error.response?.data?.error?.message?.match(/https:\/\/console\.developers\.google\.com[^\s]+/)?.[0] || '';
+        
+        return res.status(503).json({
+          error: "YouTube API not enabled",
+          details: "The YouTube Data API v3 needs to be enabled for this project in the Google Cloud Console.",
+          actionRequired: "Please enable the YouTube Data API v3 in your Google Cloud project.",
+          enableUrl: enableApiUrl,
+          code: "YOUTUBE_API_NOT_ENABLED"
+        });
+      }
+      
       res.status(500).json({
         error: "Failed to fetch YouTube videos",
         details: error.response?.data?.error?.message || error.message,
