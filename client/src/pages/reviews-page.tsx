@@ -95,17 +95,26 @@ export default function ReviewsPage() {
               Retry Connection
             </Button>
             
-            {error.code === 'YOUTUBE_API_NOT_CONFIGURED' || error.code === 'CLIENT_ERROR' ? (
+            {['YOUTUBE_API_NOT_CONFIGURED', 'CLIENT_ERROR', 'YOUTUBE_API_KEY_MISSING', 'YOUTUBE_API_PERMISSION_DENIED', 'YOUTUBE_API_ERROR'].includes(error.code) ? (
               <div className="w-full mt-3 pt-3 border-t border-destructive/20">
-                <p className="text-sm font-medium mb-2">Production Environment Instructions:</p>
+                <p className="text-sm font-medium mb-2">Troubleshooting Instructions:</p>
                 <ol className="text-xs space-y-1 list-decimal pl-4">
-                  <li>Verify that the YouTube API key is set as an environment variable named <code className="bg-background/80 px-1 py-0.5 rounded">YOUTUBE_API_KEY</code></li>
+                  <li>Verify that the YouTube API key is correctly set as an environment variable named <code className="bg-background/80 px-1 py-0.5 rounded">YOUTUBE_API_KEY</code></li>
                   <li>Make sure the YouTube Data API v3 is enabled in your Google Cloud Console</li>
-                  <li>Check that the API key has the correct permissions and no IP restrictions that would block your production server</li>
-                  <li>If the problem persists, try creating a new API key specifically for this project</li>
+                  <li>Confirm that the API key has the correct permissions to access the YouTube Data API</li>
+                  <li>Check for any IP restrictions on your API key that might block your server's requests</li>
                 </ol>
-                <p className="text-xs mt-2 text-muted-foreground">
-                  After updating the API key, restart your production server and then refresh this page.
+                <div className="mt-4 p-3 bg-background/50 rounded-md">
+                  <p className="text-xs font-medium">Test your API key with this command:</p>
+                  <pre className="p-2 bg-background text-xs mt-1 rounded overflow-x-auto">
+                    curl "https://www.googleapis.com/youtube/v3/playlistItems?part=id&maxResults=1&playlistId=PLroxG2e6nYKuMsF8nSNieCN0VSr9gB1U9&key=YOUR_API_KEY"
+                  </pre>
+                  <p className="text-xs mt-2 text-muted-foreground">
+                    (Replace YOUR_API_KEY with your actual API key to test it)
+                  </p>
+                </div>
+                <p className="text-xs mt-3 text-muted-foreground">
+                  After updating your API key, restart your server and refresh this page.
                 </p>
               </div>
             ) : null}

@@ -311,17 +311,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/youtube/playlist", async (req, res) => {
     try {
       const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+      
       if (!YOUTUBE_API_KEY) {
         console.error('[YouTube] API key is missing');
         return res.status(503).json({
           error: "YouTube API service unavailable",
-          details: "The YouTube API service is not properly configured",
-          code: "YOUTUBE_API_NOT_CONFIGURED"
+          details: "The YouTube API key is missing from environment variables",
+          actionRequired: "Add the YOUTUBE_API_KEY environment variable to your deployment",
+          code: "YOUTUBE_API_KEY_MISSING"
         });
       }
 
+      console.log('[YouTube] Attempting to fetch playlist with API key');
+      
       // The playlist ID from the given URL
       const PLAYLIST_ID = 'PLroxG2e6nYKuMsF8nSNieCN0VSr9gB1U9';
+      
+      // Test the API key with a simple request first
+      try {
+        await axios.get('https://www.googleapis.com/youtube/v3/playlistItems', {
+          params: {
+            part: 'id',
+            maxResults: 1,
+            playlistId: PLAYLIST_ID,
+            key: YOUTUBE_API_KEY
+          }
+        });
+        console.log('[YouTube] API key validated successfully');
+      } catch (testError: any) {
+        console.error('[YouTube] API key validation failed:', testError.response?.data?.error || testError.message);
+        if (testError.response?.data?.error?.status === 'PERMISSION_DENIED') {
+          return res.status(403).json({
+            error: "YouTube API permission denied",
+            details: "The YouTube API key exists but doesn't have proper permissions",
+            actionRequired: "Enable the YouTube Data API v3 in your Google Cloud Console",
+            code: "YOUTUBE_API_PERMISSION_DENIED"
+          });
+        }
+        // Re-throw to be handled in the main catch block
+        throw testError;
+      }
       
       // Get playlist items
       const response = await axios.get('https://www.googleapis.com/youtube/v3/playlistItems', {
@@ -333,13 +362,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      if (!response.data.items || response.data.items.length === 0) {
+        console.warn('[YouTube] Playlist returned no items');
+        return res.status(404).json({
+          error: "No videos found",
+          details: "The YouTube playlist exists but contains no accessible videos",
+          code: "EMPTY_PLAYLIST"
+        });
+      }
+
       console.log(`[YouTube] Retrieved ${response.data.items.length} videos from playlist`);
       
       // Transform the data to our required format
       const videos = response.data.items.map((item: any) => ({
         id: item.snippet.resourceId.videoId,
         title: item.snippet.title,
-        description: item.snippet.description,
+        description: item.snippet.description, 
         thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
         publishedAt: item.snippet.publishedAt
       }));
@@ -364,7 +402,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           code: "YOUTUBE_API_NOT_ENABLED"
         });
       }
+
+      // Handle quota exceeded errors
+      if (error.response?.data?.error?.code === 403 && 
+          error.response?.data?.error?.message?.includes('quota')) {
+        return res.status(429).json({
+          error: "YouTube API quota exceeded",
+          details: "Your daily YouTube API quota has been exceeded. Please try again tomorrow.",
+          code: "YOUTUBE_API_QUOTA_EXCEEDED"
+        });
+      }
       
+      // Generic error response with detailed information
       res.status(500).json({
         error: "Failed to fetch YouTube videos",
         details: error.response?.data?.error?.message || error.message,
