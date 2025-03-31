@@ -140,7 +140,7 @@ export default function ReviewsPage() {
         </a>
       </div>
       <div className="p-3">
-        <h3 className="font-semibold text-sm line-clamp-1 mb-1">{video.title}</h3>
+        <h3 className="font-semibold text-sm line-clamp-2 mb-1">{video.title}</h3>
         <div className="flex flex-wrap items-center gap-2 mb-1">
           {video.viewCount && (
             <Badge variant="outline" className="text-xs px-2 bg-accent/40">
