@@ -468,7 +468,7 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No collections found.</CommandEmpty>
-                          <ScrollArea className="max-h-64 overflow-y-auto">
+                          <div className="max-h-[320px] overflow-y-auto">
                             <CommandGroup>
                               {filteredCollections.map((collection) => (
                                 <CommandItem
@@ -490,8 +490,7 @@ export default function ProductForm({
                                 </CommandItem>
                               ))}
                             </CommandGroup>
-                            <ScrollBar />
-                          </ScrollArea>
+                          </div>
                         </Command>
                       </PopoverContent>
                     </Popover>
@@ -532,7 +531,7 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No countries found.</CommandEmpty>
-                          <ScrollArea className="max-h-64 overflow-y-auto">
+                          <div className="max-h-[320px] overflow-y-auto">
                             <CommandGroup>
                               {filteredCountries.map((country) => (
                                 <CommandItem
@@ -554,8 +553,7 @@ export default function ProductForm({
                                 </CommandItem>
                               ))}
                             </CommandGroup>
-                            <ScrollBar />
-                          </ScrollArea>
+                          </div>
                         </Command>
                       </PopoverContent>
                     </Popover>
@@ -609,7 +607,7 @@ export default function ProductForm({
                             className="focus:ring-0 focus:border-foreground ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                           />
                           <CommandEmpty>No materials found.</CommandEmpty>
-                          <ScrollArea className="max-h-64 overflow-y-auto">
+                          <div className="max-h-[320px] overflow-y-auto">
                             <CommandGroup>
                               {filteredMaterials.map((material) => (
                                 <CommandItem
@@ -628,8 +626,7 @@ export default function ProductForm({
                                 </CommandItem>
                               ))}
                             </CommandGroup>
-                            <ScrollBar />
-                          </ScrollArea>
+                          </div>
                         </Command>
                       </PopoverContent>
                     </Popover>
