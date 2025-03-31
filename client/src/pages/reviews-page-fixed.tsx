@@ -49,6 +49,13 @@ export default function ReviewsPage() {
     });
   };
 
+  // Helper function to parse view count strings into numbers for sorting
+  const parseViewCount = (viewCount: string | undefined): number => {
+    if (!viewCount) return 0;
+    // Remove commas and convert to number
+    return parseInt(viewCount.replace(/,/g, ''), 10) || 0;
+  };
+
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -63,7 +70,11 @@ export default function ReviewsPage() {
         }
         
         if (Array.isArray(data) && data.length > 0) {
-          setVideos(data);
+          // Sort videos by view count (highest to lowest)
+          const sortedVideos = [...data].sort((a, b) => {
+            return parseViewCount(b.viewCount) - parseViewCount(a.viewCount);
+          });
+          setVideos(sortedVideos);
         } else {
           setError({
             error: "No videos found",
@@ -131,16 +142,16 @@ export default function ReviewsPage() {
       <div className="p-3">
         <h3 className="font-semibold text-sm line-clamp-1 mb-1">{video.title}</h3>
         <div className="flex flex-wrap items-center gap-2 mb-1">
-          <Badge variant="outline" className="text-xs px-2 bg-accent/40">
-            <Timer className="h-3 w-3 mr-1" />
-            {formatDuration(video.durationSeconds)}
-          </Badge>
           {video.viewCount && (
             <Badge variant="outline" className="text-xs px-2 bg-accent/40">
               <Eye className="h-3 w-3 mr-1" />
               {video.viewCount}
             </Badge>
           )}
+          <Badge variant="outline" className="text-xs px-2 bg-accent/40">
+            <Timer className="h-3 w-3 mr-1" />
+            {formatDuration(video.durationSeconds)}
+          </Badge>
         </div>
         <span className="text-xs text-muted-foreground">Short</span>
       </div>
@@ -177,16 +188,16 @@ export default function ReviewsPage() {
       <div className="p-4">
         <h3 className="font-semibold text-lg line-clamp-2 mb-2">{video.title}</h3>
         <div className="flex flex-wrap gap-2 mb-2">
-          <Badge variant="outline" className="text-xs whitespace-nowrap">
-            <Clock className="h-3 w-3 mr-1" />
-            {formatDuration(video.durationSeconds)}
-          </Badge>
           {video.viewCount && (
             <Badge variant="outline" className="text-xs whitespace-nowrap">
               <Eye className="h-3 w-3 mr-1" />
               {video.viewCount}
             </Badge>
           )}
+          <Badge variant="outline" className="text-xs whitespace-nowrap">
+            <Clock className="h-3 w-3 mr-1" />
+            {formatDuration(video.durationSeconds)}
+          </Badge>
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2">{video.description}</p>
       </div>
