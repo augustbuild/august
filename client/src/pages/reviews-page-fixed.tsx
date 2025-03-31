@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, RefreshCw, Clock, Timer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import SocialLinks from '@/components/social-links';
 
 type ApiError = {
   error: string;
@@ -182,7 +183,31 @@ export default function ReviewsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">Product Reviews</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <h1 className="text-3xl font-bold">Product Reviews</h1>
+        <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end">
+          <div className="flex items-center mb-2">
+            <span className="text-sm font-medium mr-3">Follow us:</span>
+            <SocialLinks size="md" />
+          </div>
+          <a 
+            href="https://www.youtube.com/@august_build?sub_confirmation=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary hover:underline flex items-center"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="currentColor" 
+              className="w-4 h-4 mr-1"
+            >
+              <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+            </svg>
+            Subscribe to our channel
+          </a>
+        </div>
+      </div>
       
       {error && (
         <div className="bg-destructive/15 text-destructive p-4 rounded-md mb-6">

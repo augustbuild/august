@@ -11,27 +11,31 @@ import ReviewsPage from "@/pages/reviews-page-fixed";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 import Navbar from "./components/navbar";
+import Footer from "./components/footer";
 import ProfilePage from "@/pages/profile-page";
 
 function Router() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/products/:slug" component={ProductPage} />
-        {/* Add index routes for categories */}
-        <Route path="/materials" component={CategoryIndexPage} />
-        <Route path="/countries" component={CategoryIndexPage} />
-        <Route path="/collections" component={CategoryIndexPage} />
-        {/* Filtered product routes */}
-        <Route path="/materials/:material" component={FilteredProductsPage} />
-        <Route path="/countries/:country" component={FilteredProductsPage} />
-        <Route path="/collections/:collection" component={FilteredProductsPage} />
-        <Route path="/reviews" component={ReviewsPage} />
-        <ProtectedRoute path="/profile" component={ProfilePage} />
-        <Route component={NotFound} />
-      </Switch>
+      <div className="flex-grow">
+        <Switch>
+          <Route path="/" component={HomePage} />
+          <Route path="/products/:slug" component={ProductPage} />
+          {/* Add index routes for categories */}
+          <Route path="/materials" component={CategoryIndexPage} />
+          <Route path="/countries" component={CategoryIndexPage} />
+          <Route path="/collections" component={CategoryIndexPage} />
+          {/* Filtered product routes */}
+          <Route path="/materials/:material" component={FilteredProductsPage} />
+          <Route path="/countries/:country" component={FilteredProductsPage} />
+          <Route path="/collections/:collection" component={FilteredProductsPage} />
+          <Route path="/reviews" component={ReviewsPage} />
+          <ProtectedRoute path="/profile" component={ProfilePage} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
+      <Footer />
     </div>
   );
 }
