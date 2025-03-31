@@ -185,7 +185,7 @@ export default function ReviewsPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-3xl font-bold">Product Reviews</h1>
-        <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-start md:items-center space-y-3 md:space-y-0 md:space-x-4">
+        <div className="mt-4 md:mt-0 flex flex-row items-center space-x-3">
           <a 
             href="https://www.youtube.com/@august_build?sub_confirmation=1"
             target="_blank"
