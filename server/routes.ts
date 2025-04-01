@@ -277,6 +277,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const comments = await storage.getUserComments(parseInt(req.params.id));
     res.json(comments);
   });
+  
+  // Update user profile
+  app.patch("/api/users/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const { username } = req.body;
+      
+      if (!username || typeof username !== 'string' || username.trim() === '') {
+        return res.status(400).json({ 
+          error: "Invalid username format",
+          details: "Username cannot be empty" 
+        });
+      }
+      
+      // Check if username is already taken by another user
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser && existingUser.id !== req.user!.id) {
+        return res.status(409).json({ 
+          error: "Username already taken",
+          details: "Please choose a different username" 
+        });
+      }
+      
+      const updatedUser = await storage.updateUser(req.user!.id, { username });
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error('[Users] Profile update error:', error);
+      res.status(500).json({ 
+        error: "Failed to update profile",
+        details: error.message 
+      });
+    }
+  });
 
   // Product management
   app.patch("/api/products/:id", async (req, res) => {
