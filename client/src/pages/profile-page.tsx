@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Product, Comment } from "@shared/schema";
+import type { Product, Comment, User as SelectUser } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Check, X, Pencil } from "lucide-react";
 import ProductCard from "@/components/product-card";
@@ -20,33 +20,55 @@ export default function ProfilePage() {
   const [username, setUsername] = useState(user?.username || "");
   const [error, setError] = useState("");
 
-  const updateProfileMutation = useMutation({
+  const updateProfileMutation = useMutation<SelectUser, Error, string>({
     mutationFn: async (newUsername: string) => {
-      return await apiRequest<any>("/api/users/profile", {
-        method: "PATCH",
-        body: JSON.stringify({ username: newUsername }),
-      });
+      // Don't send request if the username hasn't changed
+      if (newUsername === user?.username) {
+        return user as SelectUser;
+      }
+      
+      try {
+        const response = await apiRequest("PATCH", "/api/users/profile", {
+          username: newUsername
+        });
+        return await response.json();
+      } catch (error) {
+        console.error("Error updating username:", error);
+        throw error;
+      }
     },
     onSuccess: (updatedUser) => {
-      toast({
-        title: "Profile updated",
-        description: "Your username has been updated successfully.",
-      });
-      // Invalidate and refetch any queries that might have the user's data
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      // Only show toast if username was actually changed
+      if (updatedUser.username !== user?.username) {
+        toast({
+          title: "Profile updated",
+          description: "Your username has been updated successfully.",
+        });
+        // Invalidate and refetch any queries that might have the user's data
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      }
       setIsEditing(false);
       setError("");
     },
     onError: (error: Error) => {
+      console.error("Profile update error:", error);
       let errorMessage = "Failed to update username. Please try again.";
+      
       try {
-        const parsedError = JSON.parse(error.message);
-        if (parsedError.error) {
-          errorMessage = parsedError.details || parsedError.error;
+        // Try to parse the error message as JSON
+        const errorObj = JSON.parse(error.message);
+        if (errorObj.error) {
+          errorMessage = errorObj.details || errorObj.error;
         }
-      } catch {
-        // Use default error message if parsing fails
+      } catch (parseError) {
+        // If parsing fails, check if the error message contains useful information
+        if (error.message.includes("409") || error.message.includes("Conflict")) {
+          errorMessage = "This username is already taken. Please choose a different one.";
+        } else if (error.message.includes("401") || error.message.includes("Unauthorized")) {
+          errorMessage = "You need to be logged in to update your profile.";
+        }
       }
+      
       setError(errorMessage);
     },
   });
