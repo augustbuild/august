@@ -68,7 +68,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    // Use case-insensitive comparison
+    if (!email) return undefined;
+    
+    // Use lowercase for consistent storage and comparison
+    const lowerEmail = email.toLowerCase();
+    
+    // Try to find by lowercase email comparison
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, lowerEmail));
+      
     return user;
   }
 
@@ -85,14 +96,30 @@ export class DatabaseStorage implements IStorage {
     email?: string;
     avatarUrl?: string;
   }): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    // Standardize email format by storing as lowercase
+    const userData = {
+      ...insertUser,
+      // Convert email to lowercase if it exists
+      email: insertUser.email ? insertUser.email.toLowerCase() : undefined
+    };
+    
+    const [user] = await db.insert(users).values(userData).returning();
     return user;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
+    // Standardize email format if being updated
+    const userData = {
+      ...updates,
+      // Convert email to lowercase if it exists in the updates
+      email: updates.email !== undefined ? 
+        (updates.email ? updates.email.toLowerCase() : null) : 
+        undefined
+    };
+    
     const [user] = await db
       .update(users)
-      .set(updates)
+      .set(userData)
       .where(eq(users.id, id))
       .returning();
     return user;
