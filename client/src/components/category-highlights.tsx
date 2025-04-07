@@ -101,7 +101,7 @@ export default function CategoryHighlights() {
     const { items, type } = categorySection;
     
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {items.map(item => (
           <Link key={item.name} href={`/${type}/${encodeURIComponent(item.name)}`}>
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
@@ -120,7 +120,7 @@ export default function CategoryHighlights() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-48 mb-6" />
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full" />
           ))}
