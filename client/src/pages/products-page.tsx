@@ -90,7 +90,7 @@ export default function ProductsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Discover Products</h1>
+      <h1 className="text-3xl font-bold mb-6">Discover Extraordinary Products</h1>
       
       {/* Category Highlights */}
       <section className="mb-10">
