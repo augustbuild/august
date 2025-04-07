@@ -139,6 +139,16 @@ export default function FilteredProductsPage() {
     }
   });
 
+  // Determine if we should show the type label in the title
+  const shouldShowTypeInTitle = (type: string) => {
+    switch (type) {
+      case "collections":
+        return false; // Don't show "Collection:" prefix
+      default:
+        return true;  // Show type label for others (Material, Country)
+    }
+  };
+  
   // Mapping plural route names to singular display names
   const getTypeDisplay = (type: string) => {
     switch (type) {
@@ -159,11 +169,11 @@ export default function FilteredProductsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-4">
-        <Button variant="ghost" onClick={() => setLocation("/")} className="p-0 h-auto">
+        <Button variant="ghost" onClick={() => setLocation("/products")} className="p-0 h-auto">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-2xl font-bold">
-          {typeDisplay}: {valueDisplay}
+          {shouldShowTypeInTitle(type) ? `${typeDisplay}: ${valueDisplay}` : valueDisplay}
         </h1>
       </div>
 
