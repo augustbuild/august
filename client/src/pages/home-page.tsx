@@ -195,7 +195,7 @@ export default function HomePage() {
           <div className="mt-16 mb-8">
             <NewsletterForm 
               variant="default" 
-              showFirstName={true}
+              showFirstName={false}
               source="homepage" 
               className="max-w-md mx-auto"
             />
