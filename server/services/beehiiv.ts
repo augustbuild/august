@@ -27,14 +27,24 @@ export async function subscribeToNewsletter(options: SubscribeOptions): Promise<
   }
 
   try {
+    // Log the request to help with debugging
+    log(`Subscribing ${options.email} to newsletter`, 'express');
+    
+    // Define custom fields as an array of objects with name/value pairs as per Beehiiv API docs
+    const customFields = [];
+    if (options.firstName) {
+      customFields.push({
+        name: 'first_name',
+        value: options.firstName
+      });
+    }
+    
     const response = await axios.post(
       `${BEEHIIV_API_URL}/publications/${BEEHIIV_PUBLICATION_ID}/subscriptions`,
       {
         email: options.email,
         referring_site: 'august-app',
-        custom_fields: {
-          first_name: options.firstName || '',
-        },
+        custom_fields: customFields,
         send_welcome_email: true,
         utm_source: options.utm_source || 'website',
         utm_medium: options.utm_medium || 'subscribe_form',
@@ -69,11 +79,45 @@ export async function subscribeToNewsletter(options: SubscribeOptions): Promise<
       const errorData = error.response.data;
       
       // Check for common error cases
-      if (status === 400 && errorData?.errors?.some((e: any) => e.includes('already exists'))) {
-        return {
-          success: true, // We treat this as success to not confuse users
-          message: 'You are already subscribed to our newsletter!'
-        };
+      if (status === 400 && errorData?.errors) {
+        // Log the full error object for debugging
+        log(`Detailed error response: ${JSON.stringify(errorData)}`, 'express');
+        
+        // Check for already subscribed error in different error response formats
+        // Beehiiv has inconsistent error formats across different API versions
+        let alreadyExists = false;
+        
+        if (Array.isArray(errorData.errors)) {
+          alreadyExists = errorData.errors.some((e: any) => {
+            if (typeof e === 'string') {
+              return e.includes('already exists') || e.includes('already subscribed');
+            } else if (e && typeof e.message === 'string') {
+              return e.message.includes('already exists') || e.message.includes('already subscribed');
+            }
+            return false;
+          });
+        } else if (typeof errorData.errors === 'object') {
+          // Handle case where errors might be an object with error messages
+          const errorValues = Object.values(errorData.errors);
+          alreadyExists = errorValues.some((e: any) => {
+            if (typeof e === 'string') {
+              return e.includes('already exists') || e.includes('already subscribed');
+            } else if (Array.isArray(e)) {
+              return e.some((subErr: any) => 
+                typeof subErr === 'string' && 
+                (subErr.includes('already exists') || subErr.includes('already subscribed'))
+              );
+            }
+            return false;
+          });
+        }
+        
+        if (alreadyExists) {
+          return {
+            success: true, // We treat this as success to not confuse users
+            message: 'You are already subscribed to our newsletter!'
+          };
+        }
       }
       
       log(`Beehiiv API error: ${JSON.stringify(errorData)}`, 'express');

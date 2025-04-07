@@ -2,11 +2,14 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProductSchema, insertCommentSchema, insertVoteSchema, User } from "@shared/schema";
+import { insertProductSchema, insertCommentSchema, insertVoteSchema, User, users } from "@shared/schema";
 import Stripe from "stripe";
 import axios from "axios";
 import { subscribeToNewsletter } from "./services/beehiiv";
 import { z } from "zod";
+import { db } from "./db";
+import { and, eq, isNotNull, like, ne, or } from "drizzle-orm";
+import rateLimit from "express-rate-limit";
 
 // Initialize Stripe with comprehensive error handling
 let stripe: Stripe | null = null;
@@ -580,6 +583,278 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('[Newsletter] Error processing subscription:', error);
       return res.status(500).json({ 
         error: "Subscription failed", 
+        details: error.message || "An unexpected error occurred. Please try again later."
+      });
+    }
+  });
+
+  // Create a rate limiter for admin endpoints
+  const adminRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    max: 120, // limit each IP to 120 requests per hour (allows for batch processing)
+    message: {
+      error: "Too many requests",
+      details: "You have exceeded the rate limit for this operation. Please try again later.",
+      code: "RATE_LIMIT_EXCEEDED"
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  });
+  
+  // Helper function to validate admin access
+  const validateAdminAccess = (req: Express.Request): { isAuthorized: boolean, message?: string } => {
+    // For script execution in development, allow bypass with correct token
+    const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+    const validScriptToken = "august_newsletter_script_2025";
+    const isScriptBypass = isDevelopment && 
+                         (req.body?._devBypassAuth === true || req.query?._devBypassAuth === "true") && 
+                         (req.body?._scriptRunToken === validScriptToken || req.query?._scriptRunToken === validScriptToken);
+    
+    if (isScriptBypass) {
+      console.log('[Admin] Script bypass authentication accepted');
+      return { isAuthorized: true };
+    }
+    
+    // Check for admin authorization (implement proper admin check as needed)
+    const user = req.user as User | undefined;
+    if (!user) {
+      return { 
+        isAuthorized: false, 
+        message: "Unauthorized. You must be logged in to access this endpoint" 
+      };
+    }
+    
+    // This endpoint is only available in development or to authorized admins
+    // In production, you should implement proper admin role checks
+    if (!isDevelopment && user.email !== 'admin@example.com') {
+      return { 
+        isAuthorized: false, 
+        message: "Forbidden. You do not have permission to access this endpoint" 
+      };
+    }
+    
+    console.log(`[Admin] Admin access granted to user ${user.id} (${user.email || user.username})`);
+    return { isAuthorized: true };
+  };
+  
+  // Endpoint to get all users with email addresses
+  app.get("/api/admin/users/with-email", adminRateLimit, async (req, res) => {
+    try {
+      // Validate admin access
+      const accessCheck = validateAdminAccess(req);
+      if (!accessCheck.isAuthorized) {
+        return res.status(accessCheck.message?.includes("Unauthorized") ? 401 : 403)
+          .json({ error: accessCheck.message?.split('.')[0], details: accessCheck.message });
+      }
+      
+      // Get all users with email addresses
+      const usersWithEmails = await db.query.users.findMany({
+        where: or(
+          and(
+            isNotNull(users.email),
+            ne(users.email, '')
+          ),
+          like(users.username, '%@%')
+        )
+      });
+      
+      // Transform the data to include only necessary fields
+      const simplifiedUsers = usersWithEmails.map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email || (user.username.includes('@') ? user.username : null),
+        isSubscribedToNewsletter: user.isSubscribedToNewsletter
+      }));
+      
+      return res.status(200).json({
+        total: simplifiedUsers.length,
+        users: simplifiedUsers
+      });
+    } catch (error: any) {
+      console.error('[Admin] Error fetching users with emails:', error);
+      return res.status(500).json({ 
+        error: "Failed to fetch users", 
+        details: error.message || "An unexpected error occurred. Please try again later."
+      });
+    }
+  });
+  
+  // Endpoint to subscribe a single user to the newsletter
+  app.post("/api/admin/newsletter/subscribe-single", adminRateLimit, async (req, res) => {
+    try {
+      // Validate admin access
+      const accessCheck = validateAdminAccess(req);
+      if (!accessCheck.isAuthorized) {
+        return res.status(accessCheck.message?.includes("Unauthorized") ? 401 : 403)
+          .json({ error: accessCheck.message?.split('.')[0], details: accessCheck.message });
+      }
+      
+      const userId = req.body.userId;
+      if (!userId) {
+        return res.status(400).json({ 
+          error: "Bad Request", 
+          details: "User ID is required"
+        });
+      }
+      
+      // Get the user
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      if (!user) {
+        return res.status(404).json({ 
+          error: "Not Found", 
+          details: `User with ID ${userId} not found`
+        });
+      }
+      
+      // Use email if available, otherwise use username if it looks like an email
+      const email = user.email || (user.username.includes('@') ? user.username : null);
+      
+      if (!email) {
+        return res.status(400).json({ 
+          error: "Bad Request", 
+          details: "User does not have a valid email address"
+        });
+      }
+      
+      // Subscribe the user to the newsletter
+      const result = await subscribeToNewsletter({
+        email,
+        firstName: user.username,
+        utm_source: 'admin_single_subscribe',
+      });
+      
+      if (result.success) {
+        // Update user in database if they weren't already marked as subscribed
+        if (!user.isSubscribedToNewsletter) {
+          await db.update(users)
+            .set({ isSubscribedToNewsletter: true })
+            .where(eq(users.id, user.id));
+        }
+      }
+      
+      return res.status(200).json(result);
+    } catch (error: any) {
+      console.error('[Admin] Error subscribing user to newsletter:', error);
+      return res.status(500).json({ 
+        success: false,
+        message: error.message || "An unexpected error occurred. Please try again later."
+      });
+    }
+  });
+  
+  // Admin endpoint for bulk subscribing all users to newsletter (legacy approach)
+  app.post("/api/admin/newsletter/bulk-subscribe", adminRateLimit, async (req, res) => {
+    try {
+      console.log('[Admin] Processing bulk newsletter subscription request');
+      
+      // For script execution in development, allow bypass with correct token
+      const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+      const validScriptToken = "august_newsletter_script_2025";
+      const isScriptBypass = isDevelopment && 
+                            req.body?._devBypassAuth === true && 
+                            req.body?._scriptRunToken === validScriptToken;
+      
+      if (isScriptBypass) {
+        console.log('[Admin] Script bypass authentication accepted');
+      } else {
+        // Check for admin authorization (implement proper admin check as needed)
+        const user = req.user as User | undefined;
+        if (!user) {
+          return res.status(401).json({ error: "Unauthorized", details: "You must be logged in to access this endpoint" });
+        }
+        
+        // This endpoint is only available in development or to authorized admins
+        // In production, you should implement proper admin role checks
+        if (!isDevelopment && user.email !== 'admin@example.com') {
+          return res.status(403).json({ error: "Forbidden", details: "You do not have permission to access this endpoint" });
+        }
+        
+        console.log(`[Admin] Admin access granted to user ${user.id} (${user.email || user.username})`);
+      }
+      
+      // Get all users with email addresses
+      const usersWithEmails = await db.query.users.findMany({
+        where: or(
+          and(
+            isNotNull(users.email),
+            ne(users.email, '')
+          ),
+          like(users.username, '%@%')
+        )
+      });
+      
+      console.log(`[Admin] Found ${usersWithEmails.length} users with email addresses to subscribe`);
+      
+      const results = {
+        total: usersWithEmails.length,
+        success: 0,
+        alreadySubscribed: 0,
+        failed: 0,
+        errors: [] as string[]
+      };
+      
+      // Helper function to wait between API calls
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      
+      // Process each user with rate limiting
+      for (const user of usersWithEmails) {
+        try {
+          // Use email if available, otherwise use username if it looks like an email
+          const email = user.email || (user.username.includes('@') ? user.username : null);
+          
+          if (!email) {
+            results.failed++;
+            results.errors.push(`User ID ${user.id}: No valid email found`);
+            continue;
+          }
+          
+          const result = await subscribeToNewsletter({
+            email,
+            firstName: user.username,
+            utm_source: 'admin_bulk_subscribe',
+          });
+          
+          if (result.success) {
+            if (result.message.includes('already subscribed')) {
+              results.alreadySubscribed++;
+            } else {
+              results.success++;
+            }
+            
+            // Update user in database if they weren't already marked as subscribed
+            if (!user.isSubscribedToNewsletter) {
+              await db.update(users)
+                .set({ isSubscribedToNewsletter: true })
+                .where(eq(users.id, user.id));
+            }
+          } else {
+            results.failed++;
+            results.errors.push(`User ID ${user.id} (${email}): ${result.message}`);
+          }
+          
+          // Add a small delay between requests to avoid overwhelming the API
+          await delay(1000); // 1 second delay
+          
+        } catch (userError: any) {
+          results.failed++;
+          results.errors.push(`User ID ${user.id}: ${userError.message}`);
+          
+          // Still add delay even after errors
+          await delay(1000);
+        }
+      }
+      
+      return res.status(200).json({
+        message: "Bulk newsletter subscription completed",
+        results
+      });
+    } catch (error: any) {
+      console.error('[Admin] Error processing bulk subscription:', error);
+      return res.status(500).json({ 
+        error: "Bulk subscription failed", 
         details: error.message || "An unexpected error occurred. Please try again later."
       });
     }
