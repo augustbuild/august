@@ -145,7 +145,7 @@ export default function HomePage() {
         </div>
       ) : (
         <>
-          <div className="divide-y divide-border space-y-3">
+          <div className="divide-y divide-border">
             {displayedProducts?.map((product, index) => {
               // Insert newsletter form after the 3rd product
               const newsletterAfterThisItem = index === 2;
@@ -154,10 +154,10 @@ export default function HomePage() {
               const isLastProduct = displayedProducts.length === index + 1;
               
               return (
-                <div key={product.id} className="pt-3 first:pt-0">
+                <div key={product.id} className="py-3 first:pt-0 last:pb-0">
                   <div 
                     ref={isLastProduct ? lastProductRef : undefined}
-                    className="py-4 first:pt-0"
+                    className="py-0"
                   >
                     <ProductCard 
                       product={product}
