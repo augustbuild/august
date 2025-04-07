@@ -167,7 +167,7 @@ export default function HomePage() {
                   
                   {/* Insert newsletter form after the 3rd product */}
                   {newsletterAfterThisItem && (
-                    <div className="py-6 my-2 border-y bg-accent/20">
+                    <div className="py-6 my-2 border-t bg-accent/20">
                       <div className="py-2">
                         <div className="mb-4">
                           <h3 className="text-xl font-semibold mb-1">Discover Extraordinary Products</h3>
