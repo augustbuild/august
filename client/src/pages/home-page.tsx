@@ -147,29 +147,39 @@ export default function HomePage() {
         <>
           <div className="divide-y divide-border">
             {displayedProducts?.map((product, index) => {
-              if (displayedProducts.length === index + 1) {
-                return (
+              // Insert newsletter form after the 3rd product
+              const newsletterAfterThisItem = index === 2;
+              
+              // Set up ref for the last product for infinite scroll
+              const isLastProduct = displayedProducts.length === index + 1;
+              
+              return (
+                <div key={product.id}>
                   <div 
-                    ref={lastProductRef}
-                    key={product.id} 
-                    className="py-4 first:pt-0 last:pb-0"
+                    ref={isLastProduct ? lastProductRef : undefined}
+                    className="py-4 first:pt-0"
                   >
                     <ProductCard 
                       product={product}
                       isFullView={false}
                     />
                   </div>
-                );
-              } else {
-                return (
-                  <div key={product.id} className="py-4 first:pt-0 last:pb-0">
-                    <ProductCard 
-                      product={product}
-                      isFullView={false}
-                    />
-                  </div>
-                );
-              }
+                  
+                  {/* Insert newsletter form after the 3rd product */}
+                  {newsletterAfterThisItem && (
+                    <div className="py-6 my-2 border-y bg-accent/20">
+                      <div className="py-2">
+                        <NewsletterForm 
+                          variant="inline" 
+                          showFirstName={false}
+                          source="homepage_inline" 
+                          className="w-full mx-auto"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
             })}
           </div>
           
@@ -190,16 +200,6 @@ export default function HomePage() {
               </Button>
             </div>
           )}
-          
-          {/* Newsletter section */}
-          <div className="mt-16 mb-8">
-            <NewsletterForm 
-              variant="inline" 
-              showFirstName={false}
-              source="homepage" 
-              className="w-full mx-auto"
-            />
-          </div>
         </>
       )}
     </div>
