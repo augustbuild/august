@@ -118,7 +118,7 @@ export default function NewsletterForm({
     <div className={`${containerClasses} ${className}`}>
       {variant === "default" && (
         <div className="mb-4">
-          <h3 className="text-xl font-semibold mb-1">Get Product Recommendations</h3>
+          <h3 className="text-xl font-semibold mb-1">Discover Extraordinary Products</h3>
           <p className="text-muted-foreground text-sm">
             Join our newsletter to receive the latest product recommendations directly in your inbox.
           </p>
