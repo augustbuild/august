@@ -150,7 +150,7 @@ export default function NewsletterForm({
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className={`flex-1 ${variant === "inline" ? "sm:max-w-md" : ""}`}>
+              <FormItem className={`flex-1 ${variant === "inline" ? "sm:max-w-[300px]" : ""}`}>
                 <FormControl>
                   <Input
                     type="email"
