@@ -27,6 +27,12 @@ const Navbar: React.FC = () => {
                 <NavigationMenuTrigger>Products</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="w-[200px] p-2 space-y-1">
+                    <Link href="/products">
+                      <div className="flex items-center gap-2 rounded-md p-2 hover:bg-accent cursor-pointer font-medium">
+                        <span>All Products</span>
+                      </div>
+                    </Link>
+                    <div className="my-1 border-t"></div>
                     <Link href="/materials">
                       <div className="flex items-center gap-2 rounded-md p-2 hover:bg-accent cursor-pointer">
                         <Package className="h-4 w-4" />

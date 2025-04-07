@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import HomePage from "@/pages/home-page";
 import ProductPage from "@/pages/product-page";
+import ProductsPage from "@/pages/products-page";
 import FilteredProductsPage from "@/pages/filtered-products-page";
 import CategoryIndexPage from "@/pages/category-index-page";
 import ReviewsPage from "@/pages/reviews-page-fixed";
@@ -21,6 +22,7 @@ function Router() {
       <div className="flex-grow">
         <Switch>
           <Route path="/" component={HomePage} />
+          <Route path="/products" component={ProductsPage} />
           <Route path="/products/:slug" component={ProductPage} />
           {/* Add index routes for categories */}
           <Route path="/materials" component={CategoryIndexPage} />

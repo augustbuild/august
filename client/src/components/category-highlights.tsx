@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Package, Globe, FolderOpen, ChevronRight } from "lucide-react";
+import { Link } from "wouter";
 import type { Product } from "@shared/schema";
 import { materials, countries, collections } from "@/lib/category-data";
-import { Link } from "wouter";
-import { Badge } from "@/components/ui/badge";
-import { Package, Globe, FolderOpen } from "lucide-react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { getCountryFlag } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CategorySection {
   title: string;
@@ -15,96 +17,146 @@ interface CategorySection {
 }
 
 export default function CategoryHighlights() {
-  const { data: products } = useQuery<Product[]>({
+  const [activeTab, setActiveTab] = useState<string>("materials");
+  
+  const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
-
-  // Function to count items and sort by frequency
-  const getTopCategories = (
-    type: "materials" | "countries" | "collections",
-    referenceList: string[]
-  ) => {
-    let allItems: string[] = [];
-
-    switch (type) {
-      case "materials":
-        allItems = products?.flatMap((p) => p.material || []) || [];
-        break;
-      case "countries":
-        allItems = products?.map((p) => p.country) || [];
-        break;
-      case "collections":
-        allItems = products?.map((p) => p.collection) || [];
-        break;
-    }
-
-    // Count occurrences
-    const counts = new Map<string, number>();
-    allItems.forEach((item) => {
-      counts.set(item, (counts.get(item) || 0) + 1);
+  
+  const getCategoryCounts = () => {
+    if (!products) return {
+      materialCounts: {},
+      countryCounts: {},
+      collectionCounts: {}
+    };
+    
+    const materialCounts: Record<string, number> = {};
+    const countryCounts: Record<string, number> = {};
+    const collectionCounts: Record<string, number> = {};
+    
+    products.forEach(product => {
+      // Count materials
+      if (product.material) {
+        product.material.forEach(m => {
+          materialCounts[m] = (materialCounts[m] || 0) + 1;
+        });
+      }
+      
+      // Count countries
+      if (product.country) {
+        countryCounts[product.country] = (countryCounts[product.country] || 0) + 1;
+      }
+      
+      // Count collections
+      if (product.collection) {
+        collectionCounts[product.collection] = (collectionCounts[product.collection] || 0) + 1;
+      }
     });
-
-    // Create sorted items array
-    return referenceList
-      .map((name) => ({
-        name,
-        count: counts.get(name) || 0,
-      }))
-      .filter((item) => item.count > 0)
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-      .slice(0, 10); // Show top 10 categories
+    
+    return { materialCounts, countryCounts, collectionCounts };
   };
-
-  const sections: CategorySection[] = [
+  
+  const { materialCounts, countryCounts, collectionCounts } = getCategoryCounts();
+  
+  const categorySections: CategorySection[] = [
     {
-      title: "Popular Materials",
+      title: "Materials",
       icon: Package,
       type: "materials",
-      items: getTopCategories("materials", materials),
+      items: materials
+        .map(material => ({
+          name: material,
+          count: materialCounts[material] || 0
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6)
     },
     {
-      title: "Popular Collections",
-      icon: FolderOpen,
-      type: "collections",
-      items: getTopCategories("collections", collections),
-    },
-    {
-      title: "Popular Countries",
+      title: "Countries",
       icon: Globe,
       type: "countries",
-      items: getTopCategories("countries", countries),
+      items: countries
+        .map(country => ({
+          name: country,
+          count: countryCounts[country] || 0
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6)
     },
+    {
+      title: "Collections",
+      icon: FolderOpen,
+      type: "collections",
+      items: collections
+        .map(collection => ({
+          name: collection,
+          count: collectionCounts[collection] || 0
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6)
+    }
   ];
 
-  return (
-    <div className="space-y-6">
-      {sections.map((section) => (
-        <div key={section.type}>
-          <div className="flex items-center gap-2 mb-3">
-            <section.icon className="h-5 w-5 text-muted-foreground" />
-            <h2 className="font-medium">{section.title}</h2>
-          </div>
-          <ScrollArea className="w-full">
-            <div className="flex gap-2 pb-4">
-              {section.items.map((item) => (
-                <Link
-                  key={item.name}
-                  href={`/${section.type}/${encodeURIComponent(item.name)}`}
-                >
-                  <Badge
-                    variant="secondary"
-                    className="cursor-pointer whitespace-nowrap hover:bg-secondary/80 hover:text-secondary-foreground"
-                  >
-                    {section.type === "countries" && getCountryFlag(item.name)}{" "}
-                    {item.name} ({item.count})
-                  </Badge>
-                </Link>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+  const renderCategoryCards = (categorySection: CategorySection) => {
+    const { items, type } = categorySection;
+    
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {items.map(item => (
+          <Link key={item.name} href={`/${type}/${encodeURIComponent(item.name)}`}>
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardHeader className="py-4">
+                <CardTitle className="text-lg">{item.name}</CardTitle>
+                <CardDescription>{item.count} product{item.count !== 1 ? 's' : ''}</CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-48 mb-6" />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
         </div>
-      ))}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Tabs defaultValue="materials" value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex justify-between items-center mb-6">
+          <TabsList>
+            <TabsTrigger value="materials">Materials</TabsTrigger>
+            <TabsTrigger value="countries">Countries</TabsTrigger>
+            <TabsTrigger value="collections">Collections</TabsTrigger>
+          </TabsList>
+          <Link href={`/${activeTab}`}>
+            <Button variant="ghost" className="gap-1">
+              See all <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        
+        <TabsContent value="materials">
+          {renderCategoryCards(categorySections[0])}
+        </TabsContent>
+        
+        <TabsContent value="countries">
+          {renderCategoryCards(categorySections[1])}
+        </TabsContent>
+        
+        <TabsContent value="collections">
+          {renderCategoryCards(categorySections[2])}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
