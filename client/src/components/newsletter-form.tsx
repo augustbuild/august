@@ -100,7 +100,7 @@ export default function NewsletterForm({
           <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">Thank you for subscribing!</h3>
           <p className="text-muted-foreground">
-            You have been added to our newsletter. Get ready for new product recommendations!
+            You have been added to our newsletter. Get ready for extraordinary product recommendations from the August community each week!
           </p>
           <Button
             className="mt-4"
@@ -120,7 +120,7 @@ export default function NewsletterForm({
         <div className="mb-4">
           <h3 className="text-xl font-semibold mb-1">Discover Extraordinary Products</h3>
           <p className="text-muted-foreground text-sm">
-            Join our newsletter to receive the latest product recommendations directly in your inbox.
+            Get extraordinary product recommendations from the August community each week.
           </p>
         </div>
       )}
