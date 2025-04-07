@@ -197,7 +197,7 @@ export default function HomePage() {
               variant="default" 
               showFirstName={false}
               source="homepage" 
-              className="max-w-md mx-auto"
+              className="w-full mx-auto"
             />
           </div>
         </>

@@ -104,7 +104,7 @@ export default function Footer() {
             
             {/* Newsletter form positioned below social icons */}
             <div className="mb-2">
-              <p className="text-sm font-medium mb-2">Join our newsletter</p>
+              <h3 className="font-semibold text-lg mb-4">Newsletter</h3>
               <NewsletterForm variant="compact" source="footer" className="max-w-xs" />
             </div>
           </div>
