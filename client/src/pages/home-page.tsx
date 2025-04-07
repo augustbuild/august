@@ -194,7 +194,7 @@ export default function HomePage() {
           {/* Newsletter section */}
           <div className="mt-16 mb-8">
             <NewsletterForm 
-              variant="default" 
+              variant="inline" 
               showFirstName={false}
               source="homepage" 
               className="w-full mx-auto"
