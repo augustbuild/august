@@ -5,6 +5,8 @@ import { setupAuth } from "./auth";
 import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
 import Stripe from "stripe";
 import axios from "axios";
+import { subscribeToNewsletter } from "./services/beehiiv";
+import { z } from "zod";
 
 // Initialize Stripe with comprehensive error handling
 let stripe: Stripe | null = null;
@@ -498,6 +500,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to fetch YouTube videos",
         details: error.response?.data?.error?.message || error.message,
         code: error.response?.data?.error?.code || "YOUTUBE_API_ERROR"
+      });
+    }
+  });
+  
+  // Newsletter subscription endpoint
+  const newsletterSchema = z.object({
+    email: z.string().email("Please enter a valid email address"),
+    firstName: z.string().optional(),
+    source: z.string().optional(),
+  });
+  
+  app.post("/api/newsletter/subscribe", async (req, res) => {
+    try {
+      console.log('[Newsletter] Processing subscription request');
+      
+      const validated = newsletterSchema.safeParse(req.body);
+      if (!validated.success) {
+        console.error('[Newsletter] Validation error:', validated.error);
+        return res.status(400).json({ 
+          error: "Invalid subscription data", 
+          details: validated.error.errors[0]?.message || "Please check your information and try again" 
+        });
+      }
+      
+      const result = await subscribeToNewsletter({
+        email: validated.data.email,
+        firstName: validated.data.firstName,
+        utm_source: validated.data.source || 'website',
+      });
+      
+      if (result.success) {
+        console.log(`[Newsletter] Successfully subscribed email: ${validated.data.email}`);
+        return res.status(200).json({ 
+          message: result.message || "Thank you for subscribing to our newsletter!" 
+        });
+      } else {
+        console.error(`[Newsletter] Subscription failed for email: ${validated.data.email}`);
+        return res.status(400).json({ 
+          error: "Subscription failed", 
+          details: result.message || "Unable to subscribe at this time. Please try again later."
+        });
+      }
+    } catch (error: any) {
+      console.error('[Newsletter] Error processing subscription:', error);
+      return res.status(500).json({ 
+        error: "Subscription failed", 
+        details: error.message || "An unexpected error occurred. Please try again later."
       });
     }
   });

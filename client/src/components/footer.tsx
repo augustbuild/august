@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'wouter';
 import { ExternalLink } from 'lucide-react';
+import NewsletterForm from './newsletter-form';
 
 // Social media URLs
 const SOCIAL_LINKS = {
@@ -13,6 +14,11 @@ export default function Footer() {
   return (
     <footer className="bg-background border-t mt-auto">
       <div className="container mx-auto py-8 px-4">
+        {/* Newsletter form (full width above other content) */}
+        <div className="mb-10">
+          <NewsletterForm variant="inline" source="footer" />
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="font-semibold text-lg mb-4">August</h3>
@@ -48,6 +54,7 @@ export default function Footer() {
           </div>
           
           <div>
+            <h3 className="font-semibold text-lg mb-4">Follow Us</h3>
             <div className="flex space-x-4">
               <a 
                 href={SOCIAL_LINKS.YOUTUBE} 

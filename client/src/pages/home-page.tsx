@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import ProductCard from "@/components/product-card";
 import ProductForm from "@/components/product-form";
+import NewsletterForm from "@/components/newsletter-form";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { Loader2, Plus, ChevronDown } from "lucide-react";
@@ -189,6 +190,22 @@ export default function HomePage() {
               </Button>
             </div>
           )}
+          
+          {/* Newsletter section */}
+          <div className="mt-16 mb-8 border border-primary/20 rounded-lg bg-primary/5 p-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-2">Stay Updated</h2>
+              <p className="text-muted-foreground">
+                Get the latest product recommendations and exclusive insights delivered to your inbox.
+              </p>
+            </div>
+            <NewsletterForm 
+              variant="default" 
+              showFirstName={true}
+              source="homepage" 
+              className="max-w-md mx-auto"
+            />
+          </div>
         </>
       )}
     </div>
