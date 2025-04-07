@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { materials, countries, collections } from "@/lib/category-data";
-import CategoryNavigation from "@/components/category-navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { getCountryFlag } from "@/lib/utils";
 
 export default function CategoryIndexPage() {
   const [location, setLocation] = useLocation();
@@ -16,7 +17,7 @@ export default function CategoryIndexPage() {
     switch (type) {
       case "materials":
         return { 
-          title: "Materials", 
+          title: "Browse by Material", 
           items: materials.map(material => ({ 
             name: material,
             count: 0 // Will be updated below
@@ -24,7 +25,7 @@ export default function CategoryIndexPage() {
         };
       case "countries":
         return { 
-          title: "Countries", 
+          title: "Browse by Country", 
           items: countries.map(country => ({ 
             name: country,
             count: 0 // Will be updated below
@@ -32,7 +33,7 @@ export default function CategoryIndexPage() {
         };
       case "collections":
         return { 
-          title: "Collections", 
+          title: "Browse by Collection", 
           items: collections.map(collection => ({ 
             name: collection,
             count: 0 // Will be updated below
@@ -67,7 +68,8 @@ export default function CategoryIndexPage() {
     }).length;
     
     return { ...item, count };
-  }).sort((a, b) => b.count - a.count); // Sort by count, descending
+  }).filter(item => item.count > 0) // Only show items with products
+    .sort((a, b) => b.count - a.count); // Sort by count, descending
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -83,16 +85,27 @@ export default function CategoryIndexPage() {
       </div>
       
       {isLoading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
         </div>
       ) : (
-        <CategoryNavigation 
-          type={type}
-          currentValue=""
-          items={itemsWithCounts}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          {itemsWithCounts.map(item => (
+            <Link key={item.name} href={`/${type}/${encodeURIComponent(item.name)}`}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="py-4">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {type === "countries" && <span>{getCountryFlag(item.name)}</span>}
+                    {item.name}
+                  </CardTitle>
+                  <CardDescription>{item.count} product{item.count !== 1 ? 's' : ''}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   );

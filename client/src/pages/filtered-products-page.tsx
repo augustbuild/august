@@ -3,11 +3,12 @@ import type { Product } from "@shared/schema";
 import ProductCard from "@/components/product-card";
 import { Loader2, ArrowLeft, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
-import CategoryNavigation from "@/components/category-navigation";
+import { Link, useLocation } from "wouter";
 import { materials, countries, collections } from "@/lib/category-data";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { getCountryFlag } from "@/lib/utils";
 
 export default function FilteredProductsPage() {
   const [location, setLocation] = useLocation();
@@ -167,14 +168,26 @@ export default function FilteredProductsPage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-sm font-medium text-muted-foreground mb-2">
+        <h2 className="text-sm font-medium text-muted-foreground mb-4">
           Browse other {type}:
         </h2>
-        <CategoryNavigation
-          type={type as "materials" | "countries" | "collections"}
-          currentValue={value}
-          items={categoryData || []}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(categoryData || []).map(item => (
+            item.name !== decodeURIComponent(value) ? (
+              <Link key={item.name} href={`/${type}/${encodeURIComponent(item.name)}`}>
+                <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                  <CardHeader className="py-4">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      {type === "countries" && <span>{getCountryFlag(item.name)}</span>}
+                      {item.name}
+                    </CardTitle>
+                    <CardDescription>{item.count} product{item.count !== 1 ? 's' : ''}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            ) : null
+          ))}
+        </div>
       </div>
 
       {isLoading ? (
