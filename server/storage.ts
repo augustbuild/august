@@ -20,6 +20,7 @@ export interface IStorage {
     username: string;
     email?: string;
     avatarUrl?: string;
+    isSubscribedToNewsletter?: boolean;
   }): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User>;
 
@@ -95,6 +96,7 @@ export class DatabaseStorage implements IStorage {
     username: string;
     email?: string;
     avatarUrl?: string;
+    isSubscribedToNewsletter?: boolean;
   }): Promise<User> {
     // Standardize email format by storing as lowercase
     const userData = {

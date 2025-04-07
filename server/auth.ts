@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import { randomBytes } from "crypto";
 import fetch from "node-fetch";
+import { subscribeToNewsletter } from "./services/beehiiv";
 
 // Validate Mailgun configuration
 if (!process.env.MAILGUN_DOMAIN || !process.env.MAILGUN_API_KEY) {
@@ -140,7 +141,21 @@ export function setupAuth(app: Express) {
         user = await storage.createUser({
           email,
           username: finalUsername,
+          isSubscribedToNewsletter: true,
         });
+        
+        // Auto-subscribe the new user to the newsletter
+        try {
+          await subscribeToNewsletter({
+            email,
+            firstName: finalUsername,
+            utm_source: 'signup',
+          });
+          console.log(`[Auth] Auto-subscribed new user to newsletter: ${email}`);
+        } catch (error) {
+          console.error('[Auth] Failed to subscribe new user to newsletter:', error);
+          // Continue with account creation even if newsletter subscription fails
+        }
       }
 
       await storage.updateUser(user.id, {

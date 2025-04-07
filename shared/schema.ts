@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   avatarUrl: text("avatar_url"),
   magicLinkToken: text("magic_link_token"),
   magicLinkExpiry: timestamp("magic_link_expiry"),
+  isSubscribedToNewsletter: boolean("is_subscribed_to_newsletter").default(true).notNull(),
 });
 
 export const products = pgTable("products", {

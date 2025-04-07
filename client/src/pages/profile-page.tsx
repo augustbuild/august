@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Product, Comment, User as SelectUser } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Check, X, Pencil } from "lucide-react";
+import { Loader2, Check, X, Pencil, Mail } from "lucide-react";
 import ProductCard from "@/components/product-card";
 import UserComments from "@/components/user-comments";
 import { useState } from "react";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -20,33 +22,45 @@ export default function ProfilePage() {
   const [username, setUsername] = useState(user?.username || "");
   const [error, setError] = useState("");
 
-  const updateProfileMutation = useMutation<SelectUser, Error, string>({
-    mutationFn: async (newUsername: string) => {
-      // Don't send request if the username hasn't changed
-      if (newUsername === user?.username) {
+  const updateProfileMutation = useMutation<SelectUser, Error, { username?: string; isSubscribedToNewsletter?: boolean }>({
+    mutationFn: async (updates) => {
+      // Don't send request if there are no actual changes
+      if (
+        (updates.username === undefined || updates.username === user?.username) &&
+        (updates.isSubscribedToNewsletter === undefined || updates.isSubscribedToNewsletter === user?.isSubscribedToNewsletter)
+      ) {
         return user as SelectUser;
       }
       
       try {
-        const response = await apiRequest("PATCH", "/api/users/profile", {
-          username: newUsername
-        });
+        const response = await apiRequest("PATCH", "/api/users/profile", updates);
         return await response.json();
       } catch (error) {
-        console.error("Error updating username:", error);
+        console.error("Error updating profile:", error);
         throw error;
       }
     },
     onSuccess: (updatedUser) => {
-      // Only show toast if username was actually changed
+      // Check what was changed and show appropriate notifications
+      let changes = [];
+      
       if (updatedUser.username !== user?.username) {
+        changes.push("username");
+      }
+      
+      if (updatedUser.isSubscribedToNewsletter !== user?.isSubscribedToNewsletter) {
+        changes.push("newsletter preferences");
+      }
+      
+      if (changes.length > 0) {
         toast({
           title: "Profile updated",
-          description: "Your username has been updated successfully.",
+          description: `Your ${changes.join(" and ")} ${changes.length > 1 ? "have" : "has"} been updated successfully.`,
         });
         // Invalidate and refetch any queries that might have the user's data
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       }
+      
       setIsEditing(false);
       setError("");
     },
@@ -96,13 +110,17 @@ export default function ProfilePage() {
       setError("Username cannot be empty");
       return;
     }
-    updateProfileMutation.mutate(username);
+    updateProfileMutation.mutate({ username });
   };
 
   const handleCancelEdit = () => {
     setUsername(user?.username || "");
     setIsEditing(false);
     setError("");
+  };
+  
+  const handleToggleNewsletter = (checked: boolean) => {
+    updateProfileMutation.mutate({ isSubscribedToNewsletter: checked });
   };
 
   return (
@@ -164,6 +182,32 @@ export default function ProfilePage() {
             <div className="flex flex-col space-y-1">
               <div className="text-sm font-medium">Email</div>
               <div>{user?.email || 'Not provided'}</div>
+            </div>
+            
+            <div className="flex flex-col space-y-4 pt-2">
+              <div className="text-sm font-medium">Newsletter Preferences</div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="newsletter-subscription"
+                  checked={!!user?.isSubscribedToNewsletter}
+                  onCheckedChange={handleToggleNewsletter}
+                  disabled={updateProfileMutation.isPending}
+                />
+                <Label htmlFor="newsletter-subscription" className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                  {user?.isSubscribedToNewsletter
+                    ? "You are subscribed to our newsletter"
+                    : "Subscribe to our newsletter"}
+                </Label>
+                {updateProfileMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground ml-2" />
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {user?.isSubscribedToNewsletter
+                  ? "We'll send you updates about new products and features."
+                  : "Subscribe to receive updates about new products and features."}
+              </p>
             </div>
           </div>
         </CardContent>

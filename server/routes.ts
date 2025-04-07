@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProductSchema, insertCommentSchema, insertVoteSchema } from "@shared/schema";
+import { insertProductSchema, insertCommentSchema, insertVoteSchema, User } from "@shared/schema";
 import Stripe from "stripe";
 import axios from "axios";
 import { subscribeToNewsletter } from "./services/beehiiv";
@@ -287,25 +287,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const { username } = req.body;
+      const { username, isSubscribedToNewsletter } = req.body;
+      const updates: Partial<User> = {};
       
-      if (!username || typeof username !== 'string' || username.trim() === '') {
-        return res.status(400).json({ 
-          error: "Invalid username format",
-          details: "Username cannot be empty" 
+      // Handle username updates if provided
+      if (username !== undefined) {
+        if (!username || typeof username !== 'string' || username.trim() === '') {
+          return res.status(400).json({ 
+            error: "Invalid username format",
+            details: "Username cannot be empty" 
+          });
+        }
+        
+        // Check if username is already taken by another user
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser && existingUser.id !== req.user!.id) {
+          return res.status(409).json({ 
+            error: "Username already taken",
+            details: "Please choose a different username" 
+          });
+        }
+        
+        updates.username = username;
+      }
+      
+      // Handle newsletter subscription updates if provided
+      if (isSubscribedToNewsletter !== undefined) {
+        updates.isSubscribedToNewsletter = isSubscribedToNewsletter;
+        
+        // If subscribing, also update their subscription in the newsletter service
+        if (isSubscribedToNewsletter && req.user?.email) {
+          try {
+            await subscribeToNewsletter({
+              email: req.user.email,
+              firstName: req.user.username,
+              utm_source: 'profile_page',
+            });
+            console.log(`[Users] User ${req.user.id} subscribed to newsletter`);
+          } catch (subError) {
+            // Log error but don't fail the request
+            console.error('[Users] Failed to update external newsletter subscription:', subError);
+          }
+        }
+      }
+      
+      // Only proceed if there are updates to make
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({
+          error: "No valid updates provided",
+          details: "At least one valid field must be provided for update"
         });
       }
       
-      // Check if username is already taken by another user
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser && existingUser.id !== req.user!.id) {
-        return res.status(409).json({ 
-          error: "Username already taken",
-          details: "Please choose a different username" 
-        });
-      }
-      
-      const updatedUser = await storage.updateUser(req.user!.id, { username });
+      const updatedUser = await storage.updateUser(req.user!.id, updates);
       res.json(updatedUser);
     } catch (error: any) {
       console.error('[Users] Profile update error:', error);
