@@ -228,7 +228,7 @@ export default function ProductPage() {
                 variant={hasUpvoted ? "default" : "outline"}
                 size="sm"
                 onClick={handleUpvote}
-                disabled={voteMutation.isPending || !user}
+                disabled={voteMutation.isPending}
                 className={cn(
                   "h-9 px-4 flex items-center gap-2",
                   hasUpvoted && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"

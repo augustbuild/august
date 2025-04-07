@@ -300,7 +300,7 @@ export default function ProductCard({
               variant={hasUpvoted ? "default" : "outline"}
               size="sm"
               onClick={handleUpvote}
-              disabled={voteMutation.isPending || !user}
+              disabled={voteMutation.isPending}
               className={cn(
                 "h-7 px-2 flex items-center gap-1",
                 hasUpvoted && "bg-[#FFD700] border-[#FFD700] text-black hover:bg-[#FFCC00] hover:text-black hover:border-[#FFCC00]"
