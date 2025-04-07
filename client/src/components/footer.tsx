@@ -16,6 +16,7 @@ export default function Footer() {
       <div className="container mx-auto py-8 px-4">
         {/* Newsletter form (full width above other content) */}
         <div className="mb-10">
+          <h3 className="font-semibold text-lg mb-4">Get Product Recommendations</h3>
           <NewsletterForm variant="inline" source="footer" />
         </div>
         

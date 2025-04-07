@@ -192,13 +192,7 @@ export default function HomePage() {
           )}
           
           {/* Newsletter section */}
-          <div className="mt-16 mb-8 border border-primary/20 rounded-lg bg-primary/5 p-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">Stay Updated</h2>
-              <p className="text-muted-foreground">
-                Get the latest product recommendations and exclusive insights delivered to your inbox.
-              </p>
-            </div>
+          <div className="mt-16 mb-8">
             <NewsletterForm 
               variant="default" 
               showFirstName={true}
