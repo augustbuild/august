@@ -141,12 +141,7 @@ export default function FilteredProductsPage() {
 
   // Determine if we should show the type label in the title
   const shouldShowTypeInTitle = (type: string) => {
-    switch (type) {
-      case "collections":
-        return false; // Don't show "Collection:" prefix
-      default:
-        return true;  // Show type label for others (Material, Country)
-    }
+    return false; // Don't show any type prefix (Collection, Material, Country)
   };
   
   // Mapping plural route names to singular display names
